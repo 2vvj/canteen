@@ -1,0 +1,1102 @@
+[
+    {
+        "zone_a": 0,
+        "zone_b": 1,
+        "distance": 0.09
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 2,
+        "distance": 0.2
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 3,
+        "distance": 0.06
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 4,
+        "distance": 0.2
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 5,
+        "distance": 0.25
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 6,
+        "distance": 0.5
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 9,
+        "distance": 0.82
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 10,
+        "distance": 0.57
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 11,
+        "distance": 0.615
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 12,
+        "distance": 0.53
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 18,
+        "distance": 0.15
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 21,
+        "distance": 1
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 22,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 23,
+        "distance": 1.2
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 24,
+        "distance": 0.7
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 25,
+        "distance": 0.77
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 26,
+        "distance": 1.2
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 27,
+        "distance": 1.8
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 28,
+        "distance": 1.4
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 29,
+        "distance": 1.2
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 31,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 33,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 34,
+        "distance": 0.67
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 35,
+        "distance": 0.64
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 36,
+        "distance": 0.52
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 37,
+        "distance": 0.73
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 38,
+        "distance": 0.37
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 40,
+        "distance": 0.5
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 41,
+        "distance": 0.51
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 42,
+        "distance": 0.8
+    },
+    {
+        "zone_a": 0,
+        "zone_b": 43,
+        "distance": 0.5
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 2,
+        "distance": 0.31
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 3,
+        "distance": 0.15
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 4,
+        "distance": 0.13
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 5,
+        "distance": 0.16
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 6,
+        "distance": 0.6
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 9,
+        "distance": 0.83
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 10,
+        "distance": 0.5
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 11,
+        "distance": 0.63
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 12,
+        "distance": 0.51
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 18,
+        "distance": 0.24
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 21,
+        "distance": 0.93
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 22,
+        "distance": 0.92
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 23,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 24,
+        "distance": 0.63
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 25,
+        "distance": 0.69
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 26,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 27,
+        "distance": 1.7
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 28,
+        "distance": 1.3
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 29,
+        "distance": 1.2
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 31,
+        "distance": 1
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 33,
+        "distance": 1
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 34,
+        "distance": 0.58
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 35,
+        "distance": 0.55
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 36,
+        "distance": 0.43
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 37,
+        "distance": 0.64
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 38,
+        "distance": 0.28
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 40,
+        "distance": 0.41
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 41,
+        "distance": 0.42
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 42,
+        "distance": 0.71
+    },
+    {
+        "zone_a": 1,
+        "zone_b": 43,
+        "distance": 0.4
+    },
+    {
+        "zone_a": 2,
+        "zone_b": 5,
+        "distance": 0.47
+    },
+    {
+        "zone_a": 2,
+        "zone_b": 12,
+        "distance": 0.49
+    },
+    {
+        "zone_a": 2,
+        "zone_b": 34,
+        "distance": 0.64
+    },
+    {
+        "zone_a": 2,
+        "zone_b": 36,
+        "distance": 0.75
+    },
+    {
+        "zone_a": 2,
+        "zone_b": 37,
+        "distance": 0.96
+    },
+    {
+        "zone_a": 2,
+        "zone_b": 40,
+        "distance": 0.53
+    },
+    {
+        "zone_a": 3,
+        "zone_b": 5,
+        "distance": 0.31
+    },
+    {
+        "zone_a": 3,
+        "zone_b": 12,
+        "distance": 0.48
+    },
+    {
+        "zone_a": 3,
+        "zone_b": 34,
+        "distance": 0.63
+    },
+    {
+        "zone_a": 3,
+        "zone_b": 36,
+        "distance": 0.6
+    },
+    {
+        "zone_a": 3,
+        "zone_b": 37,
+        "distance": 0.79
+    },
+    {
+        "zone_a": 3,
+        "zone_b": 40,
+        "distance": 0.46
+    },
+    {
+        "zone_a": 4,
+        "zone_b": 5,
+        "distance": 0.19
+    },
+    {
+        "zone_a": 4,
+        "zone_b": 12,
+        "distance": 0.38
+    },
+    {
+        "zone_a": 4,
+        "zone_b": 34,
+        "distance": 0.45
+    },
+    {
+        "zone_a": 4,
+        "zone_b": 36,
+        "distance": 0.46
+    },
+    {
+        "zone_a": 4,
+        "zone_b": 37,
+        "distance": 0.67
+    },
+    {
+        "zone_a": 4,
+        "zone_b": 40,
+        "distance": 0.28
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 6,
+        "distance": 0.75
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 9,
+        "distance": 0.91
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 10,
+        "distance": 0.55
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 11,
+        "distance": 0.71
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 12,
+        "distance": 0.58
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 18,
+        "distance": 0.34
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 21,
+        "distance": 0.76
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 22,
+        "distance": 0.8
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 23,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 24,
+        "distance": 0.65
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 25,
+        "distance": 0.76
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 26,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 27,
+        "distance": 1.4
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 28,
+        "distance": 1.2
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 29,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 31,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 33,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 34,
+        "distance": 0.65
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 35,
+        "distance": 0.62
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 36,
+        "distance": 0.27
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 37,
+        "distance": 0.48
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 38,
+        "distance": 0.18
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 40,
+        "distance": 0.42
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 41,
+        "distance": 0.5
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 42,
+        "distance": 0.6
+    },
+    {
+        "zone_a": 5,
+        "zone_b": 43,
+        "distance": 0.3
+    },
+    {
+        "zone_a": 6,
+        "zone_b": 12,
+        "distance": 0.4
+    },
+    {
+        "zone_a": 6,
+        "zone_b": 34,
+        "distance": 0.59
+    },
+    {
+        "zone_a": 6,
+        "zone_b": 36,
+        "distance": 0.98
+    },
+    {
+        "zone_a": 6,
+        "zone_b": 37,
+        "distance": 1.2
+    },
+    {
+        "zone_a": 6,
+        "zone_b": 40,
+        "distance": 0.67
+    },
+    {
+        "zone_a": 9,
+        "zone_b": 12,
+        "distance": 0.34
+    },
+    {
+        "zone_a": 9,
+        "zone_b": 34,
+        "distance": 0.41
+    },
+    {
+        "zone_a": 9,
+        "zone_b": 36,
+        "distance": 0.97
+    },
+    {
+        "zone_a": 9,
+        "zone_b": 37,
+        "distance": 1.2
+    },
+    {
+        "zone_a": 9,
+        "zone_b": 40,
+        "distance": 0.6
+    },
+    {
+        "zone_a": 10,
+        "zone_b": 12,
+        "distance": 0.07
+    },
+    {
+        "zone_a": 10,
+        "zone_b": 34,
+        "distance": 0.12
+    },
+    {
+        "zone_a": 10,
+        "zone_b": 36,
+        "distance": 0.66
+    },
+    {
+        "zone_a": 10,
+        "zone_b": 37,
+        "distance": 0.9
+    },
+    {
+        "zone_a": 10,
+        "zone_b": 40,
+        "distance": 0.3
+    },
+    {
+        "zone_a": 11,
+        "zone_b": 12,
+        "distance": 0.14
+    },
+    {
+        "zone_a": 11,
+        "zone_b": 34,
+        "distance": 0.32
+    },
+    {
+        "zone_a": 11,
+        "zone_b": 36,
+        "distance": 0.82
+    },
+    {
+        "zone_a": 11,
+        "zone_b": 37,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 11,
+        "zone_b": 40,
+        "distance": 0.5
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 18,
+        "distance": 0.67
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 21,
+        "distance": 1.2
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 22,
+        "distance": 0.96
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 23,
+        "distance": 0.71
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 24,
+        "distance": 0.23
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 25,
+        "distance": 0.29
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 26,
+        "distance": 0.73
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 27,
+        "distance": 1
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 28,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 29,
+        "distance": 0.76
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 31,
+        "distance": 0.64
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 33,
+        "distance": 0.64
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 34,
+        "distance": 0.18
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 35,
+        "distance": 0.16
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 36,
+        "distance": 0.68
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 37,
+        "distance": 0.93
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 38,
+        "distance": 0.7
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 40,
+        "distance": 0.37
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 41,
+        "distance": 0.24
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 42,
+        "distance": 0.58
+    },
+    {
+        "zone_a": 12,
+        "zone_b": 43,
+        "distance": 0.55
+    },
+    {
+        "zone_a": 18,
+        "zone_b": 34,
+        "distance": 0.81
+    },
+    {
+        "zone_a": 18,
+        "zone_b": 36,
+        "distance": 0.64
+    },
+    {
+        "zone_a": 18,
+        "zone_b": 37,
+        "distance": 0.85
+    },
+    {
+        "zone_a": 18,
+        "zone_b": 40,
+        "distance": 0.64
+    },
+    {
+        "zone_a": 21,
+        "zone_b": 34,
+        "distance": 0.97
+    },
+    {
+        "zone_a": 21,
+        "zone_b": 36,
+        "distance": 0.54
+    },
+    {
+        "zone_a": 21,
+        "zone_b": 37,
+        "distance": 0.38
+    },
+    {
+        "zone_a": 21,
+        "zone_b": 40,
+        "distance": 0.8
+    },
+    {
+        "zone_a": 22,
+        "zone_b": 34,
+        "distance": 0.77
+    },
+    {
+        "zone_a": 22,
+        "zone_b": 36,
+        "distance": 0.65
+    },
+    {
+        "zone_a": 22,
+        "zone_b": 37,
+        "distance": 0.6
+    },
+    {
+        "zone_a": 22,
+        "zone_b": 40,
+        "distance": 0.77
+    },
+    {
+        "zone_a": 23,
+        "zone_b": 34,
+        "distance": 0.55
+    },
+    {
+        "zone_a": 23,
+        "zone_b": 36,
+        "distance": 0.93
+    },
+    {
+        "zone_a": 23,
+        "zone_b": 37,
+        "distance": 0.88
+    },
+    {
+        "zone_a": 23,
+        "zone_b": 40,
+        "distance": 0.73
+    },
+    {
+        "zone_a": 24,
+        "zone_b": 34,
+        "distance": 0.04
+    },
+    {
+        "zone_a": 24,
+        "zone_b": 36,
+        "distance": 0.5
+    },
+    {
+        "zone_a": 24,
+        "zone_b": 37,
+        "distance": 0.75
+    },
+    {
+        "zone_a": 24,
+        "zone_b": 40,
+        "distance": 0.23
+    },
+    {
+        "zone_a": 25,
+        "zone_b": 34,
+        "distance": 0.26
+    },
+    {
+        "zone_a": 25,
+        "zone_b": 36,
+        "distance": 0.78
+    },
+    {
+        "zone_a": 25,
+        "zone_b": 37,
+        "distance": 0.1
+    },
+    {
+        "zone_a": 25,
+        "zone_b": 40,
+        "distance": 0.45
+    },
+    {
+        "zone_a": 26,
+        "zone_b": 34,
+        "distance": 0.54
+    },
+    {
+        "zone_a": 26,
+        "zone_b": 36,
+        "distance": 0.96
+    },
+    {
+        "zone_a": 26,
+        "zone_b": 37,
+        "distance": 0.94
+    },
+    {
+        "zone_a": 26,
+        "zone_b": 40,
+        "distance": 0.72
+    },
+    {
+        "zone_a": 27,
+        "zone_b": 34,
+        "distance": 0.84
+    },
+    {
+        "zone_a": 27,
+        "zone_b": 36,
+        "distance": 1.2
+    },
+    {
+        "zone_a": 27,
+        "zone_b": 37,
+        "distance": 1.2
+    },
+    {
+        "zone_a": 27,
+        "zone_b": 40,
+        "distance": 1
+    },
+    {
+        "zone_a": 28,
+        "zone_b": 34,
+        "distance": 0.94
+    },
+    {
+        "zone_a": 28,
+        "zone_b": 36,
+        "distance": 0.1
+    },
+    {
+        "zone_a": 28,
+        "zone_b": 37,
+        "distance": 0.96
+    },
+    {
+        "zone_a": 28,
+        "zone_b": 40,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 29,
+        "zone_b": 34,
+        "distance": 0.72
+    },
+    {
+        "zone_a": 29,
+        "zone_b": 36,
+        "distance": 0.97
+    },
+    {
+        "zone_a": 29,
+        "zone_b": 37,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 29,
+        "zone_b": 40,
+        "distance": 0.75
+    },
+    {
+        "zone_a": 31,
+        "zone_b": 34,
+        "distance": 0.6
+    },
+    {
+        "zone_a": 31,
+        "zone_b": 36,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 31,
+        "zone_b": 37,
+        "distance": 1.3
+    },
+    {
+        "zone_a": 31,
+        "zone_b": 40,
+        "distance": 0.8
+    },
+    {
+        "zone_a": 33,
+        "zone_b": 34,
+        "distance": 0.6
+    },
+    {
+        "zone_a": 33,
+        "zone_b": 36,
+        "distance": 0.94
+    },
+    {
+        "zone_a": 33,
+        "zone_b": 37,
+        "distance": 1.1
+    },
+    {
+        "zone_a": 33,
+        "zone_b": 40,
+        "distance": 0.8
+    },
+    {
+        "zone_a": 34,
+        "zone_b": 35,
+        "distance": 0.01
+    },
+    {
+        "zone_a": 34,
+        "zone_b": 36,
+        "distance": 0.55
+    },
+    {
+        "zone_a": 34,
+        "zone_b": 37,
+        "distance": 0.8
+    },
+    {
+        "zone_a": 34,
+        "zone_b": 38,
+        "distance": 0.77
+    },
+    {
+        "zone_a": 34,
+        "zone_b": 40,
+        "distance": 0.27
+    },
+    {
+        "zone_a": 34,
+        "zone_b": 41,
+        "distance": 0.16
+    },
+    {
+        "zone_a": 34,
+        "zone_b": 42,
+        "distance": 0.4
+    },
+    {
+        "zone_a": 34,
+        "zone_b": 43,
+        "distance": 0.4
+    },
+    {
+        "zone_a": 35,
+        "zone_b": 36,
+        "distance": 0.53
+    },
+    {
+        "zone_a": 35,
+        "zone_b": 37,
+        "distance": 0.78
+    },
+    {
+        "zone_a": 35,
+        "zone_b": 40,
+        "distance": 0.26
+    },
+    {
+        "zone_a": 36,
+        "zone_b": 37,
+        "distance": 0.25
+    },
+    {
+        "zone_a": 36,
+        "zone_b": 38,
+        "distance": 0.28
+    },
+    {
+        "zone_a": 36,
+        "zone_b": 40,
+        "distance": 0.33
+    },
+    {
+        "zone_a": 36,
+        "zone_b": 41,
+        "distance": 0.47
+    },
+    {
+        "zone_a": 36,
+        "zone_b": 42,
+        "distance": 0.44
+    },
+    {
+        "zone_a": 36,
+        "zone_b": 43,
+        "distance": 0.14
+    },
+    {
+        "zone_a": 37,
+        "zone_b": 38,
+        "distance": 0.49
+    },
+    {
+        "zone_a": 37,
+        "zone_b": 40,
+        "distance": 0.58
+    },
+    {
+        "zone_a": 37,
+        "zone_b": 41,
+        "distance": 0.71
+    },
+    {
+        "zone_a": 37,
+        "zone_b": 42,
+        "distance": 0.45
+    },
+    {
+        "zone_a": 37,
+        "zone_b": 43,
+        "distance": 0.39
+    },
+    {
+        "zone_a": 38,
+        "zone_b": 40,
+        "distance": 0.53
+    },
+    {
+        "zone_a": 40,
+        "zone_b": 41,
+        "distance": 0.13
+    },
+    {
+        "zone_a": 40,
+        "zone_b": 42,
+        "distance": 0.36
+    },
+    {
+        "zone_a": 40,
+        "zone_b": 43,
+        "distance": 0.2
+    }
+]
