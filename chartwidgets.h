@@ -1,0 +1,56 @@
+#ifndef CHARTWIDGETS_H
+#define CHARTWIDGETS_H
+
+#include <QWidget>
+#include <QVector>
+#include <QString>
+#include <QColor>
+#include <QRectF>
+
+class LineChartWidget : public QWidget {
+    Q_OBJECT
+public:
+    struct DataPoint {
+        QString label;
+        double value = 0;
+    };
+
+    explicit LineChartWidget(QWidget *parent = nullptr);
+
+    void setData(const QVector<DataPoint> &points, const QString &title,
+                 const QColor &lineColor);
+    void setYAxisLabel(const QString &label);
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+
+private:
+    QRectF calcChartArea() const;
+    QVector<DataPoint> m_points;
+    QString m_title;
+    QString m_yAxisLabel;
+    QColor m_lineColor;
+};
+
+class BarChartWidget : public QWidget {
+    Q_OBJECT
+public:
+    struct BarData {
+        QString label;
+        double value = 0;
+    };
+
+    explicit BarChartWidget(QWidget *parent = nullptr);
+
+    void setData(const QVector<BarData> &bars, const QString &title);
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+
+private:
+    QRectF calcChartArea() const;
+    QVector<BarData> m_bars;
+    QString m_title;
+};
+
+#endif
