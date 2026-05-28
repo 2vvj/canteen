@@ -11,6 +11,7 @@
 #include <QPainterPath>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QDialog>
 #include <QMessageBox>
 #include <QGraphicsPixmapItem>
 #include <QRandomGenerator>
@@ -445,7 +446,106 @@ void MainWindow::tickCharacter() {
     } else { m_character->setPos(cur.x()+dx/dist*step, cur.y()+dy/dist*step); m_character->advanceWalkPhase(); }
 }
 
-void MainWindow::onGoEat() { m_stack->setCurrentWidget(m_mealPage); }
+void MainWindow::onGoEat() {
+    if (m_userZoneId < 0) {
+        showNoZoneDialog();
+        return;
+    }
+    m_stack->setCurrentWidget(m_mealPage);
+}
+
+void MainWindow::showNoZoneDialog() {
+    struct NoZoneDialog : QDialog {
+        NoZoneDialog(QWidget *parent) : QDialog(parent) {
+            setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+            setAttribute(Qt::WA_TranslucentBackground);
+            setFixedSize(420, 220);
+            setModal(true);
+
+            auto *btn = new SketchyButton(QString::fromUtf8("我知道了"),
+                                          C_CARD_SAGE, C_SHADOW_DK, this);
+            btn->setFixedSize(110, 42);
+            int bx = (width() - btn->width()) / 2;
+            btn->move(bx, height() - btn->height() - 28);
+            connect(btn, &QPushButton::clicked, this, &QDialog::accept);
+        }
+
+    protected:
+        void paintEvent(QPaintEvent *) override {
+            QPainter p(this);
+            p.setRenderHint(QPainter::Antialiasing);
+
+            QRectF card(18, 18, width() - 36, height() - 36);
+            int seed = 73;
+
+            // Shadow
+            QRectF shadow = card.translated(2.5, 3.5);
+            QPainterPath sp = sketchyRect(shadow, seed + 100, 2.8);
+            p.setBrush(C_SHADOW_DK);
+            p.setPen(Qt::NoPen);
+            p.drawPath(sp);
+
+            // Card fill
+            QPainterPath cp = sketchyRect(card, seed, 2.8);
+            drawInkWash(&p, cp, C_CREAM, 18);
+            drawInkBorder(&p, cp, C_INK, 3, 0.7);
+
+            // Decorative line below title
+            QPointF lineStart(card.left() + 25, card.top() + 52);
+            QPointF lineEnd(card.left() + 25 + 60, card.top() + 52);
+            QPen decoPen(C_INK_LIGHT);
+            decoPen.setWidthF(1.0);
+            decoPen.setCapStyle(Qt::RoundCap);
+            p.setPen(decoPen);
+            // Slightly wavy line
+            QPainterPath wavy;
+            wavy.moveTo(lineStart);
+            wavy.cubicTo(lineStart + QPointF(20, -3), lineStart + QPointF(40, 3), lineEnd);
+            p.drawPath(wavy);
+            // Second faint pass for sketchy feel
+            decoPen.setWidthF(0.5);
+            p.setPen(decoPen);
+            p.translate(0.3, 0.4);
+            p.drawPath(wavy);
+            p.resetTransform();
+
+            // Title
+            QFont f = font();
+            f.setPointSize(13);
+            f.setBold(true);
+            f.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+            p.setFont(f);
+            p.setPen(C_INK);
+            p.drawText(QRectF(card.left() + 25, card.top() + 18, card.width() - 50, 30),
+                       Qt::AlignLeft | Qt::AlignVCenter,
+                       QString::fromUtf8("提示"));
+
+            // Message
+            f.setPointSize(10);
+            f.setBold(false);
+            f.setLetterSpacing(QFont::AbsoluteSpacing, 1.0);
+            p.setFont(f);
+            p.setPen(C_INK_LIGHT);
+            p.drawText(QRectF(card.left() + 25, card.top() + 65, card.width() - 50, 70),
+                       Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap,
+                       QString::fromUtf8("请先在地图上点击选择您所在的位置"));
+        }
+
+        void mousePressEvent(QMouseEvent *e) override {
+            m_dragPos = e->globalPosition().toPoint() - frameGeometry().topLeft();
+        }
+        void mouseMoveEvent(QMouseEvent *e) override {
+            if (e->buttons() & Qt::LeftButton)
+                move(e->globalPosition().toPoint() - m_dragPos);
+        }
+
+    private:
+        QPoint m_dragPos;
+    };
+
+    NoZoneDialog dlg(this);
+    dlg.exec();
+}
 
 void MainWindow::onHistory() {
     CalendarWindow *cw = new CalendarWindow(this);

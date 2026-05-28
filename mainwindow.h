@@ -134,6 +134,7 @@ private slots:
 
 private:
     void setupMapPage();
+    void showNoZoneDialog();
     void applyUserSettings();
     void updateSidebarUserInfo();
     void updateLionSprite();
