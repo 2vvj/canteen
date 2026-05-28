@@ -134,7 +134,6 @@ private slots:
 
 private:
     void setupMapPage();
-    void showZoneInfo(const ZoneInfo *info);
     void applyUserSettings();
     void updateSidebarUserInfo();
     void updateLionSprite();

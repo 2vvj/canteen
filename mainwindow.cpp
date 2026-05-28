@@ -529,13 +529,14 @@ void MainWindow::onSceneLeftClicked(QPointF scenePos) {
     int zoneId = m_zoneManager->zoneAtPoint(scenePos);
     if(zoneId>=0){
         m_targetPos=scenePos; m_roaming=false;
-        m_selectedZoneId=zoneId; m_userZoneId=zoneId;  // 记录用户位置
-        showZoneInfo(m_zoneManager->zoneInfo(zoneId));
-    } else { m_selectedZoneId=-1; }
-}
-
-void MainWindow::showZoneInfo(const ZoneInfo *info) {
-    QToolTip::showText(QCursor::pos(), QString("%1  (ID:%2)").arg(info->name).arg(info->id), m_mapView, QRect(), 3000);
+        m_selectedZoneId=zoneId; m_userZoneId=zoneId;
+    } else {
+        m_selectedZoneId=-1;
+        QPoint pos = QCursor::pos();
+        QTimer::singleShot(0, this, [this, pos]() {
+            QToolTip::showText(pos, QString::fromUtf8("未识别区域"), m_mapView, QRect(), 2000);
+        });
+    }
 }
 
 void MainWindow::applyUserSettings() {
