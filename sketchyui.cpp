@@ -134,8 +134,8 @@ SketchyButton::SketchyButton(const QString &text,
     setMinimumWidth(110);
 
     QFont f = font();
-    f.setPointSize(11);
-    f.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+    f.setPointSize(12);
+    f.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
     setFont(f);
 
     m_seed = seedFor(QRectF(0, 0, width(), height()),

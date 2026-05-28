@@ -114,13 +114,13 @@ void WelcomePage::paintEvent(QPaintEvent *) {
 
 // ── Sidebar ────────────────────────────────────────────────────
 Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
-    setFixedWidth(195);
+    setFixedWidth(255);
     QVBoxLayout *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(16,32,16,32); layout->setSpacing(14);
+    layout->setContentsMargins(20,40,20,32); layout->setSpacing(16);
 
     QLabel *label = new QLabel(QString::fromUtf8("菜  单"));
-    QFont lblFont; lblFont.setPointSize(10);
-    lblFont.setLetterSpacing(QFont::AbsoluteSpacing,3); label->setFont(lblFont);
+    QFont lblFont; lblFont.setPointSize(12);
+    lblFont.setLetterSpacing(QFont::AbsoluteSpacing,4); label->setFont(lblFont);
     label->setStyleSheet(QString("color: %1; padding-left: 4px;").arg(C_INK_LIGHT.name()));
     layout->addWidget(label); layout->addSpacing(6);
 
@@ -130,7 +130,7 @@ Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
     m_settingsBtn= new SketchyButton(QString::fromUtf8("设置"),     C_CARD_TAUPE, C_SHADOW_DK);
 
     for (auto *b : {m_cardBtn, m_historyBtn, m_reviewBtn, m_settingsBtn}) {
-        b->setIconType(ICON_NONE); b->setFixedHeight(50);
+        b->setIconType(ICON_NONE); b->setFixedHeight(56);
     }
     connect(m_cardBtn,    &QPushButton::clicked, this, &Sidebar::goEatClicked);
     connect(m_historyBtn, &QPushButton::clicked, this, &Sidebar::historyClicked);
@@ -143,23 +143,33 @@ Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
 
     QFrame *sep = new QFrame; sep->setFrameShape(QFrame::HLine);
     sep->setStyleSheet("QFrame { color: #C4BDB3; }");
-    layout->addWidget(sep); layout->addSpacing(10);
+    layout->addWidget(sep); layout->addSpacing(12);
 
     QHBoxLayout *userRow = new QHBoxLayout;
-    m_avatarLabel = new QLabel; m_avatarLabel->setFixedSize(42,42);
-    QPixmap defAv(42,42); defAv.fill(Qt::transparent);
+    m_avatarLabel = new QLabel; m_avatarLabel->setFixedSize(50,50);
+    QPixmap defAv(50,50); defAv.fill(Qt::transparent);
     { QPainter p(&defAv); p.setRenderHint(QPainter::Antialiasing);
-      p.setBrush(QColor("#C4BDB3")); p.setPen(Qt::NoPen); p.drawEllipse(0,0,42,42); }
+      p.setBrush(QColor("#C4BDB3")); p.setPen(Qt::NoPen); p.drawEllipse(0,0,50,50); }
     m_avatarLabel->setPixmap(defAv); userRow->addWidget(m_avatarLabel);
+    QFont infoFont; infoFont.setPointSize(12);
+    infoFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
+
     m_nameLabel = new QLabel(QString::fromUtf8("用户"));
-    m_nameLabel->setStyleSheet(QString("color:%1;font-size:13px;font-weight:bold;").arg(C_INK.name()));
+    m_nameLabel->setFont(infoFont);
+    m_nameLabel->setStyleSheet(QString("color:%1;font-weight:bold;").arg(C_INK.name()));
     userRow->addWidget(m_nameLabel); userRow->addStretch(); layout->addLayout(userRow);
     layout->addSpacing(4);
+
+    QFont subFont; subFont.setPointSize(10);
+    subFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
+
     m_calorieLabel = new QLabel(QString::fromUtf8("今日已摄入 0 卡路里"));
-    m_calorieLabel->setStyleSheet("color:#9A9590;font-size:11px;padding-left:4px;");
+    m_calorieLabel->setFont(subFont);
+    m_calorieLabel->setStyleSheet("color:#9A9590;padding-left:4px;");
     m_calorieLabel->setWordWrap(true); layout->addWidget(m_calorieLabel);
     m_bmrLabel = new QLabel(QString::fromUtf8("基础代谢 —  kcal/天"));
-    m_bmrLabel->setStyleSheet("color:#B5AFA8;font-size:11px;padding-left:4px;");
+    m_bmrLabel->setFont(subFont);
+    m_bmrLabel->setStyleSheet("color:#B5AFA8;padding-left:4px;");
     m_bmrLabel->setWordWrap(true); layout->addWidget(m_bmrLabel);
 }
 
@@ -171,7 +181,7 @@ static QPixmap circleCrop(const QPixmap &src, int size) {
     p.drawPixmap(0,0,size,size,src.scaled(size,size,Qt::KeepAspectRatioByExpanding,Qt::SmoothTransformation));
     return result;
 }
-void Sidebar::setAvatar(const QPixmap &pixmap) { if(!pixmap.isNull()) m_avatarLabel->setPixmap(circleCrop(pixmap,42)); }
+void Sidebar::setAvatar(const QPixmap &pixmap) { if(!pixmap.isNull()) m_avatarLabel->setPixmap(circleCrop(pixmap,50)); }
 void Sidebar::setUserName(const QString &name) { m_nameLabel->setText(name); }
 void Sidebar::setTodayCalories(int kcal) {
     m_todayCalories = kcal;
@@ -351,9 +361,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     m_welcomeTimer->start(5000);
     connect(m_welcomeTimer, &QTimer::timeout, this, &MainWindow::enterMap);
 
-    QSize screen = QApplication::primaryScreen()->availableSize();
-    resize(screen.width()*0.72, screen.height()*0.82);
     setMinimumSize(800,600); setWindowTitle(QString::fromUtf8("干饭人"));
+    showMaximized();
 
     m_zoneManager->loadFromFile("zones.json");
     m_distanceDB->open("distances.db");
@@ -408,9 +417,11 @@ void MainWindow::setupMapPage() {
     QPixmap mapPix("map_origin.jpg");
     QGraphicsPixmapItem *mapItem = m_mapScene->addPixmap(mapPix);
     m_mapScene->setSceneRect(mapPix.rect());
-    m_mapView->fitInView(mapItem, Qt::KeepAspectRatio);
+    double initScale = m_mapView->viewport()->height() / m_mapScene->sceneRect().height();
+    m_mapView->scale(initScale, initScale);
+    m_mapView->centerOn(m_mapScene->sceneRect().center());
 
-    m_character = new CharacterItem("lion_slim.png", 65);
+    m_character = new CharacterItem("lion_slim.png", 90);
     m_mapScene->addItem(m_character);
     m_character->setPos(QRandomGenerator::global()->bounded(mapPix.width()),
                         QRandomGenerator::global()->bounded(mapPix.height()));
@@ -432,7 +443,11 @@ void MainWindow::setupMapPage() {
 }
 
 void MainWindow::enterMap() { m_welcomeTimer->stop(); m_stack->setCurrentWidget(m_mapPage);
-    m_mapView->fitInView(m_mapScene->sceneRect(), Qt::KeepAspectRatio); }
+    m_mapView->resetTransform();
+    double s = m_mapView->viewport()->height() / m_mapScene->sceneRect().height();
+    m_mapView->scale(s, s);
+    m_mapView->centerOn(m_mapScene->sceneRect().center());
+    m_mapView->setFocus(); }
 
 void MainWindow::tickCharacter() {
     QRectF bounds = m_mapScene->sceneRect(); if(bounds.isEmpty()) return;
@@ -740,5 +755,16 @@ void MainWindow::saveDailyRecords() {
 }
 void MainWindow::keyPressEvent(QKeyEvent *event) {
     if(event->key()==Qt::Key_E && event->modifiers()==Qt::ControlModifier){ onToggleEditMode(); return; }
+    if(m_stack->currentWidget()==m_mapPage && (event->modifiers() & Qt::ControlModifier)) {
+        if(event->key()==Qt::Key_Equal || event->key()==Qt::Key_Plus) { m_mapView->scale(1.15,1.15); return; }
+        if(event->key()==Qt::Key_Minus) { m_mapView->scale(1.0/1.15,1.0/1.15); return; }
+        if(event->key()==Qt::Key_0) {
+            m_mapView->resetTransform();
+            double s = m_mapView->viewport()->height() / m_mapScene->sceneRect().height();
+            m_mapView->scale(s,s);
+            m_mapView->centerOn(m_mapScene->sceneRect().center());
+            return;
+        }
+    }
     QMainWindow::keyPressEvent(event);
 }
