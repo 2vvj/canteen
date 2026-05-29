@@ -48,8 +48,11 @@ private:
     // 自适应阈值：≤3字容1，>3字容2
     static int maxAcceptableDist(const QString &query);
 
-    // 编辑距离 → 相似度 (0.0 ~ 1.0)
+    // 编辑距离 → 相似度 (0.0 ~ 1.0)，用于菜名
     static double nameSimilarity(const QString &s1, const QString &s2);
+
+    // 食堂名匹配（单向包含，不使用编辑距离）
+    static double restaurantSimilarity(const QString &query, const QString &restaurant);
 
     // 查同义词表：返回搜索词映射到的所有标签；空列表=未命中
     QStringList resolveSynonyms(const QString &word) const;
