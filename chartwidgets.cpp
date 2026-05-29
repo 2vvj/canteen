@@ -67,15 +67,20 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
     int h = height();
     if (w <= 0 || h <= 0) return;
 
-    // 1. 暖米手账纸背景
+    // 1. 暖米手账纸背景 — 有机形状
     QRadialGradient bgGradient(rect().center(), qMax(w, h) * 0.75);
     bgGradient.setColorAt(0.0, QColor(253, 251, 247));
     bgGradient.setColorAt(0.5, QColor(250, 246, 240));
     bgGradient.setColorAt(1.0, QColor(245, 240, 232));
     painter.setBrush(bgGradient);
     painter.setPen(Qt::NoPen);
-    painter.drawRoundedRect(rect(), 16, 16);
+    QPainterPath bgPath = DecoPainter::makeOrganicRect(
+        QRectF(rect()).adjusted(2, 2, -2, -2), 2.5f, 21);
+    painter.drawPath(bgPath);
     DecoPainter::drawPaperTexture(painter, rect());
+
+    // 1.5 手绘边框
+    DecoPainter::drawSketchyBorder(&painter, bgPath, QColor(43, 43, 43, 40), 1, 0.6f);
 
     // 2. 水彩晕染装饰
     DecoPainter::drawWatercolorSplotch(painter, QPointF(w * 0.10f, h * 0.08f), 18,
@@ -223,15 +228,20 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
     int h = height();
     if (w <= 0 || h <= 0) return;
 
-    // 1. 暖米手账纸背景
+    // 1. 暖米手账纸背景 — 有机形状
     QRadialGradient bgGradient(rect().center(), qMax(w, h) * 0.75);
     bgGradient.setColorAt(0.0, QColor(253, 251, 247));
     bgGradient.setColorAt(0.5, QColor(250, 246, 240));
     bgGradient.setColorAt(1.0, QColor(245, 240, 232));
     painter.setBrush(bgGradient);
     painter.setPen(Qt::NoPen);
-    painter.drawRoundedRect(rect(), 16, 16);
+    QPainterPath bgPath = DecoPainter::makeOrganicRect(
+        QRectF(rect()).adjusted(2, 2, -2, -2), 2.5f, 23);
+    painter.drawPath(bgPath);
     DecoPainter::drawPaperTexture(painter, rect());
+
+    // 1.5 手绘边框
+    DecoPainter::drawSketchyBorder(&painter, bgPath, QColor(43, 43, 43, 40), 1, 0.6f);
 
     // 2. 水彩晕染装饰
     DecoPainter::drawWatercolorSplotch(painter, QPointF(w * 0.10f, h * 0.08f), 16,

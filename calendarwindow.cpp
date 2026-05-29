@@ -1,77 +1,329 @@
 #include "calendarwindow.h"
 #include "statisticswindow.h"
 #include "decopainter.h"
+#include "sketchyui.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QPushButton>
 #include <QPainter>
+#include <QPainterPath>
+#include <QLinearGradient>
+#include <QTextCharFormat>
+#include <QMouseEvent>
 #include <cmath>
 
-CalendarWindow::CalendarWindow(QWidget *parent) : QDialog(parent), m_currentDate(QDate::currentDate())
+static const QColor C_CREAM  = QColor("#FDFBF7");
+static const QColor C_INK    = QColor("#2B2B2B");
+static const QColor C_SHADOW = QColor("#3A3530");
+
+// ========== ScratchyDivider ==========
+// 参考开屏界面：单条 quadTo 柔和曲线，双层墨线叠涂
+ScratchyDivider::ScratchyDivider(QWidget *parent)
+    : QWidget(parent)
 {
-    setWindowTitle(QString::fromUtf8("历史记录"));
-    resize(500, 620);
-    setStyleSheet("QDialog { background: transparent; }");
+    setFixedHeight(14);
+    setStyleSheet("background: transparent; border: none;");
+}
+
+void ScratchyDivider::paintEvent(QPaintEvent *) {
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+    float x0 = width() * 0.26f;
+    float x1 = width() * 0.74f;
+    float y  = height() * 0.5f;
+
+    QPainterPath sepPath;
+    sepPath.moveTo(x0, y);
+    sepPath.quadTo((x0 + x1) / 2.0f, y - 1.2f, x1, y + 0.6f);
+
+    QPen sepPen(QColor("#4A4540"));
+    sepPen.setWidthF(1.2);
+    sepPen.setCapStyle(Qt::RoundCap);
+    p.setPen(sepPen);
+    p.setBrush(Qt::NoBrush);
+    p.drawPath(sepPath);
+
+    sepPen.setWidthF(0.6);
+    sepPen.setColor(QColor("#7A7570"));
+    p.setPen(sepPen);
+    p.drawPath(sepPath);
+}
+
+// ========== CalendarFrameWidget ==========
+CalendarFrameWidget::CalendarFrameWidget(QCalendarWidget *calendar, QWidget *parent)
+    : QWidget(parent), m_calendar(calendar)
+{
+    setStyleSheet("background: transparent; border: none;");
+    QVBoxLayout *lay = new QVBoxLayout(this);
+    lay->setContentsMargins(10, 10, 10, 10);
+    lay->addWidget(m_calendar);
+}
+
+void CalendarFrameWidget::paintEvent(QPaintEvent *) {
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+    QRectF r = rect().adjusted(2, 2, -2, -2);
+
+    p.setBrush(C_CREAM);
+    p.setPen(Qt::NoPen);
+    QPainterPath bgPath = DecoPainter::makeOrganicRect(r, 2.2f, 19);
+    p.drawPath(bgPath);
+
+    QColor ink(43, 43, 43, 75);
+    DecoPainter::drawSketchyBorder(&p, bgPath, ink, 3, 1.0f);
+}
+
+// ========== RecordCardWidget ==========
+RecordCardWidget::RecordCardWidget(QWidget *parent)
+    : QWidget(parent)
+{
+    m_cardColor = C_CREAM;
+    setMinimumHeight(140);
+
+    QVBoxLayout *layout = new QVBoxLayout(this);
+    layout->setContentsMargins(22, 14, 22, 12);
+    layout->setSpacing(6);
+
+    m_dateLabel = new QLabel(this);
+    m_dateLabel->setStyleSheet(
+        "font-size:15px;font-weight:bold;border:none;background:transparent;"
+        "color:#2B2B2B;font-family:'Microsoft YaHei';");
+    layout->addWidget(m_dateLabel);
+
+    m_dishesLabel = new QLabel(this);
+    m_dishesLabel->setStyleSheet(
+        "font-size:13px;border:none;background:transparent;"
+        "color:#5D4B3A;font-family:'Microsoft YaHei';");
+    m_dishesLabel->setWordWrap(true);
+    layout->addWidget(m_dishesLabel);
+
+    m_caloriesLabel = new QLabel(this);
+    m_caloriesLabel->setStyleSheet(
+        "font-size:13px;border:none;background:transparent;"
+        "color:#5D4B3A;font-family:'Microsoft YaHei';");
+    layout->addWidget(m_caloriesLabel);
+
+    m_priceLabel = new QLabel(this);
+    m_priceLabel->setStyleSheet(
+        "font-size:13px;border:none;background:transparent;"
+        "color:#5D4B3A;font-family:'Microsoft YaHei';");
+    layout->addWidget(m_priceLabel);
+}
+
+void RecordCardWidget::setDateText(const QString &text) {
+    m_dateLabel->setText(text);
+}
+
+void RecordCardWidget::setDishesText(const QString &text) {
+    m_dishesLabel->setText(text);
+}
+
+void RecordCardWidget::setCaloriesText(const QString &text) {
+    m_caloriesLabel->setText(text);
+}
+
+void RecordCardWidget::setPriceText(const QString &text) {
+    m_priceLabel->setText(text);
+}
+
+void RecordCardWidget::addButton(SketchyButton *btn) {
+    QVBoxLayout *lay = qobject_cast<QVBoxLayout*>(layout());
+    if (lay) {
+        QHBoxLayout *row = new QHBoxLayout;
+        row->addStretch();
+        row->addWidget(btn);
+        lay->addLayout(row);
+    }
+}
+
+void RecordCardWidget::paintEvent(QPaintEvent *) {
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setRenderHint(QPainter::SmoothPixmapTransform);
+
+    QRectF r = rect().adjusted(3, 3, -3, -3);
+
+    QLinearGradient bg(r.topLeft(), r.bottomRight());
+    bg.setColorAt(0.0, m_cardColor);
+    bg.setColorAt(0.5, QColor("#F9F5F0"));
+    bg.setColorAt(1.0, QColor("#F5F0EA"));
+    p.setBrush(bg);
+    p.setPen(Qt::NoPen);
+    QPainterPath bgPath = DecoPainter::makeOrganicRect(r, 2.5f, 13);
+    p.drawPath(bgPath);
+
+    QColor ink(43, 43, 43, 80);
+    DecoPainter::drawSketchyBorder(&p, bgPath, ink, 2, 1.0f);
+
+    float barW = 5.0f;
+    QRectF barR(r.x() + 10, r.y() + r.height() * 0.32f, barW, r.height() * 0.55f);
+    QPainterPath barPath = DecoPainter::makeWavyRect(barR, 1.0f);
+    p.setBrush(QColor("#D0DDE8"));
+    p.setPen(Qt::NoPen);
+    p.setOpacity(0.7);
+    p.drawPath(barPath);
+    p.setOpacity(1.0);
+}
+
+// ========== CalendarWindow ==========
+CalendarWindow::CalendarWindow(QWidget *parent)
+    : QDialog(parent), m_currentDate(QDate::currentDate())
+{
+    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    setFixedSize(480, 570);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setContentsMargins(36, 36, 36, 28);
     mainLayout->setSpacing(10);
-    mainLayout->setContentsMargins(22,16,22,16);
 
+    // ── 标题 — 占满宽度，文字居中 ──
     QLabel *titleLabel = new QLabel(QString::fromUtf8("饮 食 历 史"), this);
-    titleLabel->setStyleSheet(
-        "font-size:22px;font-weight:bold;color:#2B2B2B;padding:8px 0 2px 0;"
-        "letter-spacing:8px;font-family:'Microsoft YaHei';");
     titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setStyleSheet(
+        "font-size:20px;font-weight:bold;color:#2B2B2B;"
+        "letter-spacing:8px;font-family:'Microsoft YaHei';"
+        "border:none;background:transparent;");
     mainLayout->addWidget(titleLabel);
 
-    m_calendar = new QCalendarWidget(this);
+    // ── 关闭按钮 — 绝对定位在右上角 ──
+    m_closeBtn = new QPushButton(QString::fromUtf8("×"), this);
+    m_closeBtn->setFixedSize(28, 28);
+    m_closeBtn->setCursor(Qt::PointingHandCursor);
+    m_closeBtn->setStyleSheet(
+        "QPushButton {"
+        "  border: 1.5px solid #C8BEB4; border-radius: 8px;"
+        "  background-color: #F5F0E8;"
+        "  color: #2B2B2B; font-size: 16px; font-weight: bold;"
+        "  font-family: 'Microsoft YaHei';"
+        "}"
+        "QPushButton:hover {"
+        "  background-color: #EDE4D8; border-color: #B8A898;"
+        "}"
+        "QPushButton:pressed {"
+        "  background-color: #E0D4C4;"
+        "}");
+    connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::close);
+    m_closeBtn->move(width() - 36 - 28, 36);
+
+    mainLayout->addSpacing(4);
+
+    // ── 手绘分隔线 ──
+    mainLayout->addWidget(new ScratchyDivider(this));
+
+    // ── 日历 — 有机手绘框架包裹 ──
+    m_calendar = new QCalendarWidget();
     m_calendar->setGridVisible(false);
     m_calendar->setFirstDayOfWeek(Qt::Monday);
     m_calendar->setSelectedDate(m_currentDate);
     m_calendar->setMaximumHeight(280);
+    m_calendar->setVerticalHeaderFormat(QCalendarWidget::NoVerticalHeader);
     m_calendar->setStyleSheet(
-        "QCalendarWidget { background-color:#FAF8F5; border:1.5px solid #E0D8D0; border-radius:12px; padding:4px; }"
-        "QCalendarWidget QToolButton { color:#2B2B2B; font-size:13px; font-weight:bold; padding:4px 12px;"
-        "  border:1.5px solid #D5C8B8; border-radius:8px; background-color:#F5F0E8; font-family:'Microsoft YaHei'; }"
-        "QCalendarWidget QToolButton:hover { background-color:#EDE4D8; }"
-        "QCalendarWidget QAbstractItemView:enabled { font-family:'Microsoft YaHei'; font-size:12px;"
-        "  color:#5D4B3A; selection-background-color:#E0D0C0; selection-color:#2B2B2B; background-color:#FAF8F5; }");
+        "QCalendarWidget {"
+        "  background-color: #FDFBF7; border: none;"
+        "}"
+        // 月份弹出菜单
+        "QCalendarWidget QMenu {"
+        "  background-color: #FDFBF7;"
+        "  border: 1.5px solid #C8BEB4;"
+        "  padding: 4px;"
+        "}"
+        "QCalendarWidget QMenu::item {"
+        "  padding: 4px 20px;"
+        "  color: #2B2B2B;"
+        "  font-family: 'Microsoft YaHei';"
+        "}"
+        "QCalendarWidget QMenu::item:selected {"
+        "  background-color: #E8D8C8;"
+        "}"
+        // 导航栏按钮
+        "QCalendarWidget QWidget#qt_calendar_navigationbar > QToolButton {"
+        "  color: #2B2B2B; font-size: 14px; font-weight: bold;"
+        "  padding: 5px 14px;"
+        "  border: 1.5px solid #C8BEB4; border-radius: 8px;"
+        "  background-color: #F5F0E8;"
+        "  font-family: 'Microsoft YaHei';"
+        "  margin: 2px;"
+        "}"
+        "QCalendarWidget QWidget#qt_calendar_navigationbar > QToolButton:hover {"
+        "  background-color: #EDE4D8; border-color: #B8A898;"
+        "}"
+        "QCalendarWidget QWidget#qt_calendar_navigationbar > QToolButton:pressed {"
+        "  background-color: #E0D4C4;"
+        "}"
+        // 年份输入框 — 隐藏上下按钮，纯文本输入
+        "QCalendarWidget QSpinBox {"
+        "  background-color: #F5F0E8;"
+        "  border: 1.5px solid #C8BEB4; border-radius: 8px;"
+        "  padding: 3px 8px;"
+        "  color: #2B2B2B; font-size: 13px;"
+        "  font-family: 'Microsoft YaHei';"
+        "}"
+        "QCalendarWidget QSpinBox::up-button,"
+        "QCalendarWidget QSpinBox::down-button {"
+        "  width: 0px; height: 0px; border: none; background: transparent;"
+        "}"
+        "QCalendarWidget QSpinBox::up-arrow,"
+        "QCalendarWidget QSpinBox::down-arrow {"
+        "  width: 0px; height: 0px;"
+        "}"
+        // 日期区域
+        "QCalendarWidget QAbstractItemView:enabled {"
+        "  font-family: 'Microsoft YaHei'; font-size: 12px;"
+        "  color: #5D4B3A;"
+        "  selection-background-color: #E8D8C8;"
+        "  selection-color: #2B2B2B;"
+        "  background-color: #FDFBF7;"
+        "  alternate-background-color: #F9F5EF;"
+        "  outline: none;"
+        "}"
+        "QCalendarWidget QAbstractItemView:disabled {"
+        "  color: #D0C8C0;"
+        "}"
+        "QCalendarWidget QWidget#qt_calendar_navigationbar {"
+        "  background-color: #FDFBF7; border: none;"
+        "}");
+
+    // 周末文字颜色
+    QTextCharFormat weekendFmt;
+    weekendFmt.setForeground(QColor("#B08070"));
+    m_calendar->setWeekdayTextFormat(Qt::Saturday, weekendFmt);
+    m_calendar->setWeekdayTextFormat(Qt::Sunday, weekendFmt);
+
+    // 今天高亮 — 柔和复古蓝底色
+    QTextCharFormat todayFmt;
+    todayFmt.setBackground(QColor("#D0DDE8"));
+    todayFmt.setForeground(QColor("#2B2B2B"));
+    QFont todayFont;
+    todayFont.setBold(true);
+    todayFmt.setFont(todayFont);
+    m_calendar->setDateTextFormat(QDate::currentDate(), todayFmt);
+
     connect(m_calendar, &QCalendarWidget::clicked, this, &CalendarWindow::onDateSelected);
-    mainLayout->addWidget(m_calendar);
 
-    // 当天记录
-    QFrame *recordFrame = new QFrame(this);
-    recordFrame->setStyleSheet("QFrame { background-color:#FAF8F5; border:1.5px solid #E0D8D0; border-radius:10px; }");
-    QVBoxLayout *frameLayout = new QVBoxLayout(recordFrame);
-    frameLayout->setContentsMargins(16,12,16,12); frameLayout->setSpacing(6);
+    m_calendarFrame = new CalendarFrameWidget(m_calendar, this);
+    mainLayout->addWidget(m_calendarFrame);
 
-    m_dateLabel = new QLabel(m_currentDate.toString("yyyy-MM-dd"), this);
-    m_dateLabel->setStyleSheet("font-size:14px;font-weight:bold;border:none;background:transparent;color:#2B2B2B;font-family:'Microsoft YaHei';");
-    frameLayout->addWidget(m_dateLabel);
+    // ── 记录卡片 ──
+    m_recordCard = new RecordCardWidget(this);
+    mainLayout->addWidget(m_recordCard);
 
-    m_dishesLabel = new QLabel(QString::fromUtf8("菜品：无记录"), this);
-    m_dishesLabel->setStyleSheet("font-size:12px;border:none;background:transparent;color:#5D4B3A;font-family:'Microsoft YaHei';");
-    m_dishesLabel->setWordWrap(true);
-    frameLayout->addWidget(m_dishesLabel);
+    mainLayout->addStretch();
 
-    m_caloriesLabel = new QLabel(QString::fromUtf8("热量：— kcal"), this);
-    m_caloriesLabel->setStyleSheet("font-size:12px;border:none;background:transparent;color:#5D4B3A;font-family:'Microsoft YaHei';");
-    frameLayout->addWidget(m_caloriesLabel);
-
-    m_priceLabel = new QLabel(QString::fromUtf8("价格：— 元"), this);
-    m_priceLabel->setStyleSheet("font-size:12px;border:none;background:transparent;color:#5D4B3A;font-family:'Microsoft YaHei';");
-    frameLayout->addWidget(m_priceLabel);
-
+    // ── 数据统计按钮 — 右下角，独立于卡片 ──
     QHBoxLayout *btnRow = new QHBoxLayout;
     btnRow->addStretch();
-    QPushButton *statsBtn = new QPushButton(QString::fromUtf8("数据统计"));
-    statsBtn->setMinimumHeight(40);
-    statsBtn->setStyleSheet("QPushButton{background:#C86A5A;color:white;font-size:14px;font-weight:bold;border-radius:8px;padding:6px 20px;}"
-                            "QPushButton:hover{background:#B05848;}");
+    SketchyButton *statsBtn = new SketchyButton(
+        QString::fromUtf8("数据统计"),
+        QColor("#D0DDE8"),
+        C_SHADOW,
+        this);
+    statsBtn->setMinimumSize(130, 42);
+    statsBtn->setStyleSheet(
+        "font-size:15px;font-weight:bold;color:#2B2B2B;"
+        "font-family:'Microsoft YaHei';");
     connect(statsBtn, &QPushButton::clicked, this, &CalendarWindow::onStatisticsClicked);
     btnRow->addWidget(statsBtn);
-    frameLayout->addLayout(btnRow);
-    mainLayout->addWidget(recordFrame);
+    mainLayout->addLayout(btnRow);
 
     showRecordForDate(m_currentDate);
 }
@@ -81,38 +333,73 @@ void CalendarWindow::setRecords(const QMap<QString, DailyRecord> &records) {
     showRecordForDate(m_currentDate);
 }
 
-void CalendarWindow::paintEvent(QPaintEvent *event) {
-    QDialog::paintEvent(event);
-    QPainter painter(this); painter.setRenderHint(QPainter::Antialiasing);
-    int w=width(), h=height();
-    painter.setBrush(QColor(242,233,212,200)); painter.setPen(Qt::NoPen);
-    painter.drawPath(DecoPainter::makeOrganicRect(QRectF(0,0,w,h), 3.5f, 7));
-    painter.setBrush(QColor(208,227,239,50));
-    painter.drawPath(DecoPainter::makeOrganicRect(QRectF(w*0.55f,h*0.65f,w*0.5f,h*0.4f), 4.0f, 6));
-    DecoPainter::drawPaperTexture(painter, QRect(0,0,w,h));
-    float s = qMin(w,h)/26.0f;
-    DecoPainter::drawSakura(painter, QPointF(w*0.04f,h*0.03f), s*0.6f);
-    DecoPainter::drawXiaolongbao(painter, QPointF(w*0.04f,h*0.94f), s*0.7f);
-    DecoPainter::drawTinyCat(painter, QPointF(w*0.95f,h*0.93f), s*0.8f);
+// ── 参照 SettingsDialog 的卡片式绘制 ──
+void CalendarWindow::paintEvent(QPaintEvent *) {
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+
+    QRectF card(12, 12, width() - 24, height() - 24);
+    int seed = 61;
+
+    // 阴影层
+    QRectF shadow = card.translated(2.5, 3.5);
+    QPainterPath sp = sketchyRect(shadow, seed + 100, 2.8);
+    p.setBrush(C_SHADOW);
+    p.setPen(Qt::NoPen);
+    p.drawPath(sp);
+
+    // 卡片层 — 奶油纸色 + 墨水晕染 + 黑边
+    QPainterPath cp = sketchyRect(card, seed, 2.8);
+    drawInkWash(&p, cp, C_CREAM, 18);
+    drawInkBorder(&p, cp, C_INK, 3, 0.7);
+}
+
+void CalendarWindow::mousePressEvent(QMouseEvent *e) {
+    if (e->button() == Qt::LeftButton) {
+        QWidget *child = childAt(e->pos());
+        if (!child || child == this) {
+            m_dragPos = e->globalPosition().toPoint() - frameGeometry().topLeft();
+            m_dragging = true;
+        }
+    }
+    QDialog::mousePressEvent(e);
+}
+
+void CalendarWindow::mouseMoveEvent(QMouseEvent *e) {
+    if (m_dragging && (e->buttons() & Qt::LeftButton)) {
+        QPoint delta = e->globalPosition().toPoint() - frameGeometry().topLeft() - m_dragPos;
+        if (delta.manhattanLength() > 4)
+            move(e->globalPosition().toPoint() - m_dragPos);
+    }
+    QDialog::mouseMoveEvent(e);
+}
+
+void CalendarWindow::mouseReleaseEvent(QMouseEvent *e) {
+    m_dragging = false;
+    QDialog::mouseReleaseEvent(e);
 }
 
 void CalendarWindow::onDateSelected(const QDate &date) {
     m_currentDate = date;
-    m_dateLabel->setText(date.toString("yyyy-MM-dd"));
     showRecordForDate(date);
 }
 
 void CalendarWindow::showRecordForDate(const QDate &date) {
+    m_recordCard->setDateText(date.toString("yyyy-MM-dd"));
+
     QString key = date.toString("yyyy-MM-dd");
     if (m_records.contains(key)) {
         const auto &r = m_records[key];
-        m_dishesLabel->setText(QString::fromUtf8("菜品：%1").arg(r.dishes.join(", ")));
-        m_caloriesLabel->setText(QString::fromUtf8("热量：%1 kcal").arg(r.totalCalories,0,'f',0));
-        m_priceLabel->setText(QString::fromUtf8("价格：¥%1").arg(r.totalPrice,0,'f',1));
+        m_recordCard->setDishesText(
+            QString::fromUtf8("菜品：%1").arg(r.dishes.join(QString::fromUtf8("、"))));
+        m_recordCard->setCaloriesText(
+            QString::fromUtf8("热量：%1 kcal").arg(r.totalCalories, 0, 'f', 0));
+        m_recordCard->setPriceText(
+            QString::fromUtf8("价格：%1 元").arg(r.totalPrice, 0, 'f', 1));
     } else {
-        m_dishesLabel->setText(QString::fromUtf8("菜品：无记录"));
-        m_caloriesLabel->setText(QString::fromUtf8("热量：— kcal"));
-        m_priceLabel->setText(QString::fromUtf8("价格：— 元"));
+        m_recordCard->setDishesText(QString::fromUtf8("菜品：无记录"));
+        m_recordCard->setCaloriesText(QString::fromUtf8("热量：— kcal"));
+        m_recordCard->setPriceText(QString::fromUtf8("价格：— 元"));
     }
 }
 

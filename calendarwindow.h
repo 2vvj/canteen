@@ -3,14 +3,62 @@
 
 #include <QDialog>
 #include <QCalendarWidget>
+#include <QPushButton>
 #include <QLabel>
 #include <QDate>
 #include <QMap>
+#include <QColor>
+#include <QPoint>
 
 struct DailyRecord {
     QStringList dishes;
     double totalCalories = 0;
     double totalPrice = 0;
+};
+
+class SketchyButton;
+
+// 手绘分隔线 — 一根带毛刺的墨线
+class ScratchyDivider : public QWidget {
+    Q_OBJECT
+public:
+    explicit ScratchyDivider(QWidget *parent = nullptr);
+protected:
+    void paintEvent(QPaintEvent *event) override;
+};
+
+// 有机框架 — 包裹日历，绘制手绘边框
+class CalendarFrameWidget : public QWidget {
+    Q_OBJECT
+public:
+    explicit CalendarFrameWidget(QCalendarWidget *calendar, QWidget *parent = nullptr);
+protected:
+    void paintEvent(QPaintEvent *event) override;
+private:
+    QCalendarWidget *m_calendar;
+};
+
+// 有机形状的记录卡片 — 手绘宣纸质感
+class RecordCardWidget : public QWidget {
+    Q_OBJECT
+public:
+    explicit RecordCardWidget(QWidget *parent = nullptr);
+
+    void setDateText(const QString &text);
+    void setDishesText(const QString &text);
+    void setCaloriesText(const QString &text);
+    void setPriceText(const QString &text);
+    void addButton(SketchyButton *btn);
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+
+private:
+    QLabel *m_dateLabel;
+    QLabel *m_dishesLabel;
+    QLabel *m_caloriesLabel;
+    QLabel *m_priceLabel;
+    QColor m_cardColor;
 };
 
 class CalendarWindow : public QDialog {
@@ -22,6 +70,9 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
 
 private slots:
     void onDateSelected(const QDate &date);
@@ -31,12 +82,13 @@ private:
     void showRecordForDate(const QDate &date);
 
     QCalendarWidget *m_calendar;
-    QLabel *m_dateLabel;
-    QLabel *m_dishesLabel;
-    QLabel *m_caloriesLabel;
-    QLabel *m_priceLabel;
+    CalendarFrameWidget *m_calendarFrame;
+    RecordCardWidget *m_recordCard;
+    QPushButton *m_closeBtn;
     QDate m_currentDate;
     QMap<QString, DailyRecord> m_records;
+    QPoint m_dragPos;
+    bool m_dragging = false;
 };
 
 #endif
