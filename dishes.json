@@ -2470,7 +2470,7 @@
             "牛肉",
             "米粉",
             "套餐",
-			"拌粉"	
+            "拌粉"
         ],
         "tastyScore": 8.8,
         "experienceScore": 8.0,
@@ -25728,6 +25728,859 @@
             "便宜"
         ],
         "tastyScore": 8.6,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "卤牛腩煲仔饭",
+        "restaurant": "家园三层",
+        "price": 25.0,
+        "calories": 720.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "牛肉",
+            "卤味",
+            "煲仔饭",
+            "粤菜"
+        ],
+        "tastyScore": 9.4,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "排骨煲仔饭",
+        "restaurant": "家园三层",
+        "price": 25.0,
+        "calories": 740.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "排骨",
+            "猪肉",
+            "煲仔饭",
+            "粤菜"
+        ],
+        "tastyScore": 9.3,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "叉烧煲仔饭",
+        "restaurant": "家园三层",
+        "price": 18.0,
+        "calories": 760.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "叉烧",
+            "猪肉",
+            "煲仔饭",
+            "粤菜"
+        ],
+        "tastyScore": 9.0,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "广式腊肠煲仔饭",
+        "restaurant": "家园三层",
+        "price": 16.0,
+        "calories": 780.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "腊肠",
+            "猪肉",
+            "粤菜",
+            "煲仔饭"
+        ],
+        "tastyScore": 9.1,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "咸鱼鸡粒茄子煲仔饭",
+        "restaurant": "家园三层",
+        "price": 16.0,
+        "calories": 650.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "鱼",
+            "鸡肉",
+            "茄子",
+            "煲仔饭",
+            "咸"
+        ],
+        "tastyScore": 8.7,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "腊味菌菇煲仔饭",
+        "restaurant": "家园三层",
+        "price": 16.0,
+        "calories": 680.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "蘑菇",
+            "粤菜",
+            "煲仔饭",
+            "腊肉"
+        ],
+        "tastyScore": 8.6,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "盐焗鸡煲仔饭",
+        "restaurant": "家园三层",
+        "price": 14.0,
+        "calories": 610.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "咸",
+            "粤菜",
+            "鸡肉",
+            "煲仔饭"
+        ],
+        "tastyScore": 8.8,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "滑蛋牛肉煲仔饭",
+        "restaurant": "家园三层",
+        "price": 18.0,
+        "calories": 690.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "鸡蛋",
+            "牛肉",
+            "煲仔饭",
+            "粤菜"
+        ],
+        "tastyScore": 9.5,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "招牌鱼砂锅饭",
+        "restaurant": "家园三层",
+        "price": 18.0,
+        "calories": 620.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "鱼",
+            "砂锅",
+            "米饭"
+        ],
+        "tastyScore": 8.8,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "群菇砂锅饭",
+        "restaurant": "家园三层",
+        "price": 13.0,
+        "calories": 450.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "蘑菇",
+            "砂锅",
+            "米饭"
+        ],
+        "tastyScore": 8.2,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "脆骨肠砂锅饭",
+        "restaurant": "家园三层",
+        "price": 16.0,
+        "calories": 680.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "香肠",
+            "砂锅",
+            "米饭"
+        ],
+        "tastyScore": 8.5,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "培根砂锅饭",
+        "restaurant": "家园三层",
+        "price": 15.0,
+        "calories": 700.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "培根",
+            "猪肉",
+            "砂锅",
+            "米饭"
+        ],
+        "tastyScore": 8.4,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "鸡肉砂锅饭",
+        "restaurant": "家园三层",
+        "price": 18.0,
+        "calories": 580.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "鸡肉",
+            "砂锅",
+            "米饭"
+        ],
+        "tastyScore": 8.6,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "肥牛砂锅饭",
+        "restaurant": "家园三层",
+        "price": 20.0,
+        "calories": 750.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "牛肉",
+            "砂锅",
+            "米饭"
+        ],
+        "tastyScore": 9.2,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "肥肠砂锅饭",
+        "restaurant": "家园三层",
+        "price": 18.0,
+        "calories": 780.0,
+        "supplyWindows": [
+            {
+                "start": "10:00",
+                "end": "22:00"
+            }
+        ],
+        "role": "FULL_MEAL",
+        "tags": [
+            "肥肠",
+            "砂锅",
+            "米饭"
+        ],
+        "tastyScore": 8.9,
+        "experienceScore": 9.5,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "番茄日本豆腐",
+        "restaurant": "家园二层",
+        "price": 12.0,
+        "calories": 220.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "西红柿",
+            "豆腐",
+            "日式"
+        ],
+        "tastyScore": 8.4,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "可乐杏鲍菇拌饭",
+        "restaurant": "家园二层",
+        "price": 10.0,
+        "calories": 480.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "STAPLE",
+        "tags": [
+            "甜",
+            "杏鲍菇",
+            "拌饭"
+        ],
+        "tastyScore": 8.3,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "干煸豆角",
+        "restaurant": "家园二层",
+        "price": 8.0,
+        "calories": 260.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "豆角",
+            "干煸"
+        ],
+        "tastyScore": 8.5,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "菠菜炒鸡蛋",
+        "restaurant": "家园二层",
+        "price": 8.0,
+        "calories": 210.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "菠菜",
+            "鸡蛋"
+        ],
+        "tastyScore": 8.1,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "酸辣土豆丝",
+        "restaurant": "家园二层",
+        "price": 6.0,
+        "calories": 180.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "酸",
+            "辣",
+            "土豆"
+        ],
+        "tastyScore": 8.8,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "外婆菜鸡蛋拌饭",
+        "restaurant": "家园二层",
+        "price": 12.0,
+        "calories": 520.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "STAPLE",
+        "tags": [
+            "鸡蛋",
+            "拌饭"
+        ],
+        "tastyScore": 9.1,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "炸蘑菇",
+        "restaurant": "家园二层",
+        "price": 8.0,
+        "calories": 350.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "蘑菇",
+            "油炸"
+        ],
+        "tastyScore": 8.9,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "尖椒鸡蛋",
+        "restaurant": "家园二层",
+        "price": 10.0,
+        "calories": 240.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "辣",
+            "鸡蛋",
+            "尖椒"
+        ],
+        "tastyScore": 8.4,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "麻酱素什锦",
+        "restaurant": "家园二层",
+        "price": 8.0,
+        "calories": 190.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "麻酱"
+        ],
+        "tastyScore": 8.0,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "西红柿鸡蛋",
+        "restaurant": "家园二层",
+        "price": 8.0,
+        "calories": 230.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "西红柿",
+            "鸡蛋"
+        ],
+        "tastyScore": 8.6,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "虫草花炒鸡蛋",
+        "restaurant": "家园二层",
+        "price": 9.0,
+        "calories": 220.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "鸡蛋",
+            "蘑菇"
+        ],
+        "tastyScore": 8.5,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "湘味豆腐",
+        "restaurant": "家园二层",
+        "price": 7.0,
+        "calories": 280.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "豆腐",
+            "辣",
+            "湘菜"
+        ],
+        "tastyScore": 8.6,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "蛋黄玉米粒",
+        "restaurant": "家园二层",
+        "price": 7.0,
+        "calories": 320.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "鸡蛋",
+            "玉米"
+        ],
+        "tastyScore": 8.7,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "外婆菜蛋炒饭",
+        "restaurant": "家园二层",
+        "price": 7.0,
+        "calories": 550.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "STAPLE",
+        "tags": [
+            "鸡蛋",
+            "米饭"
+        ],
+        "tastyScore": 9.2,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "豆角烧茄子",
+        "restaurant": "家园二层",
+        "price": 7.0,
+        "calories": 290.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "豆角",
+            "茄子"
+        ],
+        "tastyScore": 8.5,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "蛋炒饭",
+        "restaurant": "家园二层",
+        "price": 8.0,
+        "calories": 510.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "STAPLE",
+        "tags": [
+            "鸡蛋",
+            "米饭"
+        ],
+        "tastyScore": 8.3,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "豉汁秋葵",
+        "restaurant": "家园二层",
+        "price": 12.0,
+        "calories": 120.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "清淡",
+            "粤菜"
+        ],
+        "tastyScore": 8.2,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "木耳油菜",
+        "restaurant": "家园二层",
+        "price": 6.0,
+        "calories": 90.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "VEGGIE",
+        "tags": [
+            "木耳",
+            "油菜",
+            "清淡"
+        ],
+        "tastyScore": 7.9,
+        "experienceScore": 9.0,
+        "healthScore": 5.0,
+        "drawCount": 0,
+        "lastRating": 3.0
+    },
+    {
+        "name": "麻仁红薯",
+        "restaurant": "家园二层",
+        "price": 12.0,
+        "calories": 380.0,
+        "supplyWindows": [
+            {
+                "start": "11:00",
+                "end": "13:30"
+            },
+            {
+                "start": "17:00",
+                "end": "19:00"
+            }
+        ],
+        "role": "STAPLE",
+        "tags": [
+            "粗粮"
+        ],
+        "tastyScore": 8.8,
         "experienceScore": 9.0,
         "healthScore": 5.0,
         "drawCount": 0,

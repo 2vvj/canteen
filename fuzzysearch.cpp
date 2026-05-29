@@ -89,6 +89,19 @@ double FuzzySearch::nameSimilarity(const QString &s1, const QString &s2) {
     return sim;
 }
 
+double FuzzySearch::restaurantSimilarity(const QString &query, const QString &restaurant) {
+    if (query.isEmpty() || restaurant.isEmpty()) return 0.0;
+
+    QString q = query.toLower(), r = restaurant.toLower();
+
+    if (q == r) return 1.0;
+
+    // 单向包含：查询被餐厅名完整包含（查询≥2字）
+    if (q.length() >= 2 && r.contains(q)) return 0.9;
+
+    return 0.0;
+}
+
 // ============ 历史偏好加权 ============
 
 double FuzzySearch::historyBonus(const Dish &dish, const UserProfile &user) const {
@@ -158,7 +171,7 @@ QVector<SearchResult> FuzzySearch::rescoreWithCurrentTags(
         sr.nameScore = 0;
         for (const auto &tag : m_tempTags) {
             double dishSim = nameSimilarity(tag, d.name);
-            double restSim = nameSimilarity(tag, d.restaurant);
+            double restSim = restaurantSimilarity(tag, d.restaurant);
             sr.nameScore = qMax(sr.nameScore, qMax(dishSim, restSim));
         }
 
@@ -250,7 +263,7 @@ QVector<SearchResult> FuzzySearch::search(const QString &query,
 
         // 名字匹配：菜名和食堂名都算，取较高分
         double dishNameSim = nameSimilarity(q, d.name);
-        double restSim = nameSimilarity(q, d.restaurant);
+        double restSim = restaurantSimilarity(q, d.restaurant);
         sr.nameScore = qMax(dishNameSim, restSim);
 
         // 标签匹配
