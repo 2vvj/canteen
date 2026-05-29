@@ -26,6 +26,14 @@ bool UserData::load(const QString &filePath)
 bool UserData::save(const QString &filePath) const
 {
     QJsonObject obj;
+    // Read existing file to preserve ratings/calories/calorieDate etc.
+    {
+        QFile f(filePath);
+        if (f.open(QIODevice::ReadOnly)) {
+            obj = QJsonDocument::fromJson(f.readAll()).object();
+            f.close();
+        }
+    }
     obj["avatar"] = settings.avatarPath;
     obj["name"] = settings.name;
     obj["gender"] = settings.gender;

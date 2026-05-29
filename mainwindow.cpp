@@ -225,17 +225,30 @@ ReviewDialog::ReviewDialog(const QVector<Dish> &dishes, int userZoneId,
     : QDialog(parent), m_zoneManager(zoneMgr), m_distanceDB(distDB),
       m_userZoneId(userZoneId), m_userData(settings)
 {
-    setWindowTitle(QString::fromUtf8("最终确认 — 你的搭配"));
-    resize(500, 660);
-    setStyleSheet("QDialog { background: #FDFBF7; }");
+    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+    resize(520, 700);
 
     QVBoxLayout *layout = new QVBoxLayout(this);
-    layout->setContentsMargins(20,16,20,16); layout->setSpacing(8);
+    layout->setContentsMargins(36, 40, 36, 32);
+    layout->setSpacing(12);
 
+    // Fonts
+    QFont titleFont; titleFont.setPointSize(16);
+    titleFont.setLetterSpacing(QFont::AbsoluteSpacing, 3.0);
+    titleFont.setWeight(QFont::Bold);
+    QFont bodyFont; bodyFont.setPointSize(11);
+    bodyFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
+    QFont hintFont; hintFont.setPointSize(10);
+    hintFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+
+    // Title
     QLabel *titleLabel = new QLabel(QString::fromUtf8("你的今日搭配"));
-    titleLabel->setStyleSheet("font-size:20px;font-weight:bold;color:#2B2B2B;font-family:'Microsoft YaHei';");
+    titleLabel->setFont(titleFont);
+    titleLabel->setStyleSheet(QString("color: %1;").arg(C_INK.name()));
     titleLabel->setAlignment(Qt::AlignCenter);
     layout->addWidget(titleLabel);
+    layout->addSpacing(4);
 
     double totalPrice=0, totalCalories=0, avgTaste=0, avgExp=0, avgHealth=0;
     QString restaurant;
@@ -247,11 +260,10 @@ ReviewDialog::ReviewDialog(const QVector<Dish> &dishes, int userZoneId,
     int n=dishes.size();
     if(n>0){ avgTaste/=n; avgExp/=n; avgHealth/=n; }
 
-    // 判断餐段
     int hour = QTime::currentTime().hour();
     bool isBreakfast = (hour < 10);
     double priceBaseline = isBreakfast ? 10.0 : (hour < 16 ? 18.0 : 16.0);
-    double calBaseline = 2500; // 默认
+    double calBaseline = 2500;
     if (m_userData.height>0 && m_userData.weight>0 && m_userData.age>0 && !m_userData.gender.isEmpty()) {
         double bmr;
         if (m_userData.gender == QString::fromUtf8("女"))
@@ -261,13 +273,11 @@ ReviewDialog::ReviewDialog(const QVector<Dish> &dishes, int userZoneId,
         calBaseline = isBreakfast ? bmr*0.3 : (hour < 16 ? bmr*0.4 : bmr*0.3);
     }
 
-    // 距离计算
     int restZone = findZoneForRestaurant(restaurant);
     double distMeters = 0;
-    double avgDist = 200;  // 默认平均距离
+    double avgDist = 200;
     if (restZone >= 0 && m_userZoneId >= 0 && m_distanceDB) {
-        distMeters = getDistance(m_userZoneId, restZone) * 1000.0; // km → m
-        // 计算到所有食堂的平均距离
+        distMeters = getDistance(m_userZoneId, restZone) * 1000.0;
         double totalDist=0; int count=0;
         const auto zones = m_zoneManager->allZones();
         for (const auto &z : zones) {
@@ -278,7 +288,6 @@ ReviewDialog::ReviewDialog(const QVector<Dish> &dishes, int userZoneId,
         if (count>0) avgDist = (totalDist/count) * 1000.0;
     }
 
-    // 归一化到0-100（越高越好），归零条件放宽到3倍基准
     float priceScore = qBound(0.0f, 100.0f * (1.0f - static_cast<float>(totalPrice) / (3.0f * static_cast<float>(priceBaseline))), 100.0f);
     float calScore = qBound(0.0f,
         100.0f * (1.0f - static_cast<float>(qAbs(totalCalories-calBaseline)) / (2.0f * static_cast<float>(calBaseline))), 100.0f);
@@ -314,25 +323,78 @@ ReviewDialog::ReviewDialog(const QVector<Dish> &dishes, int userZoneId,
         .arg(mealType).arg(dishNames)
         .arg(totalPrice,0,'f',1).arg(totalCalories,0,'f',0).arg(calBaseline,0,'f',0)
         .arg(restaurant).arg(distMeters,0,'f',0));
-    m_summaryLabel->setStyleSheet("font-size:12px;color:#5D4B3A;background:transparent;padding:2px 0;");
+    m_summaryLabel->setFont(hintFont);
+    m_summaryLabel->setStyleSheet(QString("color: %1;background:transparent;").arg(C_INK_LIGHT.name()));
     m_summaryLabel->setWordWrap(true); m_summaryLabel->setAlignment(Qt::AlignCenter);
     layout->addWidget(m_summaryLabel);
-    layout->addSpacing(6);
+    layout->addSpacing(8);
 
     QHBoxLayout *btnRow = new QHBoxLayout;
-    QPushButton *cancelBtn = new QPushButton(QString::fromUtf8("算了，重新选"));
-    cancelBtn->setMinimumHeight(46);
-    cancelBtn->setStyleSheet("QPushButton{background:#ff9800;color:white;font-size:15px;font-weight:bold;border-radius:10px;}"
-                             "QPushButton:hover{background:#f57c00;}");
-    QPushButton *confirmBtn = new QPushButton(QString::fromUtf8("就这些！开吃！"));
-    confirmBtn->setMinimumHeight(46);
-    confirmBtn->setStyleSheet("QPushButton{background:#4caf50;color:white;font-size:15px;font-weight:bold;border-radius:10px;}"
-                              "QPushButton:hover{background:#43a047;}");
-    btnRow->addWidget(cancelBtn); btnRow->addWidget(confirmBtn);
+    btnRow->addStretch();
+    QFont btnFont; btnFont.setPointSize(10);
+    btnFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+    SketchyButton *cancelBtn = new SketchyButton(QString::fromUtf8("算了，重新选"),
+        C_CARD_TAUPE, C_SHADOW_DK, this);
+    cancelBtn->setFixedSize(130, 44);
+    cancelBtn->setFont(btnFont);
+    SketchyButton *confirmBtn = new SketchyButton(QString::fromUtf8("就这些！开吃！"),
+        C_CARD_SAGE, C_SHADOW_DK, this);
+    confirmBtn->setFixedSize(130, 44);
+    confirmBtn->setFont(btnFont);
+    btnRow->addWidget(cancelBtn);
+    btnRow->addWidget(confirmBtn);
+    btnRow->addStretch();
     layout->addLayout(btnRow);
 
     connect(cancelBtn, &QPushButton::clicked, this, [this](){ m_confirmed=false; reject(); });
     connect(confirmBtn, &QPushButton::clicked, this, [this](){ m_confirmed=true; accept(); });
+}
+
+void ReviewDialog::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+
+    QRectF card(12, 12, width() - 24, height() - 24);
+    int seed = 89;
+
+    QRectF shadow = card.translated(2.5, 3.5);
+    QPainterPath sp = sketchyRect(shadow, seed + 100, 2.8);
+    p.setBrush(C_SHADOW_DK);
+    p.setPen(Qt::NoPen);
+    p.drawPath(sp);
+
+    QPainterPath cp = sketchyRect(card, seed, 2.8);
+    drawInkWash(&p, cp, C_CREAM, 18);
+    drawInkBorder(&p, cp, C_INK, 3, 0.7);
+}
+
+void ReviewDialog::mousePressEvent(QMouseEvent *e)
+{
+    if (e->button() == Qt::LeftButton) {
+        QWidget *child = childAt(e->pos());
+        if (!child || child == this) {
+            m_dragPos = e->globalPosition().toPoint() - frameGeometry().topLeft();
+            m_dragging = true;
+        }
+    }
+    QDialog::mousePressEvent(e);
+}
+
+void ReviewDialog::mouseMoveEvent(QMouseEvent *e)
+{
+    if (m_dragging && (e->buttons() & Qt::LeftButton)) {
+        QPoint delta = e->globalPosition().toPoint() - frameGeometry().topLeft() - m_dragPos;
+        if (delta.manhattanLength() > 4)
+            move(e->globalPosition().toPoint() - m_dragPos);
+    }
+    QDialog::mouseMoveEvent(e);
+}
+
+void ReviewDialog::mouseReleaseEvent(QMouseEvent *e)
+{
+    m_dragging = false;
+    QDialog::mouseReleaseEvent(e);
 }
 
 // ── MainWindow ─────────────────────────────────────────────────
@@ -385,6 +447,16 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     }
     applyUserSettings();
     loadDailyRecords();
+    // 如果 user.json 中的今日热量与 daily_records 不一致，以 daily_records 为准并修复
+    QString today = QDate::currentDate().toString("yyyy-MM-dd");
+    if (m_dailyRecords.contains(today)) {
+        double drCal = m_dailyRecords[today].totalCalories;
+        if (m_userProfile.todayCalories != drCal) {
+            m_userProfile.todayCalories = drCal;
+            updateSidebarUserInfo();
+            saveRatingsToUserFile(); // 修复 user.json
+        }
+    }
     // 加载评分日期
     {
         QFile f("rating_dates.json");
@@ -614,8 +686,62 @@ void MainWindow::onMealReadyForReview(const QVector<Dish> &selected) {
         for (const auto &d : selected) rec.totalPrice += d.price;
         saveDailyRecords();
         updateSidebarUserInfo(); updateLionSprite();
-        QMessageBox::information(this, QString::fromUtf8("开饭啦！"),
-            QString::fromUtf8("共 %1 道菜，合计 %2 kcal\n祝你用餐愉快！").arg(selected.size()).arg(totalCal,0,'f',0));
+
+        struct MealDoneDialog : QDialog {
+            MealDoneDialog(const QString &text, QWidget *parent) : QDialog(parent) {
+                setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+                setAttribute(Qt::WA_TranslucentBackground);
+                setFixedSize(420, 260);
+                setModal(true);
+
+                QFont titleFont; titleFont.setPointSize(15);
+                titleFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.5);
+                titleFont.setWeight(QFont::Bold);
+                QFont bodyFont; bodyFont.setPointSize(11);
+                bodyFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
+
+                auto *titleLbl = new QLabel(QString::fromUtf8("开饭啦！"), this);
+                titleLbl->setFont(titleFont);
+                titleLbl->setStyleSheet(QString("color: %1;").arg(C_INK.name()));
+                titleLbl->setAlignment(Qt::AlignCenter);
+                titleLbl->setGeometry(0, 50, width(), 34);
+
+                auto *bodyLbl = new QLabel(text, this);
+                bodyLbl->setFont(bodyFont);
+                bodyLbl->setStyleSheet(QString("color: %1;").arg(C_INK_LIGHT.name()));
+                bodyLbl->setAlignment(Qt::AlignCenter);
+                bodyLbl->setWordWrap(true);
+                bodyLbl->setGeometry(30, 92, width() - 60, 56);
+
+                auto *btn = new SketchyButton(QString::fromUtf8("好的"),
+                                              C_CARD_SAGE, C_SHADOW_DK, this);
+                btn->setFixedSize(90, 40);
+                btn->move((width() - 90) / 2, height() - btn->height() - 24);
+                QFont btnFont; btnFont.setPointSize(11);
+                btnFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+                btn->setFont(btnFont);
+                connect(btn, &QPushButton::clicked, this, &QDialog::accept);
+            }
+        protected:
+            void paintEvent(QPaintEvent *) override {
+                QPainter p(this);
+                p.setRenderHint(QPainter::Antialiasing);
+                QRectF card(18, 18, width() - 36, height() - 36);
+                int seed = 57;
+                QRectF shadow = card.translated(2.5, 3.5);
+                QPainterPath sp = sketchyRect(shadow, seed + 100, 2.8);
+                p.setBrush(C_SHADOW_DK);
+                p.setPen(Qt::NoPen);
+                p.drawPath(sp);
+                QPainterPath cp = sketchyRect(card, seed, 2.8);
+                drawInkWash(&p, cp, C_CREAM, 18);
+                drawInkBorder(&p, cp, C_INK, 3, 0.7);
+            }
+        };
+        MealDoneDialog doneDlg(QString::fromUtf8("共 %1 道菜，合计 %2 kcal\n祝你用餐愉快！")
+            .arg(selected.size()).arg(totalCal,0,'f',0), this);
+        doneDlg.exec();
+
         QTimer::singleShot(500, this, &MainWindow::onFinishEating);
     } else { m_mealPage->resetMeal(); }
 }
@@ -665,7 +791,7 @@ void MainWindow::applyUserSettings() {
         else bmr=static_cast<int>(10.0*s.weight+6.25*s.height-5.0*s.age+5);
         m_sidebar->setBMR(bmr);
     }
-    updateLionSprite();
+    updateSidebarUserInfo();
 }
 
 void MainWindow::updateSidebarUserInfo() {
@@ -681,7 +807,7 @@ void MainWindow::updateLionSprite() {
             bmr=10.0*s.weight+6.25*s.height-5.0*s.age-161;
         else bmr=10.0*s.weight+6.25*s.height-5.0*s.age+5;
     }
-    if(m_userProfile.todayCalories > bmr)
+    if(m_userProfile.todayCalories > bmr + 300)
         m_character->setSprite("lion_obese.png");
     else
         m_character->setSprite("lion_slim.png");
