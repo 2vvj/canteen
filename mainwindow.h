@@ -96,6 +96,13 @@ public:
                  const UserSettings &settings,
                  QWidget *parent = nullptr);
     bool isConfirmed() const { return m_confirmed; }
+
+protected:
+    void paintEvent(QPaintEvent *event) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+
 private:
     int findZoneForRestaurant(const QString &restaurant) const;
     double getDistance(int zoneA, int zoneB) const;
@@ -107,6 +114,8 @@ private:
     DistanceDB *m_distanceDB;
     int m_userZoneId;
     UserSettings m_userData;
+    QPoint m_dragPos;
+    bool m_dragging = false;
 };
 
 // 主窗口
@@ -134,7 +143,7 @@ private slots:
 
 private:
     void setupMapPage();
-    void showZoneInfo(const ZoneInfo *info);
+    void showNoZoneDialog();
     void applyUserSettings();
     void updateSidebarUserInfo();
     void updateLionSprite();
