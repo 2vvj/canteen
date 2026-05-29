@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QComboBox>
+#include <QPoint>
 #include "userdata.h"
 
 class SettingsDialog : public QDialog {
@@ -14,7 +15,11 @@ public:
     UserSettings result() const { return m_result; }
 
 protected:
+    void paintEvent(QPaintEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *event) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
 
 private slots:
     void onAvatarClicked();
@@ -34,6 +39,8 @@ private:
     QLineEdit *m_weightEdit;
     QLineEdit *m_ageEdit;
     QWidget *m_genderPopup = nullptr;
+    QPoint m_dragPos;
+    bool m_dragging = false;
 };
 
 #endif
