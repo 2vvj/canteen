@@ -141,6 +141,8 @@ private:
     void loadDailyRecords();
     void saveDailyRecords();
     void saveRatingsToUserFile();
+    void loadEatingTimes();
+    void saveEatingTimes();
 
     QStackedWidget *m_stack;
     WelcomePage *m_welcomePage;
@@ -171,6 +173,7 @@ private:
     QVector<Dish> m_currentMealDishes;
     QMap<QString, DailyRecord> m_dailyRecords;
     QMap<QString, QString> m_ratingDates;  // 菜名 -> 评分日期
+    QMap<QString, QString> m_eatingTimes;  // 菜名 -> 食用时间 "yyyy-MM-dd HH:mm"
 };
 
 #endif

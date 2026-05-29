@@ -24,6 +24,9 @@ public:
     void cancelPreview();
     void flashEffect();
 
+    void setLocked(bool locked);
+    bool isLocked() const { return m_locked; }
+
 signals:
     void ratingRequested(int proposedRating);
     void ratingChanged(int rating);
@@ -40,14 +43,17 @@ private:
     int m_rating;
     int m_pendingRating;
     bool m_previewing;
+    bool m_locked = false;
 };
 
 class HistoryItemWidget : public QWidget {
     Q_OBJECT
 public:
     explicit HistoryItemWidget(int dishId, const QString &dishName,
-                               const QString &timestamp, const QColor &cardColor,
-                               int initialRating, QWidget *parent = nullptr);
+                               const QString &dateStr, const QString &canteenName,
+                               const QColor &cardColor,
+                               int initialRating, bool locked,
+                               QWidget *parent = nullptr);
 
 signals:
     void dishRated(int dishId, int rating);
@@ -71,7 +77,7 @@ public:
     explicit HistoryWindow(QWidget *parent = nullptr);
 
     void loadDishes(const QVector<Dish> &dishes, const UserProfile &user,
-                    const QMap<QString, QString> &ratingDates = {});
+                    const QMap<QString, QString> &eatingDates = {});
 
 signals:
     void dishRated(int dishId, int rating);

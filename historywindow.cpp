@@ -39,6 +39,7 @@ StarRatingWidget::StarRatingWidget(int maxStars, QWidget *parent)
 }
 
 void StarRatingWidget::onStarClicked() {
+    if (m_locked) return;
     QPushButton *clickedBtn = qobject_cast<QPushButton*>(sender());
     if (!clickedBtn) return;
     int proposedRating = clickedBtn->property("starIndex").toInt();
@@ -82,7 +83,17 @@ void StarRatingWidget::flashEffect() {
     });
 }
 
+void StarRatingWidget::setLocked(bool locked) {
+    m_locked = locked;
+    for (auto *btn : starButtons) {
+        btn->setEnabled(!locked);
+        btn->setCursor(locked ? Qt::ArrowCursor : Qt::PointingHandCursor);
+    }
+    updateStarUI();
+}
+
 void StarRatingWidget::setRating(int rating) {
+    if (m_locked && rating != m_rating) return;
     if (rating < 0) rating = 0;
     if (rating > m_maxStars) rating = m_maxStars;
     m_rating = rating;
@@ -128,8 +139,9 @@ void StarRatingWidget::updateStarUIPreview(int previewRating) {
 
 // ========== HistoryItemWidget ==========
 HistoryItemWidget::HistoryItemWidget(int dishId, const QString &dishName,
-                                     const QString &timestamp, const QColor &cardColor,
-                                     int initialRating, QWidget *parent)
+                                     const QString &dateStr, const QString &canteenName,
+                                     const QColor &cardColor,
+                                     int initialRating, bool locked, QWidget *parent)
     : QWidget(parent), m_dishId(dishId), m_dishName(dishName), m_cardColor(cardColor)
 {
     QString bgName = cardColor.name();
@@ -147,17 +159,30 @@ HistoryItemWidget::HistoryItemWidget(int dishId, const QString &dishName,
         "font-size: 17px; font-weight: bold; border: none;"
         "background: transparent; color: #2B2B2B; font-family: 'Microsoft YaHei';");
 
-    QLabel *dateLabel = new QLabel(timestamp, this);
-    dateLabel->setStyleSheet(
+    // Small text: date · canteen
+    QString infoText;
+    if (!dateStr.isEmpty() && !canteenName.isEmpty())
+        infoText = dateStr + QString::fromUtf8(" · ") + canteenName;
+    else if (!dateStr.isEmpty())
+        infoText = dateStr;
+    else if (!canteenName.isEmpty())
+        infoText = canteenName;
+    else
+        infoText = QString::fromUtf8("未知");
+
+    QLabel *infoLabel = new QLabel(infoText, this);
+    infoLabel->setStyleSheet(
         "font-size: 12px; border: none; background: transparent;"
         "color: #8B8B8B; font-family: 'Microsoft YaHei';");
 
     infoLayout->addWidget(nameLabel);
-    infoLayout->addWidget(dateLabel);
+    infoLayout->addWidget(infoLabel);
     mainLayout->addLayout(infoLayout, 1);
 
     m_starWidget = new StarRatingWidget(5, this);
     m_starWidget->setRating(initialRating);
+    if (locked || initialRating > 0)
+        m_starWidget->setLocked(true);
     connect(m_starWidget, &StarRatingWidget::ratingRequested,
             this, &HistoryItemWidget::onRatingRequested);
     mainLayout->addWidget(m_starWidget, 0, Qt::AlignRight | Qt::AlignVCenter);
@@ -300,7 +325,7 @@ void HistoryWindow::paintEvent(QPaintEvent *event) {
 
 // 外部接口：加载菜品列表和用户评分
 void HistoryWindow::loadDishes(const QVector<Dish> &dishes, const UserProfile &user,
-                                const QMap<QString, QString> &ratingDates) {
+                                const QMap<QString, QString> &eatingDates) {
     QLayoutItem *child;
     while ((child = listLayout->takeAt(0)) != nullptr) {
         delete child->widget();
@@ -311,17 +336,13 @@ void HistoryWindow::loadDishes(const QVector<Dish> &dishes, const UserProfile &u
     for (int i = 0; i < dishes.size(); ++i) {
         const auto &d = dishes[i];
         int rating = static_cast<int>(user.ratings.value(d.name, 0));
-        QString timestamp;
-        if (rating > 0 && ratingDates.contains(d.name))
-            timestamp = ratingDates[d.name];
-        else if (rating > 0)
-            timestamp = QString::fromUtf8("已评分");
-        else
-            timestamp = QString::fromUtf8("尚未评分");
+        QString dateStr = eatingDates.value(d.name);
+        bool locked = (rating > 0);
         QColor cardColor = kCardColors[colorIndex % kCardColors.size()];
         colorIndex++;
 
-        HistoryItemWidget *itemWidget = new HistoryItemWidget(i, d.name, timestamp, cardColor, rating, this);
+        HistoryItemWidget *itemWidget = new HistoryItemWidget(
+            i, d.name, dateStr, d.restaurant, cardColor, rating, locked, this);
         listLayout->addWidget(itemWidget);
 
         connect(itemWidget, &HistoryItemWidget::dishRated, this, [this](int dishId, int r) {
