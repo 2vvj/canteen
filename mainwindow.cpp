@@ -23,6 +23,7 @@
 #include <QToolTip>
 #include <QTime>
 #include <QDate>
+#include <QDateTime>
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -467,6 +468,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             f.close();
         }
     }
+    loadEatingTimes();
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
@@ -642,22 +644,40 @@ void MainWindow::onHistory() {
 }
 
 void MainWindow::onReview() {
-    // 菜品评价：只显示用户吃过的菜
     HistoryWindow *hw = new HistoryWindow(this);
     hw->setAttribute(Qt::WA_DeleteOnClose);
     hw->setWindowTitle(QString::fromUtf8("菜品评价"));
-    // 只显示评分过的菜，按日期排序
-    QVector<Dish> ratedDishes;
+
+    // 改用 m_eatingTimes（含具体时间），无记录时回退到日历日期
+    QMap<QString, QString> eatingDates;
+    for (auto it = m_dailyRecords.begin(); it != m_dailyRecords.end(); ++it)
+        for (const QString &dishName : it.value().dishes) {
+            if (m_eatingTimes.contains(dishName))
+                eatingDates[dishName] = m_eatingTimes[dishName];
+            else
+                eatingDates[dishName] = it.key();
+        }
+
+    // 筛选出所有吃过的菜品
+    QVector<Dish> eatenDishes;
     for (const auto &d : m_allDishes)
-        if (m_userProfile.ratings.contains(d.name) && m_userProfile.ratings[d.name] > 0)
-            ratedDishes.append(d);
-    std::sort(ratedDishes.begin(), ratedDishes.end(), [this](const Dish &a, const Dish &b) {
-        return m_ratingDates.value(a.name, "9999") < m_ratingDates.value(b.name, "9999");
+        if (eatingDates.contains(d.name))
+            eatenDishes.append(d);
+
+    std::sort(eatenDishes.begin(), eatenDishes.end(), [&eatingDates](const Dish &a, const Dish &b) {
+        return eatingDates.value(a.name, "9999") < eatingDates.value(b.name, "9999");
     });
-    hw->loadDishes(ratedDishes.isEmpty() ? m_allDishes : ratedDishes, m_userProfile, m_ratingDates);
-    connect(hw, &HistoryWindow::dishRated, this, [this](int dishId, int) {
-        if (dishId >= 0 && dishId < m_allDishes.size()) {
-            m_ratingDates[m_allDishes[dishId].name] = QDate::currentDate().toString("yyyy-MM-dd");
+
+    QMap<int, QString> idxToName;
+    for (int i = 0; i < eatenDishes.size(); ++i)
+        idxToName[i] = eatenDishes[i].name;
+
+    hw->loadDishes(eatenDishes, m_userProfile, eatingDates);
+    connect(hw, &HistoryWindow::dishRated, this, [this, idxToName](int dishId, int rating) {
+        if (idxToName.contains(dishId)) {
+            const QString &name = idxToName[dishId];
+            m_userProfile.ratings[name] = rating;
+            m_ratingDates[name] = QDate::currentDate().toString("yyyy-MM-dd");
             saveRatingsToUserFile();
         }
     });
@@ -685,6 +705,13 @@ void MainWindow::onMealReadyForReview(const QVector<Dish> &selected) {
         rec.totalPrice += 0;
         for (const auto &d : selected) rec.totalPrice += d.price;
         saveDailyRecords();
+        // 记录食用时间（含具体分钟）
+        {
+            QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm");
+            for (const auto &d : selected)
+                m_eatingTimes[d.name] = now;
+            saveEatingTimes();
+        }
         updateSidebarUserInfo(); updateLionSprite();
 
         struct MealDoneDialog : QDialog {
@@ -751,7 +778,12 @@ void MainWindow::onFinishEating() {
     m_mealActive=false;
     HistoryWindow *hw = new HistoryWindow(this); hw->setAttribute(Qt::WA_DeleteOnClose);
     hw->setWindowTitle(QString::fromUtf8("为这顿饭打分"));
-    hw->loadDishes(m_currentMealDishes, m_userProfile, m_ratingDates);
+    // 传入当前日期时间作为食用时间
+    QMap<QString, QString> eatingDates;
+    QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm");
+    for (const auto &d : m_currentMealDishes)
+        eatingDates[d.name] = now;
+    hw->loadDishes(m_currentMealDishes, m_userProfile, eatingDates);
     connect(hw, &HistoryWindow::dishRated, this, [this](int dishId, int rating){
         if(dishId>=0 && dishId<m_currentMealDishes.size()) {
             const QString &name = m_currentMealDishes[dishId].name;
@@ -879,6 +911,28 @@ void MainWindow::saveDailyRecords() {
         file.close();
     }
 }
+
+void MainWindow::loadEatingTimes() {
+    QFile f("eating_times.json");
+    if (f.open(QIODevice::ReadOnly)) {
+        QJsonObject obj = QJsonDocument::fromJson(f.readAll()).object();
+        for (auto it = obj.begin(); it != obj.end(); ++it)
+            m_eatingTimes[it.key()] = it.value().toString();
+        f.close();
+    }
+}
+
+void MainWindow::saveEatingTimes() {
+    QFile f("eating_times.json");
+    if (f.open(QIODevice::WriteOnly)) {
+        QJsonObject obj;
+        for (auto it = m_eatingTimes.begin(); it != m_eatingTimes.end(); ++it)
+            obj[it.key()] = it.value();
+        f.write(QJsonDocument(obj).toJson(QJsonDocument::Indented));
+        f.close();
+    }
+}
+
 void MainWindow::keyPressEvent(QKeyEvent *event) {
     if(event->key()==Qt::Key_E && event->modifiers()==Qt::ControlModifier){ onToggleEditMode(); return; }
     if(m_stack->currentWidget()==m_mapPage && (event->modifiers() & Qt::ControlModifier)) {

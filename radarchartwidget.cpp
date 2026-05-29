@@ -103,7 +103,7 @@ void RadarChartWidget::paintEvent(QPaintEvent *event) {
     }
 
     // ==========================================
-    // 4. 发散轴线 + 标签 + 实际数值标注
+    // 4. 发散轴线
     // ==========================================
     QColor axisColor(185, 170, 155, 90);
     for (int i = 0; i < 5; ++i) {
@@ -113,32 +113,54 @@ void RadarChartWidget::paintEvent(QPaintEvent *event) {
         QPointF endWobble(axisEnd.x() + wobbleX, axisEnd.y() + wobbleY);
         painter.setPen(QPen(axisColor, 1.0, Qt::SolidLine, Qt::RoundCap));
         painter.drawLine(center + QPointF(wobbleX*0.5, wobbleY*0.5), endWobble);
-
-        // 轴标签 — 手写体（放大）
-        QPointF lp = calculatePoint(center, maxRadius + 22, i * 72.0f);
-        DecoPainter::setHandwritingFont(painter, 12, true);
-        painter.setPen(DecoPainter::titleBrown());
-        painter.drawText(QRectF(lp.x() - 36, lp.y() - 10, 72, 20),
-                         Qt::AlignCenter, m_labels[i]);
     }
 
     // ==========================================
-    // 4.5 实际数值标注 — 显示在轴标签外侧
+    // 4.5 轴标签 + 实际数值 —— 固定在雷达外围不重叠
     // ==========================================
-    if (m_data.showActualValues) {
-        QStringList actualTexts;
-        actualTexts << QString::number(m_data.actualTaste, 'f', 0) + QString::fromUtf8("分");
-        actualTexts << QString::fromUtf8("¥") + QString::number(m_data.actualPrice, 'f', 1);
-        actualTexts << QString::number(m_data.actualExperience, 'f', 0) + QString::fromUtf8("分");
-        actualTexts << QString::number(m_data.actualCalories, 'f', 0) + QString::fromUtf8("kcal");
-        actualTexts << QString::number(m_data.actualDistance, 'f', 0) + QString::fromUtf8("m");
+    // 根据标签点相对于中心的方向，自动选择向外对齐的方向
+    struct TextBox { QRectF rect; int align; };
+    auto outwardPlacement = [&](const QPointF &p, float textW, float textH) -> TextBox {
+        QPointF dir = p - center;
+        int hAlign = Qt::AlignHCenter;
+        int vAlign = Qt::AlignVCenter;
+        float rx = p.x(), ry = p.y();
+        // 水平方向：在右侧则左对齐（文字向右延伸），左侧则右对齐（文字向左延伸）
+        if      (dir.x() >  8) { hAlign = Qt::AlignLeft; }
+        else if (dir.x() < -8) { hAlign = Qt::AlignRight; rx -= textW; }
+        else                   { rx -= textW / 2; }
+        // 垂直方向：在上方则底对齐（文字向上延伸），下方则顶对齐（文字向下延伸）
+        if      (dir.y() < -8) { vAlign = Qt::AlignBottom; ry -= textH; }
+        else if (dir.y() >  8) { vAlign = Qt::AlignTop; }
+        else                   { ry -= textH / 2; }
+        return { QRectF(rx, ry, textW, textH), hAlign | vAlign };
+    };
 
-        DecoPainter::setHandwritingFont(painter, 10, false);
-        for (int i = 0; i < 5; ++i) {
-            QPointF vp = calculatePoint(center, maxRadius + 40, i * 72.0f);
+    for (int i = 0; i < 5; ++i) {
+        float angle = i * 72.0f;
+        // 轴标签（在外圈稍远处）
+        QPointF lp = calculatePoint(center, maxRadius * 1.28f, angle);
+        TextBox labelBox = outwardPlacement(lp, 90, 22);
+        DecoPainter::setHandwritingFont(painter, 12, true);
+        painter.setPen(DecoPainter::titleBrown());
+        painter.drawText(labelBox.rect, labelBox.align, m_labels[i]);
+
+        // 实际数值（在标签更外侧，错开避免遮挡）
+        if (m_data.showActualValues) {
+            QStringList actualTexts;
+            actualTexts << QString::number(m_data.actualTaste, 'f', 0) + QString::fromUtf8("分");
+            actualTexts << QString::fromUtf8("¥") + QString::number(m_data.actualPrice, 'f', 1);
+            actualTexts << QString::number(m_data.actualExperience, 'f', 0) + QString::fromUtf8("分");
+            actualTexts << QString::number(m_data.actualCalories, 'f', 0) + QString::fromUtf8("kcal");
+            actualTexts << QString::number(m_data.actualDistance, 'f', 0) + QString::fromUtf8("m");
+
+            // 数值固定在标签下方（向下偏移 20px），避免与标签重叠
+            QPointF vp = calculatePoint(center, maxRadius * 1.28f, angle);
+            vp.ry() += 20.0f;
+            TextBox valBox = outwardPlacement(vp, 90, 18);
+            DecoPainter::setHandwritingFont(painter, 10, false);
             painter.setPen(QColor(180, 90, 70));
-            painter.drawText(QRectF(vp.x() - 36, vp.y() - 8, 72, 16),
-                             Qt::AlignCenter, actualTexts[i]);
+            painter.drawText(valBox.rect, valBox.align, actualTexts[i]);
         }
     }
 
