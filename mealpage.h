@@ -52,6 +52,8 @@ private:
     QVector<Dish> allSearchDishes() const;
     void doDraw(const QVector<Dish> &candidates, const QMap<QString, double> &weights);
     void refreshMenuList();
+    void recomputePhase();
+    void removeDishFromMenu(int index);
     void showNoDishes();
     bool m_mealSelectedContains(const QString &name) const;
 
