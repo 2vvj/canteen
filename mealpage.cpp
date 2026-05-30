@@ -392,7 +392,8 @@ void MealPage::onAddExtra() {
 
 void MealPage::refreshMenuList() {
     m_menuList->clear();
-    for (const auto &d : m_mealSelected) {
+    for (int i = 0; i < m_mealSelected.size(); ++i) {
+        const auto &d = m_mealSelected[i];
         QString rt;
         switch (d.role) {
             case FULL_MEAL: rt = QString::fromUtf8("[整餐]"); break;
@@ -402,14 +403,96 @@ void MealPage::refreshMenuList() {
             case BEVERAGE:  rt = QString::fromUtf8("[饮]"); break;
             case SNACK:     rt = QString::fromUtf8("[小吃]"); break;
         }
-        m_menuList->addItem(QString("%1 %2 — ¥%3 %4kcal")
+
+        auto *item = new QListWidgetItem;
+        m_menuList->addItem(item);
+
+        auto *row = new QWidget;
+        auto *layout = new QHBoxLayout(row);
+        layout->setContentsMargins(8, 4, 8, 4);
+        layout->setSpacing(8);
+
+        auto *label = new QLabel(QString("%1 %2 — ¥%3 %4kcal")
             .arg(rt).arg(d.name).arg(d.price, 0, 'f', 1).arg(d.calories, 0, 'f', 0));
+        label->setStyleSheet("font-size: 16px; color: #5d3a1a; background:transparent;");
+        layout->addWidget(label);
+        layout->addStretch();
+
+        auto *removeBtn = new QPushButton(QString::fromUtf8("✕"));
+        removeBtn->setFixedSize(24, 24);
+        removeBtn->setStyleSheet(
+            "QPushButton{background:transparent; color:#c0392b; font-size:14px; font-weight:bold; border:1px solid #e0c0b0; border-radius:12px;}"
+            "QPushButton:hover{background:#fce4e4; color:#e74c3c; border-color:#e74c3c;}");
+        layout->addWidget(removeBtn);
+
+        int idx = i;
+        connect(removeBtn, &QPushButton::clicked, this, [this, idx]() {
+            removeDishFromMenu(idx);
+        });
+
+        item->setSizeHint(row->sizeHint());
+        m_menuList->setItemWidget(item, row);
     }
 }
 
 void MealPage::onConfirmMeal() {
     // 不再直接结束，而是发射信号让 MainWindow 展示雷达确认页
     emit mealReadyForReview(m_mealSelected, m_user);
+}
+
+void MealPage::recomputePhase() {
+    if (m_mealSelected.isEmpty()) {
+        m_lockedRestaurant.clear();
+        m_phase = isBreakfast() ? BREAKFAST_MAIN : MAIN_PHASE;
+        return;
+    }
+
+    if (isBreakfast()) {
+        auto r = filledRoles();
+        bool hasStaple = r.contains(STAPLE) || r.contains(FULL_MEAL);
+        bool hasDrink = r.contains(BEVERAGE);
+
+        if (hasStaple && hasDrink)
+            m_phase = BREAKFAST_DRINK;
+        else
+            m_phase = BREAKFAST_MAIN;
+    } else {
+        auto r = filledRoles();
+        if (r.contains(FULL_MEAL) || isCoreComplete())
+            m_phase = EXTRA_PHASE;
+        else
+            m_phase = MAIN_PHASE;
+    }
+}
+
+void MealPage::removeDishFromMenu(int index) {
+    if (index < 0 || index >= m_mealSelected.size()) return;
+
+    m_mealSelected.removeAt(index);
+
+    recomputePhase();
+    updatePhaseLabel();
+    refreshMenuList();
+
+    // Reset result panel and button states
+    m_resultPanel->setVisible(false);
+    m_eatBtn->setVisible(true);
+    m_swapBtn->setVisible(true);
+    m_giveUpBtn->setVisible(false);
+    m_justEatBtn->setVisible(false);
+    m_drawLimitedBtn->setEnabled(!m_lastResults.isEmpty());
+    m_drawWeightedBtn->setEnabled(true);
+
+    if (m_phase == EXTRA_PHASE) {
+        m_extraPanel->setVisible(true);
+        m_extraDrinkBtn->setEnabled(!filledRoles().contains(BEVERAGE));
+    } else {
+        m_extraPanel->setVisible(false);
+    }
+
+    m_confirmMealBtn->setEnabled(
+        m_phase == EXTRA_PHASE || isCoreComplete() || filledRoles().contains(FULL_MEAL)
+    );
 }
 
 void MealPage::onSearchResults(const QVector<SearchResult> &results) {
