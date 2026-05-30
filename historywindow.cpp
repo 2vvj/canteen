@@ -464,8 +464,9 @@ void HistoryWindow::loadDishes(const QVector<Dish> &dishes, const UserProfile &u
     int colorIndex = 0;
     for (int i = 0; i < dishes.size(); ++i) {
         const auto &d = dishes[i];
-        int rating = static_cast<int>(user.ratings.value(d.name, 0));
-        QString dateStr = eatingDates.value(d.name);
+        QString key = d.name + "|" + d.restaurant;
+        int rating = static_cast<int>(user.ratings.value(key, 0));
+        QString dateStr = eatingDates.value(key);
         bool locked = (rating > 0);
         QColor cardColor = kCardColors[colorIndex % kCardColors.size()];
         colorIndex++;
