@@ -84,12 +84,18 @@ signals:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
 
 private:
     void handleDishRatingUpdate(int dishId, int newRating);
 
     QVBoxLayout *mainLayout;
     QVBoxLayout *listLayout;
+    QPushButton *m_closeBtn;
+    QPoint m_dragPos;
+    bool m_dragging = false;
 };
 
 #endif

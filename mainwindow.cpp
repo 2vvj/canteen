@@ -164,7 +164,7 @@ Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
     QFont subFont; subFont.setPointSize(10);
     subFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
 
-    m_calorieLabel = new QLabel(QString::fromUtf8("今日已摄入 0 卡路里"));
+    m_calorieLabel = new QLabel(QString::fromUtf8("今日已摄入 0 kcal"));
     m_calorieLabel->setFont(subFont);
     m_calorieLabel->setStyleSheet("color:#9A9590;padding-left:4px;");
     m_calorieLabel->setWordWrap(true); layout->addWidget(m_calorieLabel);
@@ -186,7 +186,7 @@ void Sidebar::setAvatar(const QPixmap &pixmap) { if(!pixmap.isNull()) m_avatarLa
 void Sidebar::setUserName(const QString &name) { m_nameLabel->setText(name); }
 void Sidebar::setTodayCalories(int kcal) {
     m_todayCalories = kcal;
-    m_calorieLabel->setText(QString::fromUtf8("今日已摄入 %1 卡路里").arg(kcal));
+    m_calorieLabel->setText(QString::fromUtf8("今日已摄入 %1 kcal").arg(kcal));
 }
 void Sidebar::setBMR(int bmr) {
     m_bmrLabel->setText(QString::fromUtf8("基础代谢 %1  kcal/天").arg(bmr));

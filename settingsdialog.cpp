@@ -84,6 +84,17 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     mainLay->addWidget(titleLbl);
     mainLay->addSpacing(4);
 
+    // ── 关闭按钮 — SketchyButton，匹配取消按钮风格 ──
+    m_closeBtn = new SketchyButton(QString::fromUtf8("×"),
+        QColor("#E0D7CC"), C_SHADOW2, this);
+    m_closeBtn->setFixedSize(36, 36);
+    m_closeBtn->setCursor(Qt::PointingHandCursor);
+    m_closeBtn->setStyleSheet(
+        "font-size: 18px; font-weight: bold; color: #2B2B2B;"
+        "font-family: 'Microsoft YaHei';");
+    connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::close);
+    m_closeBtn->move(width() - 36 - 36, 30);
+
     // ── Avatar ──
     m_avatarPreview = new QLabel;
     m_avatarPreview->setFixedSize(80, 80);
@@ -186,13 +197,9 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     // ── Buttons ──
     QHBoxLayout *btnRow = new QHBoxLayout;
     btnRow->addStretch();
-    SketchyButton *cancelBtn = new SketchyButton(QString::fromUtf8("取消"),
-        QColor("#E0D7CC"), C_SHADOW2, this);
-    cancelBtn->setFixedSize(90, 40);
     SketchyButton *saveBtn = new SketchyButton(QString::fromUtf8("保存"),
-        QColor("#D0DDE8"), C_SHADOW2, this);
+        QColor("#E0D7CC"), C_SHADOW2, this);
     saveBtn->setFixedSize(90, 40);
-    connect(cancelBtn, &QPushButton::clicked, this, &QDialog::reject);
     connect(saveBtn, &QPushButton::clicked, this, [this]() {
         m_result.name = m_nameEdit->text().isEmpty() ? QString::fromUtf8("用户") : m_nameEdit->text();
         m_result.gender = m_genderCombo->currentText();
@@ -201,7 +208,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
         m_result.age    = m_ageEdit->text().toInt();
         accept();
     });
-    btnRow->addWidget(cancelBtn);
     btnRow->addWidget(saveBtn);
     mainLay->addLayout(btnRow);
 }
@@ -260,9 +266,9 @@ void SettingsDialog::showGenderNote()
 {
     QLabel *popup = new QLabel(m_genderNoteText, this, Qt::ToolTip);
     popup->setWordWrap(true);
-    popup->setFixedWidth(320);
+    popup->setFixedWidth(280);
 
-    QFont popFont; popFont.setPointSize(11);
+    QFont popFont; popFont.setPointSize(10);
     popFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
     popup->setFont(popFont);
     popup->setStyleSheet(QString(

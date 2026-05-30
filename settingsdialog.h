@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QComboBox>
+#include <QPushButton>
 #include <QPoint>
 #include "userdata.h"
 
@@ -38,6 +39,7 @@ private:
     QLineEdit *m_heightEdit;
     QLineEdit *m_weightEdit;
     QLineEdit *m_ageEdit;
+    QPushButton *m_closeBtn;
     QWidget *m_genderPopup = nullptr;
     QPoint m_dragPos;
     bool m_dragging = false;
