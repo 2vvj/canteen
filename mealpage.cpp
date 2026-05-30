@@ -1,10 +1,24 @@
 #include "mealpage.h"
 #include "recommend.h"
+#include "decopainter.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QRandomGenerator>
 #include <QTime>
+#include <QPainter>
+
+// ── 配色（与 MainWindow 一致的手绘风色板）─────────────────────────
+static const QColor C_CREAM      = QColor("#FDFBF7");
+static const QColor C_INK        = QColor("#2B2B2B");
+static const QColor C_INK_LIGHT  = QColor("#4A4540");
+static const QColor C_SHADOW_DK  = QColor("#3A3530");
+static const QColor C_CARD_SAGE  = QColor("#DCE4D3");
+static const QColor C_CARD_BLUE  = QColor("#D0DDE8");
+static const QColor C_CARD_ROSE  = QColor("#EAD7D2");
+static const QColor C_CARD_TAUPE = QColor("#E0D7CC");
+static const QColor C_CARD_WHEAT = QColor("#F2E9D4");
+static const QColor C_ACCENT     = QColor("#C86A5A");
 
 MealPage::MealPage(const QVector<Dish> &allDishes, UserProfile &user, QWidget *parent)
     : QWidget(parent), m_allDishes(allDishes), m_user(user)
@@ -13,97 +27,135 @@ MealPage::MealPage(const QVector<Dish> &allDishes, UserProfile &user, QWidget *p
     setupUI();
 }
 
+void MealPage::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+
+    // 奶油色纸张背景
+    p.fillRect(rect(), C_CREAM);
+
+    // 纸张纹理点
+    p.setPen(Qt::NoPen);
+    for (int i = 0; i < 55; ++i) {
+        int x = QRandomGenerator::global()->bounded(width());
+        int y = QRandomGenerator::global()->bounded(height());
+        int r = QRandomGenerator::global()->bounded(3);
+        QColor dot("#D8D0C8");
+        dot.setAlpha(15 + QRandomGenerator::global()->bounded(25));
+        p.setBrush(dot);
+        p.drawEllipse(QPointF(x, y), r, r);
+    }
+}
+
 void MealPage::setupUI() {
     auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(24, 16, 24, 24);
-    mainLayout->setSpacing(12);
+    mainLayout->setContentsMargins(28, 20, 28, 28);
+    mainLayout->setSpacing(14);
 
-    // === 返回按钮 ===
-    auto *backBtn = new QPushButton(QString::fromUtf8("← 返回地图"));
-    backBtn->setStyleSheet(
-        "QPushButton{background:transparent; color:#8b6914; font-size:14px; border:1px solid #d4c4a0;"
-        "border-radius:8px; padding:6px 14px;}"
-        "QPushButton:hover{background:#f5e6c8;}");
-    connect(backBtn, &QPushButton::clicked, this, &MealPage::backToMap);
-    mainLayout->addWidget(backBtn);
+    // 字体
+    QFont bodyFont;
+    bodyFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
 
-    // === 时段状态 ===
-    auto *timeRow = new QHBoxLayout;
+    // === 顶栏：时段信息（左） + 返回按钮（右） ===
+    auto *headerRow = new QHBoxLayout;
+
+    auto *timeBlock = new QVBoxLayout;
+    timeBlock->setSpacing(2);
     m_timeLabel = new QLabel;
-    m_timeLabel->setStyleSheet("font-size: 15px; color: #8b6914; font-weight: bold;");
-    timeRow->addWidget(m_timeLabel);
+    m_timeLabel->setStyleSheet(QString("font-size:14px; color:%1; font-weight:bold; background:transparent;").arg(C_INK_LIGHT.name()));
+    timeBlock->addWidget(m_timeLabel);
+
     m_phaseLabel = new QLabel;
-    m_phaseLabel->setStyleSheet("font-size: 14px; color: #e65100; font-weight: bold;");
-    timeRow->addWidget(m_phaseLabel);
-    timeRow->addStretch();
-    mainLayout->addLayout(timeRow);
+    m_phaseLabel->setStyleSheet(QString("font-size:14px; color:%1; font-weight:bold; background:transparent;").arg(C_ACCENT.name()));
+    timeBlock->addWidget(m_phaseLabel);
+    headerRow->addLayout(timeBlock);
+    headerRow->addStretch();
+
+    m_backBtn = new SketchyButton(QString::fromUtf8("← 返回地图"), C_CARD_TAUPE, C_SHADOW_DK);
+    m_backBtn->setFixedHeight(38);
+    m_backBtn->setMinimumWidth(130);
+    QFont backFont;
+    backFont.setPointSize(11);
+    backFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+    m_backBtn->setFont(backFont);
+    connect(m_backBtn, &QPushButton::clicked, this, &MealPage::backToMap);
+    headerRow->addWidget(m_backBtn);
+    mainLayout->addLayout(headerRow);
 
     // === 搜索 ===
     m_searchWidget = new SearchWidget(m_allDishes, m_user);
+    m_searchWidget->setStyleSheet(QString("background:transparent;"));
     mainLayout->addWidget(m_searchWidget);
     connect(m_searchWidget, &SearchWidget::searchResultsChanged, this, &MealPage::onSearchResults);
     connect(m_searchWidget, &SearchWidget::tagsChanged, this, &MealPage::onTagsChanged);
 
-    // === 抽卡按钮 ===
+    // === 抽卡按钮（双按钮并排） ===
     auto *btnRow = new QHBoxLayout;
-    m_drawLimitedBtn = new QPushButton(QString::fromUtf8("从搜索结果中抽卡"));
-    m_drawLimitedBtn->setMinimumHeight(56);
+    btnRow->setSpacing(14);
+
+    m_drawLimitedBtn = new SketchyButton(QString::fromUtf8("从搜索结果中抽卡"), C_CARD_ROSE, C_SHADOW_DK);
+    m_drawLimitedBtn->setFixedHeight(54);
     m_drawLimitedBtn->setEnabled(false);
-    m_drawLimitedBtn->setStyleSheet(
-        "QPushButton{background: qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #ecb860,stop:1 #d49430);"
-        "color:white; font-size:17px; font-weight:bold; border-radius:14px; padding:10px;}"
-        "QPushButton:hover{background: qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #f0c870,stop:1 #e0a440);}"
-        "QPushButton:disabled{background:#ccc; color:#999;}");
+    QFont drawFont;
+    drawFont.setPointSize(13);
+    drawFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
+    m_drawLimitedBtn->setFont(drawFont);
     btnRow->addWidget(m_drawLimitedBtn);
 
-    m_drawWeightedBtn = new QPushButton(QString::fromUtf8("加权抽卡（惊喜模式）"));
-    m_drawWeightedBtn->setMinimumHeight(56);
-    m_drawWeightedBtn->setStyleSheet(
-        "QPushButton{background: qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #c4956a,stop:1 #9a6a40);"
-        "color:white; font-size:17px; font-weight:bold; border-radius:14px; padding:10px;}"
-        "QPushButton:hover{background: qlineargradient(x1:0,y1:0,x2:1,y2:1,stop:0 #d0a878,stop:1 #b08050);}");
+    m_drawWeightedBtn = new SketchyButton(QString::fromUtf8("加权抽卡（惊喜模式）"), C_CARD_BLUE, C_SHADOW_DK);
+    m_drawWeightedBtn->setFixedHeight(54);
+    m_drawWeightedBtn->setFont(drawFont);
     btnRow->addWidget(m_drawWeightedBtn);
     mainLayout->addLayout(btnRow);
     connect(m_drawLimitedBtn, &QPushButton::clicked, this, &MealPage::onDrawLimited);
     connect(m_drawWeightedBtn, &QPushButton::clicked, this, &MealPage::onDrawWeighted);
 
-    // === 抽卡结果 ===
-    m_resultPanel = new QWidget;
-    m_resultPanel->setStyleSheet("background:rgba(255,255,255,220); border-radius:14px; padding:12px;");
+    // === 抽卡结果卡片 ===
+    m_resultPanel = new SketchyCard;
+    m_resultPanel->setCardColor(QColor("#FFFBF5"));
     m_resultPanel->setVisible(false);
     auto *resultLayout = new QVBoxLayout(m_resultPanel);
+    resultLayout->setContentsMargins(20, 18, 20, 18);
+    resultLayout->setSpacing(12);
+
     m_resultDishLabel = new QLabel;
     m_resultDishLabel->setAlignment(Qt::AlignCenter);
     m_resultDishLabel->setWordWrap(true);
-    m_resultDishLabel->setStyleSheet("font-size: 18px; color: #5d3a1a; background:transparent;");
+    m_resultDishLabel->setStyleSheet(QString("font-size:18px; color:%1; background:transparent;").arg(C_INK.name()));
     resultLayout->addWidget(m_resultDishLabel);
 
     auto *choiceRow = new QHBoxLayout;
-    m_eatBtn = new QPushButton(QString::fromUtf8("吃这个！"));
-    m_eatBtn->setMinimumHeight(48);
-    m_eatBtn->setStyleSheet("QPushButton{background:#4caf50; color:white; font-size:17px; font-weight:bold; border-radius:12px;}"
-                            "QPushButton:hover{background:#43a047;}");
+    choiceRow->setSpacing(12);
+    m_eatBtn = new SketchyButton(QString::fromUtf8("吃这个！"), C_CARD_SAGE, C_SHADOW_DK);
+    m_eatBtn->setFixedHeight(46);
+    QFont choiceFont;
+    choiceFont.setPointSize(13);
+    choiceFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
+    m_eatBtn->setFont(choiceFont);
     choiceRow->addWidget(m_eatBtn);
-    m_swapBtn = new QPushButton(QString::fromUtf8("换一个"));
-    m_swapBtn->setMinimumHeight(48);
-    m_swapBtn->setStyleSheet("QPushButton{background:#ff9800; color:white; font-size:17px; font-weight:bold; border-radius:12px;}"
-                             "QPushButton:hover{background:#f57c00;}");
+
+    m_swapBtn = new SketchyButton(QString::fromUtf8("换一个"), C_CARD_WHEAT, C_SHADOW_DK);
+    m_swapBtn->setFixedHeight(46);
+    m_swapBtn->setFont(choiceFont);
     choiceRow->addWidget(m_swapBtn);
     resultLayout->addLayout(choiceRow);
 
-    // Bug1: "没菜了"时的两个选择按钮
     auto *noDishRow = new QHBoxLayout;
-    m_giveUpBtn = new QPushButton(QString::fromUtf8("不吃了"));
-    m_giveUpBtn->setMinimumHeight(44);
-    m_giveUpBtn->setStyleSheet("QPushButton{background:#ff9800; color:white; font-size:15px; font-weight:bold; border-radius:10px;}"
-                                "QPushButton:hover{background:#f57c00;}");
+    noDishRow->setSpacing(12);
+    m_giveUpBtn = new SketchyButton(QString::fromUtf8("不吃了"), C_CARD_ROSE, C_SHADOW_DK);
+    m_giveUpBtn->setFixedHeight(42);
     m_giveUpBtn->setVisible(false);
+    QFont noDishFont;
+    noDishFont.setPointSize(12);
+    noDishFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+    m_giveUpBtn->setFont(noDishFont);
     noDishRow->addWidget(m_giveUpBtn);
-    m_justEatBtn = new QPushButton(QString::fromUtf8("就这样吧，直接开饭！"));
-    m_justEatBtn->setMinimumHeight(44);
-    m_justEatBtn->setStyleSheet("QPushButton{background:#4caf50; color:white; font-size:15px; font-weight:bold; border-radius:10px;}"
-                                 "QPushButton:hover{background:#43a047;}");
+
+    m_justEatBtn = new SketchyButton(QString::fromUtf8("就这样吧，直接开饭！"), C_CARD_SAGE, C_SHADOW_DK);
+    m_justEatBtn->setFixedHeight(42);
     m_justEatBtn->setVisible(false);
+    m_justEatBtn->setFont(noDishFont);
     noDishRow->addWidget(m_justEatBtn);
     resultLayout->addLayout(noDishRow);
     connect(m_giveUpBtn, &QPushButton::clicked, this, [this]() { resetMeal(); emit backToMap(); });
@@ -114,46 +166,55 @@ void MealPage::setupUI() {
     connect(m_swapBtn, &QPushButton::clicked, this, &MealPage::onSwapDish);
 
     // === 附加阶段面板 ===
-    m_extraPanel = new QWidget;
-    m_extraPanel->setStyleSheet("background:rgba(255,255,240,220); border-radius:12px; padding:10px;");
+    m_extraPanel = new SketchyCard;
+    m_extraPanel->setCardColor(QColor("#F7F2E8"));
     m_extraPanel->setVisible(false);
     auto *extraLayout = new QHBoxLayout(m_extraPanel);
+    extraLayout->setContentsMargins(18, 14, 18, 14);
+    extraLayout->setSpacing(12);
+
     auto *extraLabel = new QLabel(QString::fromUtf8("核心齐了！"));
-    extraLabel->setStyleSheet("font-size: 16px; font-weight: bold; color: #5d3a1a; background:transparent;");
+    extraLabel->setStyleSheet(QString("font-size:16px; font-weight:bold; color:%1; background:transparent;").arg(C_INK.name()));
     extraLayout->addWidget(extraLabel);
-    m_extraDrinkBtn = new QPushButton(QString::fromUtf8("加个饮品/小吃"));
-    m_extraDrinkBtn->setMinimumHeight(44);
-    m_extraDrinkBtn->setStyleSheet("QPushButton{background:#e8c97a; color:white; font-size:15px; font-weight:bold; border-radius:10px;}"
-                                   "QPushButton:hover{background:#d4a040;}");
+
+    m_extraDrinkBtn = new SketchyButton(QString::fromUtf8("加个饮品/小吃"), C_CARD_WHEAT, C_SHADOW_DK);
+    m_extraDrinkBtn->setFixedHeight(42);
+    QFont extraFont;
+    extraFont.setPointSize(12);
+    extraFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+    m_extraDrinkBtn->setFont(extraFont);
     extraLayout->addWidget(m_extraDrinkBtn);
-    m_extraDoneBtn = new QPushButton(QString::fromUtf8("够了，开吃！"));
-    m_extraDoneBtn->setMinimumHeight(44);
-    m_extraDoneBtn->setStyleSheet("QPushButton{background:#4caf50; color:white; font-size:15px; font-weight:bold; border-radius:10px;}"
-                                  "QPushButton:hover{background:#43a047;}");
+
+    m_extraDoneBtn = new SketchyButton(QString::fromUtf8("够了，开吃！"), C_CARD_SAGE, C_SHADOW_DK);
+    m_extraDoneBtn->setFixedHeight(42);
+    m_extraDoneBtn->setFont(extraFont);
     extraLayout->addWidget(m_extraDoneBtn);
     mainLayout->addWidget(m_extraPanel);
     connect(m_extraDrinkBtn, &QPushButton::clicked, this, &MealPage::onAddExtra);
     connect(m_extraDoneBtn, &QPushButton::clicked, this, &MealPage::onConfirmMeal);
 
-    // === 菜单列表 ===
+    // === 菜单区域 ===
     auto *menuLabel = new QLabel(QString::fromUtf8("今日菜单"));
-    menuLabel->setStyleSheet("font-size: 17px; font-weight: bold; color: #8b6914; margin-top: 4px; background:transparent;");
+    menuLabel->setStyleSheet(QString("font-size:17px; font-weight:bold; color:%1; margin-top:6px; background:transparent;").arg(C_INK.name()));
     mainLayout->addWidget(menuLabel);
+
     m_menuList = new QListWidget;
     m_menuList->setMaximumHeight(180);
     m_menuList->setStyleSheet(
-        "QListWidget{background:rgba(255,255,255,200); border: 2px dashed #e0c8a0; border-radius: 10px;"
-        "font-size: 16px; color: #5d3a1a; selection-background-color: #ffe8cc; selection-color: #5d3a1a;}");
+        QString("QListWidget{background:rgba(255,255,255,200); border:2px dashed #C8BFA8;"
+        "border-radius:10px; font-size:15px; color:%1;"
+        "selection-background-color:#F0E8D8; selection-color:%1;"
+        "padding:6px;}").arg(C_INK.name()));
     mainLayout->addWidget(m_menuList);
 
     // === 确认菜单按钮 ===
-    m_confirmMealBtn = new QPushButton(QString::fromUtf8("确认菜单，开始吃饭！"));
-    m_confirmMealBtn->setMinimumHeight(50);
+    m_confirmMealBtn = new SketchyButton(QString::fromUtf8("确认菜单，开始吃饭！"), C_CARD_BLUE, C_SHADOW_DK);
+    m_confirmMealBtn->setFixedHeight(52);
     m_confirmMealBtn->setEnabled(false);
-    m_confirmMealBtn->setStyleSheet(
-        "QPushButton{background: #e8c97a; color:white; font-size:19px; font-weight:bold; border-radius:14px;}"
-        "QPushButton:hover{background: #d4a040;}"
-        "QPushButton:disabled{background:#ccc;}");
+    QFont confirmFont;
+    confirmFont.setPointSize(15);
+    confirmFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.5);
+    m_confirmMealBtn->setFont(confirmFont);
     mainLayout->addWidget(m_confirmMealBtn);
     connect(m_confirmMealBtn, &QPushButton::clicked, this, &MealPage::onConfirmMeal);
 

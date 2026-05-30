@@ -94,6 +94,7 @@ public:
     ReviewDialog(const QVector<Dish> &dishes, int userZoneId,
                  ZoneManager *zoneMgr, DistanceDB *distDB,
                  const UserSettings &settings,
+                 const QMap<QString, int> &restaurantZoneMap,
                  QWidget *parent = nullptr);
     bool isConfirmed() const { return m_confirmed; }
 
@@ -114,6 +115,7 @@ private:
     DistanceDB *m_distanceDB;
     int m_userZoneId;
     UserSettings m_userData;
+    QMap<QString, int> m_restaurantZoneMap;
     QPoint m_dragPos;
     bool m_dragging = false;
 };
@@ -183,6 +185,7 @@ private:
     QMap<QString, DailyRecord> m_dailyRecords;
     QMap<QString, QString> m_ratingDates;  // 菜名 -> 评分日期
     QMap<QString, QString> m_eatingTimes;  // 菜名 -> 食用时间 "yyyy-MM-dd HH:mm"
+    QMap<QString, int> m_restaurantZoneMap; // 食堂名 -> 区域ID
 };
 
 #endif
