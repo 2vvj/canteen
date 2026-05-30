@@ -221,6 +221,14 @@ void MealPage::setupUI() {
     mainLayout->addStretch();
     updatePhaseLabel();
 
+    // 实时时钟：每秒更新左上角时间
+    m_timeTimer = new QTimer(this);
+    connect(m_timeTimer, &QTimer::timeout, this, &MealPage::updateTimeDisplay);
+    m_timeTimer->start(1000);
+    updateTimeDisplay();
+}
+
+void MealPage::updateTimeDisplay() {
     QTime now = QTime::currentTime();
     QString mode = isBreakfast() ? QString::fromUtf8("早餐模式") : QString::fromUtf8("中晚餐模式");
     m_timeLabel->setText(QString("%1  %2 | 供应时段内").arg(now.toString("HH:mm")).arg(mode));
