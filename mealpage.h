@@ -5,6 +5,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QListWidget>
+#include <QTimer>
 #include <QVector>
 #include <QSet>
 #include "dishdata.h"
@@ -27,6 +28,7 @@ signals:
     void backToMap();
 
 private slots:
+    void updateTimeDisplay();
     void onSearchResults(const QVector<SearchResult> &results);
     void onTagsChanged(const QStringList &tags);
     void onDrawLimited();
@@ -59,6 +61,7 @@ private:
     Phase m_phase;
 
     // UI
+    QTimer *m_timeTimer;
     QLabel *m_timeLabel;
     QLabel *m_phaseLabel;
     SearchWidget *m_searchWidget;
