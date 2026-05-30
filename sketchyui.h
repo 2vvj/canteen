@@ -71,4 +71,20 @@ private:
     QPropertyAnimation *m_hoverAnim;
 };
 
+// ── SketchyCard: organic card container with shadow-offset ────────
+class SketchyCard : public QWidget {
+    Q_OBJECT
+public:
+    explicit SketchyCard(QWidget *parent = nullptr);
+    void setCardColor(const QColor &color);
+    void setShadowColor(const QColor &color);
+    void setInkColor(const QColor &color);
+protected:
+    void paintEvent(QPaintEvent *e) override;
+private:
+    QColor m_cardColor = QColor("#FAF7F0");
+    QColor m_shadowColor = QColor("#3A3530");
+    QColor m_inkColor = QColor("#2B2B2B");
+};
+
 #endif

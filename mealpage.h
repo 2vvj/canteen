@@ -2,7 +2,6 @@
 #define MEALPAGE_H
 
 #include <QWidget>
-#include <QPushButton>
 #include <QLabel>
 #include <QListWidget>
 #include <QVector>
@@ -10,6 +9,7 @@
 #include "dishdata.h"
 #include "searchwidget.h"
 #include "gachawidget.h"
+#include "sketchyui.h"
 
 // 用餐决策页面：搜索 → 抽卡 → 搭配
 class MealPage : public QWidget {
@@ -37,6 +37,9 @@ private slots:
     void onAddExtra();
     void onConfirmMeal();
 
+protected:
+    void paintEvent(QPaintEvent *) override;
+
 private:
     void setupUI();
     enum Phase { MAIN_PHASE, EXTRA_PHASE, BREAKFAST_MAIN, BREAKFAST_DRINK };
@@ -60,21 +63,22 @@ private:
     QLabel *m_timeLabel;
     QLabel *m_phaseLabel;
     SearchWidget *m_searchWidget;
-    QPushButton *m_drawLimitedBtn;
-    QPushButton *m_drawWeightedBtn;
-    QPushButton *m_confirmMealBtn;
-    QPushButton *m_finishMealBtn;
 
-    QWidget *m_resultPanel;
+    SketchyButton *m_backBtn;
+    SketchyButton *m_drawLimitedBtn;
+    SketchyButton *m_drawWeightedBtn;
+    SketchyButton *m_confirmMealBtn;
+
+    SketchyCard *m_resultPanel;
     QLabel *m_resultDishLabel;
-    QPushButton *m_eatBtn;
-    QPushButton *m_swapBtn;
-    QPushButton *m_giveUpBtn;
-    QPushButton *m_justEatBtn;
+    SketchyButton *m_eatBtn;
+    SketchyButton *m_swapBtn;
+    SketchyButton *m_giveUpBtn;
+    SketchyButton *m_justEatBtn;
 
-    QWidget *m_extraPanel;
-    QPushButton *m_extraDrinkBtn;
-    QPushButton *m_extraDoneBtn;
+    SketchyCard *m_extraPanel;
+    SketchyButton *m_extraDrinkBtn;
+    SketchyButton *m_extraDoneBtn;
 
     QListWidget *m_menuList;
 

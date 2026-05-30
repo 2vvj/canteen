@@ -206,6 +206,12 @@ void Sidebar::paintEvent(QPaintEvent *) {
 
 // ── ReviewDialog ────────────────────────────────────────────────
 int ReviewDialog::findZoneForRestaurant(const QString &restaurant) const {
+    // 优先查映射表
+    if (m_restaurantZoneMap.contains(restaurant)) {
+        int zoneId = m_restaurantZoneMap.value(restaurant, -1);
+        if (zoneId >= 0) return zoneId;
+    }
+    // 回退到模糊匹配
     if (!m_zoneManager) return -1;
     const auto zones = m_zoneManager->allZones();
     for (const auto &z : zones) {
@@ -222,9 +228,12 @@ double ReviewDialog::getDistance(int zoneA, int zoneB) const {
 
 ReviewDialog::ReviewDialog(const QVector<Dish> &dishes, int userZoneId,
                            ZoneManager *zoneMgr, DistanceDB *distDB,
-                           const UserSettings &settings, QWidget *parent)
+                           const UserSettings &settings,
+                           const QMap<QString, int> &restaurantZoneMap,
+                           QWidget *parent)
     : QDialog(parent), m_zoneManager(zoneMgr), m_distanceDB(distDB),
-      m_userZoneId(userZoneId), m_userData(settings)
+      m_userZoneId(userZoneId), m_userData(settings),
+      m_restaurantZoneMap(restaurantZoneMap)
 {
     setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -469,6 +478,17 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         }
     }
     loadEatingTimes();
+
+    // 加载食堂→区域映射
+    {
+        QFile f("restaurant_zone_map.json");
+        if (f.open(QIODevice::ReadOnly)) {
+            QJsonObject obj = QJsonDocument::fromJson(f.readAll()).object();
+            for (auto it = obj.begin(); it != obj.end(); ++it)
+                m_restaurantZoneMap[it.key()] = it.value().toInt(-1);
+            f.close();
+        }
+    }
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
@@ -691,9 +711,23 @@ void MainWindow::onSettings() {
 
 void MainWindow::onMealReadyForReview(const QVector<Dish> &selected) {
     if(selected.isEmpty()) return;
-    ReviewDialog dlg(selected, m_userZoneId, m_zoneManager, m_distanceDB, m_userData.settings, this);
+    ReviewDialog dlg(selected, m_userZoneId, m_zoneManager, m_distanceDB, m_userData.settings, m_restaurantZoneMap, this);
     if(dlg.exec()==QDialog::Accepted && dlg.isConfirmed()){
         m_currentMealDishes=selected; m_mealActive=true; m_stack->setCurrentWidget(m_mapPage);
+
+        // 让狮子走到对应食堂
+        if (!selected.isEmpty()) {
+            QString restaurant = selected.first().restaurant;
+            int zoneId = m_restaurantZoneMap.value(restaurant, -1);
+            if (zoneId >= 0) {
+                const ZoneInfo *zone = m_zoneManager->zoneInfo(zoneId);
+                if (zone && zone->isValid()) {
+                    m_targetPos = zone->polygon.boundingRect().center();
+                    m_roaming = false;
+                }
+            }
+        }
+
         double totalCal=0; for(const auto &d:selected) totalCal+=d.calories;
         m_userProfile.todayCalories+=totalCal;
         saveRatingsToUserFile(); // 持久化今日热量

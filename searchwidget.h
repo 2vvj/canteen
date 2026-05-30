@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QLineEdit>
-#include <QPushButton>
 #include <QListWidget>
 #include <QLabel>
 #include <QVBoxLayout>
@@ -11,6 +10,7 @@
 #include <QVector>
 
 #include "fuzzysearch.h"
+#include "sketchyui.h"
 
 class SearchWidget : public QWidget {
     Q_OBJECT
@@ -37,7 +37,7 @@ private:
     void rebuildTagChips();
 
     QLineEdit *m_searchInput;
-    QPushButton *m_searchBtn;
+    SketchyButton *m_searchBtn;
     QListWidget *m_resultList;
     QWidget *m_tagChipArea;
     QHBoxLayout *m_tagChipLayout;

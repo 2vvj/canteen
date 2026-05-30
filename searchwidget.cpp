@@ -13,22 +13,34 @@ SearchWidget::SearchWidget(const QVector<Dish> &allDishes,
     setupUI();
 }
 
+// 与 MealPage 一致的配色
+static const QColor C_INK       = QColor("#2B2B2B");
+static const QColor C_INK_LIGHT = QColor("#4A4540");
+static const QColor C_SHADOW_DK = QColor("#3A3530");
+static const QColor C_CARD_TAUPE = QColor("#E0D7CC");
+
 void SearchWidget::setupUI() {
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
     // --- 搜索栏 ---
     auto *searchRow = new QHBoxLayout;
+    searchRow->setSpacing(10);
     m_searchInput = new QLineEdit;
-    m_searchInput->setPlaceholderText("搜索菜名、食堂、标签...（如：面食、辣的、便宜）");
-    m_searchInput->setMinimumHeight(48);
-    m_searchInput->setStyleSheet("font-size: 16px; padding: 4px 12px;");
-    m_searchBtn = new QPushButton("搜索");
-    m_searchBtn->setMinimumHeight(48);
-    m_searchBtn->setStyleSheet(
-        "QPushButton{font-size: 16px; background:#e8c97a; color:white; font-weight:bold;"
-        "border-radius: 10px; padding: 4px 20px;}"
-        "QPushButton:hover{background:#d4a040;}");
+    m_searchInput->setPlaceholderText(QString::fromUtf8("搜索菜名、食堂、标签...（如：面食、辣的、便宜）"));
+    m_searchInput->setMinimumHeight(46);
+    m_searchInput->setStyleSheet(QString(
+        "QLineEdit{font-size:15px; padding:4px 14px;"
+        "background:rgba(255,255,255,220); border:2px dashed #C8BFA8;"
+        "border-radius:10px; color:%1;}").arg(C_INK.name()));
+
+    m_searchBtn = new SketchyButton(QString::fromUtf8("搜索"), C_CARD_TAUPE, C_SHADOW_DK);
+    m_searchBtn->setFixedHeight(46);
+    m_searchBtn->setMinimumWidth(90);
+    QFont btnFont;
+    btnFont.setPointSize(13);
+    btnFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
+    m_searchBtn->setFont(btnFont);
     searchRow->addWidget(m_searchInput, 1);
     searchRow->addWidget(m_searchBtn);
     mainLayout->addLayout(searchRow);
@@ -37,19 +49,26 @@ void SearchWidget::setupUI() {
     m_tagChipArea = new QWidget;
     m_tagChipLayout = new QHBoxLayout(m_tagChipArea);
     m_tagChipLayout->setContentsMargins(0, 0, 0, 0);
-    m_tagChipLayout->setSpacing(4);
+    m_tagChipLayout->setSpacing(6);
     m_tagChipLayout->addStretch();
     mainLayout->addWidget(m_tagChipArea);
 
     // --- 状态 ---
     m_statusLabel = new QLabel;
     m_statusLabel->setWordWrap(true);
-    m_statusLabel->setStyleSheet("color: #888; font-size: 14px; padding: 4px 0;");
+    m_statusLabel->setStyleSheet(QString("color:%1; font-size:14px; padding:4px 0; background:transparent;").arg(C_INK_LIGHT.name()));
     mainLayout->addWidget(m_statusLabel);
 
     // --- 结果列表 ---
     m_resultList = new QListWidget;
     m_resultList->setAlternatingRowColors(true);
+    m_resultList->setStyleSheet(QString(
+        "QListWidget{background:rgba(255,255,255,200); border:2px dashed #C8BFA8;"
+        "border-radius:10px; font-size:15px; color:%1; padding:6px;}"
+        "QListWidget::item{padding:4px 8px;}"
+        "QListWidget::item:hover{background:transparent;}"
+        "QListWidget::item:selected{background:#F0E8D8; color:%1;}"
+        "QListWidget::item:alternate{background:rgba(255,255,248,180);}").arg(C_INK.name()));
     mainLayout->addWidget(m_resultList, 1);
 
     connect(m_searchBtn, &QPushButton::clicked, this, &SearchWidget::onSearch);
@@ -66,11 +85,11 @@ void SearchWidget::rebuildTagChips() {
 
     QStringList tags = m_fuzzy.tempTags();
     for (const auto &tag : tags) {
-        auto *chip = new QPushButton(tag + " ×");
+        auto *chip = new QPushButton(tag + QString::fromUtf8(" ×"));
         chip->setStyleSheet(
-            "QPushButton{background:#ffe0b2;color:#e65100;border:none;"
-            "border-radius:14px;padding:6px 14px;font-size:15px;}"
-            "QPushButton:hover{background:#ffcc80;}");
+            "QPushButton{background:#F0E0C8; color:#8B5E3C; border:1px solid #D8C8A8;"
+            "border-radius:14px; padding:6px 14px; font-size:14px;}"
+            "QPushButton:hover{background:#E8D0B0;}");
         chip->setCursor(Qt::PointingHandCursor);
         connect(chip, &QPushButton::clicked, this, &SearchWidget::onRemoveTag);
         m_tagChipLayout->addWidget(chip);
@@ -90,7 +109,7 @@ void SearchWidget::onRemoveTag() {
     // 用剩余标签重新搜索
     if (m_fuzzy.tempTags().isEmpty()) {
         m_resultList->clear();
-        m_statusLabel->setText("标签已清空");
+        m_statusLabel->setText(QString::fromUtf8("标签已清空"));
         m_lastResults.clear();
         emit searchResultsChanged({});
     } else {
@@ -103,10 +122,10 @@ void SearchWidget::onRemoveTag() {
                                .arg(r.dish.restaurant)
                                .arg(r.dish.price, 0, 'f', 1)
                                .arg(r.dish.calories, 0, 'f', 0);
-            if (r.score > 0.5) text += " [匹配]";
+            if (r.score > 0.5) text += QString::fromUtf8(" [匹配]");
             m_resultList->addItem(text);
         }
-        m_statusLabel->setText("匹配 " + QString::number(m_lastResults.size()) + " 道菜");
+        m_statusLabel->setText(QString::fromUtf8("匹配 ") + QString::number(m_lastResults.size()) + QString::fromUtf8(" 道菜"));
         emit searchResultsChanged(m_lastResults);
     }
 
@@ -127,14 +146,14 @@ void SearchWidget::onSearch() {
                            .arg(r.dish.restaurant)
                            .arg(r.dish.price, 0, 'f', 1)
                            .arg(r.dish.calories, 0, 'f', 0);
-        if (r.score > 0.5) text += " [匹配]";
+        if (r.score > 0.5) text += QString::fromUtf8(" [匹配]");
         m_resultList->addItem(text);
     }
 
     rebuildTagChips();
 
     QStringList tags = m_fuzzy.tempTags();
-    m_statusLabel->setText("匹配 " + QString::number(m_lastResults.size()) + " 道菜");
+    m_statusLabel->setText(QString::fromUtf8("匹配 ") + QString::number(m_lastResults.size()) + QString::fromUtf8(" 道菜"));
     m_searchInput->clear();
 
     emit searchResultsChanged(m_lastResults);
@@ -153,6 +172,6 @@ void SearchWidget::resetMealSession() {
     m_fuzzy.clearTempTags();
     m_resultList->clear();
     m_lastResults.clear();
-    m_statusLabel->setText("标签已重置");
+    m_statusLabel->setText(QString::fromUtf8("标签已重置"));
     rebuildTagChips();
 }

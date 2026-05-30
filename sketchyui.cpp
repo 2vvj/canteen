@@ -267,10 +267,12 @@ void SketchyButton::paintEvent(QPaintEvent *)
     int h = height();
     QRectF area(0, 0, w, h);
     double margin = 4.0;
+    bool enabled = isEnabled();
 
-    // Shadow offset — shifts slightly on hover
-    double sx = 2.5 + m_hover * 0.8;
-    double sy = 3.0 + m_hover * 0.8;
+    // Shadow offset — shifts slightly on hover (only when enabled)
+    double activeHover = enabled ? m_hover : 0.0;
+    double sx = 2.5 + activeHover * 0.8;
+    double sy = 3.0 + activeHover * 0.8;
     QRectF shadowRect(area.left() + margin + sx,
                       area.top() + margin + sy,
                       area.width() - margin * 2 - 4,
@@ -279,8 +281,8 @@ void SketchyButton::paintEvent(QPaintEvent *)
     // Card sits offset from shadow; press moves card toward shadow
     double baseOx = -1.5, baseOy = -1.5;
     double targetOx = sx, targetOy = sy;
-    double ox = baseOx + (targetOx - baseOx) * m_pressOffset;
-    double oy = baseOy + (targetOy - baseOy) * m_pressOffset;
+    double ox = baseOx + (targetOx - baseOx) * (enabled ? m_pressOffset : 0.0);
+    double oy = baseOy + (targetOy - baseOy) * (enabled ? m_pressOffset : 0.0);
 
     QRectF cardRect(shadowRect.left() + ox,
                     shadowRect.top() + oy,
@@ -288,40 +290,56 @@ void SketchyButton::paintEvent(QPaintEvent *)
                     shadowRect.height());
 
     int s = seedFor(cardRect, m_seed);
-    // Very subtle organic edge — barely visible, just enough for paper feel
     double jitAmt = 0.6;
 
     QPainterPath shadowPath = sketchyRect(shadowRect, s + 100, jitAmt);
     QPainterPath cardPath   = sketchyRect(cardRect, s, jitAmt);
 
-    // Shadow — deepens on hover
+    // Shadow — faint when disabled, deepens on hover when enabled
     QColor shadowCol = m_shadowColor;
-    if (m_hover > 0.01) {
-        shadowCol = shadowCol.darker(100 + static_cast<int>(m_hover * 30));
+    if (!enabled) {
+        shadowCol = QColor(
+            shadowCol.red() * 0.6 + 255 * 0.4,
+            shadowCol.green() * 0.6 + 255 * 0.4,
+            shadowCol.blue() * 0.6 + 255 * 0.4);
+    } else if (activeHover > 0.01) {
+        shadowCol = shadowCol.darker(100 + static_cast<int>(activeHover * 30));
     }
     p.setBrush(shadowCol);
     p.setPen(Qt::NoPen);
     p.drawPath(shadowPath);
 
-    // Card fill — warms slightly on hover
+    // Card fill — washed out when disabled, warms slightly on hover
     QColor cardCol = m_cardColor;
-    if (m_hover > 0.01) {
-        int r = qMin(255, cardCol.red() + static_cast<int>(m_hover * 12));
-        int g = qMin(255, cardCol.green() + static_cast<int>(m_hover * 8));
-        int b = qMin(255, cardCol.blue() + static_cast<int>(m_hover * 4));
+    if (!enabled) {
+        cardCol = QColor(
+            cardCol.red() * 0.55 + 255 * 0.45,
+            cardCol.green() * 0.55 + 255 * 0.45,
+            cardCol.blue() * 0.55 + 255 * 0.45,
+            cardCol.alpha());
+    } else if (activeHover > 0.01) {
+        int r = qMin(255, cardCol.red() + static_cast<int>(activeHover * 12));
+        int g = qMin(255, cardCol.green() + static_cast<int>(activeHover * 8));
+        int b = qMin(255, cardCol.blue() + static_cast<int>(activeHover * 4));
         cardCol = QColor(r, g, b, cardCol.alpha());
     }
     drawInkWash(&p, cardPath, cardCol, 15);
 
-    // Ink border — gets bolder on hover
+    // Ink border — subtle when disabled, gets bolder on hover
     QColor ink = m_inkColor;
-    int borderPasses = 2 + static_cast<int>(m_hover * 1.5);
-    double borderSpread = 0.4 + m_hover * 0.3;
+    if (!enabled) {
+        ink = QColor(
+            ink.red() * 0.4 + 255 * 0.6,
+            ink.green() * 0.4 + 255 * 0.6,
+            ink.blue() * 0.4 + 255 * 0.6);
+    }
+    int borderPasses = enabled ? (2 + static_cast<int>(activeHover * 1.5)) : 1;
+    double borderSpread = enabled ? (0.4 + activeHover * 0.3) : 0.25;
     drawInkBorder(&p, cardPath, ink, borderPasses, borderSpread);
 
-    // Icon + Text — ink color intensifies on hover
+    // Icon + Text — faded when disabled, intensifies on hover
     QColor textInk = ink;
-    if (m_hover > 0.5) {
+    if (enabled && activeHover > 0.5) {
         textInk = QColor(
             qMin(255, ink.red() + 20),
             qMin(255, ink.green() + 10),
@@ -329,7 +347,7 @@ void SketchyButton::paintEvent(QPaintEvent *)
     }
     p.setPen(textInk);
     QFont f = font();
-    f.setWeight(m_hover > 0.5 ? QFont::DemiBold : QFont::Medium);
+    f.setWeight((enabled && activeHover > 0.5) ? QFont::DemiBold : QFont::Medium);
     p.setFont(f);
 
     if (m_iconType != ICON_NONE) {
@@ -352,6 +370,7 @@ void SketchyButton::paintEvent(QPaintEvent *)
 
 void SketchyButton::enterEvent(QEnterEvent *)
 {
+    if (!isEnabled()) return;
     m_hoverAnim->stop();
     m_hoverAnim->setEndValue(1.0);
     m_hoverAnim->start();
@@ -359,6 +378,7 @@ void SketchyButton::enterEvent(QEnterEvent *)
 
 void SketchyButton::leaveEvent(QEvent *)
 {
+    if (!isEnabled()) return;
     m_hoverAnim->stop();
     m_hoverAnim->setEndValue(0.0);
     m_hoverAnim->start();
@@ -366,6 +386,7 @@ void SketchyButton::leaveEvent(QEvent *)
 
 void SketchyButton::mousePressEvent(QMouseEvent *e)
 {
+    if (!isEnabled()) return;
     m_pressAnim->stop();
     m_pressAnim->setEndValue(1.0);
     m_pressAnim->start();
@@ -374,8 +395,36 @@ void SketchyButton::mousePressEvent(QMouseEvent *e)
 
 void SketchyButton::mouseReleaseEvent(QMouseEvent *e)
 {
+    if (!isEnabled()) return;
     m_pressAnim->stop();
     m_pressAnim->setEndValue(0.0);
     m_pressAnim->start();
     QPushButton::mouseReleaseEvent(e);
+}
+
+// ── SketchyCard ──────────────────────────────────────────────────
+
+SketchyCard::SketchyCard(QWidget *parent) : QWidget(parent) {}
+
+void SketchyCard::setCardColor(const QColor &color) { m_cardColor = color; update(); }
+void SketchyCard::setShadowColor(const QColor &color) { m_shadowColor = color; update(); }
+void SketchyCard::setInkColor(const QColor &color) { m_inkColor = color; update(); }
+
+void SketchyCard::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
+
+    QRectF card(5, 5, width() - 10, height() - 10);
+    int seed = reinterpret_cast<quintptr>(this) & 0xFFFF;
+
+    QRectF shadow = card.translated(2.5, 3.5);
+    QPainterPath sp = sketchyRect(shadow, seed + 100, 2.5);
+    p.setBrush(m_shadowColor);
+    p.setPen(Qt::NoPen);
+    p.drawPath(sp);
+
+    QPainterPath cp = sketchyRect(card, seed, 2.5);
+    drawInkWash(&p, cp, m_cardColor, 15);
+    drawInkBorder(&p, cp, m_inkColor, 3, 0.7);
 }
