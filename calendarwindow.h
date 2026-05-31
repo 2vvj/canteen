@@ -77,6 +77,7 @@ protected:
 private slots:
     void onDateSelected(const QDate &date);
     void onStatisticsClicked();
+    void onReportClicked();
 
 private:
     void showRecordForDate(const QDate &date);

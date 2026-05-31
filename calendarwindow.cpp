@@ -1,7 +1,9 @@
 #include "calendarwindow.h"
 #include "statisticswindow.h"
+#include "aireportdialog.h"
 #include "decopainter.h"
 #include "sketchyui.h"
+#include "userdata.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPainter>
@@ -300,9 +302,22 @@ CalendarWindow::CalendarWindow(QWidget *parent)
 
     mainLayout->addStretch();
 
-    // ── 数据统计按钮 — 右下角，独立于卡片 ──
+    // ── 底部按钮行：饮食报告 + 历史报告 + 数据统计 ──
     QHBoxLayout *btnRow = new QHBoxLayout;
+    SketchyButton *aiBtn = new SketchyButton(
+        QString::fromUtf8("饮食报告"),
+        QColor("#EAD7D2"),
+        C_SHADOW,
+        this);
+    aiBtn->setMinimumSize(120, 42);
+    aiBtn->setStyleSheet(
+        "font-size:14px;font-weight:bold;color:#2B2B2B;"
+        "font-family:'Microsoft YaHei';");
+    connect(aiBtn, &QPushButton::clicked, this, &CalendarWindow::onReportClicked);
+    btnRow->addWidget(aiBtn);
+
     btnRow->addStretch();
+
     SketchyButton *statsBtn = new SketchyButton(
         QString::fromUtf8("数据统计"),
         QColor("#D0DDE8"),
@@ -399,4 +414,22 @@ void CalendarWindow::onStatisticsClicked() {
     statsWin->setAttribute(Qt::WA_DeleteOnClose);
     statsWin->setRecords(m_records);
     statsWin->exec();
+}
+
+void CalendarWindow::onReportClicked() {
+    // 读取用户数据获取 BMR
+    UserData ud;
+    double bmr = 0;
+    if (ud.load("user.json")) {
+        const auto &s = ud.settings;
+        if (s.gender == QString::fromUtf8("男") || s.gender == "male") {
+            bmr = 10 * s.weight + 6.25 * s.height - 5 * s.age + 5;
+        } else {
+            bmr = 10 * s.weight + 6.25 * s.height - 5 * s.age - 161;
+        }
+    }
+
+    AiReportDialog *dlg = new AiReportDialog(m_records, bmr, this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->exec();
 }
