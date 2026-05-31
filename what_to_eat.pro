@@ -23,7 +23,9 @@ SOURCES += main.cpp \
            distancedb.cpp \
            userdata.cpp \
            calendarwindow.cpp \
-           statisticswindow.cpp
+           statisticswindow.cpp \
+           achievementmanager.cpp \
+           achievementpage.cpp
 
 HEADERS += mainwindow.h \
            mealpage.h \
@@ -45,4 +47,7 @@ HEADERS += mainwindow.h \
            distancedb.h \
            userdata.h \
            calendarwindow.h \
-           statisticswindow.h
+           statisticswindow.h \
+           achievementdata.h \
+           achievementmanager.h \
+           achievementpage.h
