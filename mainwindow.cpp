@@ -7,6 +7,8 @@
 #include "zonecommon.h"
 #include "settingsdialog.h"
 #include "decopainter.h"
+#include "achievementmanager.h"
+#include "achievementpage.h"
 #include <QPainter>
 #include <QPainterPath>
 #include <QVBoxLayout>
@@ -140,6 +142,21 @@ Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
 
     layout->addWidget(m_cardBtn); layout->addWidget(m_historyBtn);
     layout->addWidget(m_reviewBtn); layout->addWidget(m_settingsBtn);
+
+    // 成就按钮（暖金色）
+    m_achievementBtn = new SketchyButton(QString::fromUtf8("  勋章成就"),
+                                         QColor("#F2E5C7"), C_SHADOW_DK);
+    m_achievementBtn->setFixedHeight(56);
+    layout->addWidget(m_achievementBtn);
+
+    // 红色角标
+    m_achievementDot = new QLabel(m_achievementBtn);
+    m_achievementDot->setFixedSize(10, 10);
+    m_achievementDot->setStyleSheet("background:#D45A3A; border-radius:5px;");
+    m_achievementDot->move(m_achievementBtn->width() - 16, 6);
+    m_achievementDot->hide();
+    connect(m_achievementBtn, &QPushButton::clicked, this, &Sidebar::achievementsClicked);
+
     layout->addStretch();
 
     QFrame *sep = new QFrame; sep->setFrameShape(QFrame::HLine);
@@ -190,6 +207,9 @@ void Sidebar::setTodayCalories(int kcal) {
 }
 void Sidebar::setBMR(int bmr) {
     m_bmrLabel->setText(QString::fromUtf8("基础代谢 %1  kcal/天").arg(bmr));
+}
+void Sidebar::setAchievementDot(bool show) {
+    if (m_achievementDot) m_achievementDot->setVisible(show);
 }
 void Sidebar::paintEvent(QPaintEvent *) {
     QPainter p(this); p.setRenderHint(QPainter::Antialiasing);
@@ -425,6 +445,28 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     m_mealPage = new MealPage(m_allDishes, m_userProfile);
     connect(m_mealPage, &MealPage::mealReadyForReview, this, &MainWindow::onMealReadyForReview);
     connect(m_mealPage, &MealPage::backToMap, this, &MainWindow::backFromMeal);
+
+    // ── 成就系统初始化 ──
+    m_achievementManager = new AchievementManager(this);
+    m_achievementManager->load();
+
+    m_achievementPage = new AchievementPage(m_achievementManager);
+    m_stack->addWidget(m_achievementPage);
+
+    connect(m_sidebar, &Sidebar::achievementsClicked, this, [this]() {
+        m_achievementPage->refresh();
+        m_stack->setCurrentWidget(m_achievementPage);
+    });
+
+    connect(m_achievementPage, &AchievementPage::backToMap, this, [this]() {
+        m_stack->setCurrentWidget(m_mapPage);
+        m_sidebar->setAchievementDot(m_achievementManager->hasNewAchievements());
+        m_sidebar->setTodayCalories(static_cast<int>(m_userProfile.todayCalories));
+    });
+
+    connect(m_achievementManager, &AchievementManager::activeSkinChanged, this, [this](const QString &) {
+        updateLionSprite();
+    });
 
     m_stack->addWidget(m_welcomePage); m_stack->addWidget(m_mapPage);
     m_stack->addWidget(m_mealPage); m_stack->setCurrentWidget(m_welcomePage);
@@ -668,26 +710,19 @@ void MainWindow::onReview() {
     hw->setAttribute(Qt::WA_DeleteOnClose);
     hw->setWindowTitle(QString::fromUtf8("菜品评价"));
 
-    // 构建复合键 "菜名|食堂名" -> 食用时间
+    // 从 eatingTimes（精确的"菜名|食堂"键）直接构建
     QMap<QString, QString> eatingDates;
-    for (auto it = m_dailyRecords.begin(); it != m_dailyRecords.end(); ++it)
-        for (const QString &dishName : it.value().dishes) {
-            for (const auto &d : m_allDishes) {
-                if (d.name == dishName) {
-                    QString key = d.name + "|" + d.restaurant;
-                    if (m_eatingTimes.contains(key))
-                        eatingDates[key] = m_eatingTimes[key];
-                    else
-                        eatingDates[key] = it.key();
-                }
+    QVector<Dish> eatenDishes;
+    for (auto it = m_eatingTimes.begin(); it != m_eatingTimes.end(); ++it) {
+        const QString &key = it.key();  // "菜名|食堂"
+        eatingDates[key] = it.value();
+        // 从菜品库中找到对应 Dish
+        for (const auto &d : m_allDishes) {
+            if (d.name + "|" + d.restaurant == key) {
+                eatenDishes.append(d);
+                break;
             }
         }
-
-    // 筛选出所有吃过的菜品（按复合键匹配，区分不同食堂的同名菜）
-    QVector<Dish> eatenDishes;
-    for (const auto &d : m_allDishes) {
-        if (eatingDates.contains(d.name + "|" + d.restaurant))
-            eatenDishes.append(d);
     }
 
     // 按食用日期降序排列（最新在最上方）
@@ -836,6 +871,31 @@ void MainWindow::onFinishEating() {
             saveRatingsToUserFile();
         }
     });
+
+    // ── 成就检查 ──
+    if (m_achievementManager) {
+        double bmr = 2000;
+        const auto &s = m_userData.settings;
+        if (s.height > 0 && s.weight > 0 && s.age > 0 && !s.gender.isEmpty()) {
+            if (s.gender == QString::fromUtf8("女"))
+                bmr = 10.0 * s.weight + 6.25 * s.height - 5.0 * s.age - 161;
+            else
+                bmr = 10.0 * s.weight + 6.25 * s.height - 5.0 * s.age + 5;
+        }
+
+        double mealPrice = 0;
+        for (const auto &d : m_currentMealDishes) mealPrice += d.price;
+
+        m_achievementManager->checkAll(
+            QDateTime::currentDateTime(),
+            m_userProfile.todayCalories,
+            bmr,
+            m_dailyRecords,
+            mealPrice);
+
+        m_sidebar->setAchievementDot(m_achievementManager->hasNewAchievements());
+    }
+
     hw->exec();
     m_mealPage->resetMeal(); m_currentMealDishes.clear(); m_stack->setCurrentWidget(m_mapPage);
 }
@@ -878,15 +938,16 @@ void MainWindow::updateSidebarUserInfo() {
 void MainWindow::updateLionSprite() {
     const auto &s = m_userData.settings;
     double bmr = 2000;
-    if(s.height>0 && s.weight>0 && s.age>0 && !s.gender.isEmpty()){
-        if(s.gender==QString::fromUtf8("女"))
-            bmr=10.0*s.weight+6.25*s.height-5.0*s.age-161;
-        else bmr=10.0*s.weight+6.25*s.height-5.0*s.age+5;
+    if (s.height > 0 && s.weight > 0 && s.age > 0 && !s.gender.isEmpty()) {
+        if (s.gender == QString::fromUtf8("女"))
+            bmr = 10.0 * s.weight + 6.25 * s.height - 5.0 * s.age - 161;
+        else
+            bmr = 10.0 * s.weight + 6.25 * s.height - 5.0 * s.age + 5;
     }
-    if(m_userProfile.todayCalories > bmr + 300)
-        m_character->setSprite("lion_obese.png");
-    else
-        m_character->setSprite("lion_slim.png");
+    bool isObese = (m_userProfile.todayCalories > bmr + 300);
+    QString skinKey = m_achievementManager ? m_achievementManager->activeSkin() : "first_record";
+    QString path = "lion_" + skinKey + (isObese ? "_obese.png" : "_slim.png");
+    m_character->setSprite(path);
 }
 
 void MainWindow::onToggleEditMode() { m_editMode=!m_editMode; m_zoneEditor->setEditMode(m_editMode); }

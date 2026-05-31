@@ -23,6 +23,8 @@ class ZoneManager;
 class ZoneEditor;
 class DistanceDB;
 class MealPage;
+class AchievementManager;
+class AchievementPage;
 class HistoryWindow;
 struct ZoneInfo;
 
@@ -68,11 +70,13 @@ public:
     void setUserName(const QString &name);
     void setTodayCalories(int kcal);
     void setBMR(int bmr);
+    void setAchievementDot(bool show);
 signals:
     void goEatClicked();
     void historyClicked();
     void reviewClicked();
     void settingsClicked();
+    void achievementsClicked();
 protected:
     void paintEvent(QPaintEvent *e) override;
 private:
@@ -80,11 +84,13 @@ private:
     SketchyButton *m_historyBtn;
     SketchyButton *m_reviewBtn;
     SketchyButton *m_settingsBtn;
+    SketchyButton *m_achievementBtn;
     QLabel *m_avatarLabel;
     QLabel *m_nameLabel;
     QLabel *m_calorieLabel;
     QLabel *m_bmrLabel;
     int m_todayCalories = 0;
+    QLabel *m_achievementDot = nullptr;
 };
 
 // 雷达确认对话框
@@ -177,6 +183,8 @@ private:
 
     // 用餐系统
     MealPage *m_mealPage;
+    AchievementManager *m_achievementManager;
+    AchievementPage *m_achievementPage;
     QVector<Dish> m_allDishes;
     UserProfile m_userProfile;
     QPushButton *m_finishEatingBtn;
