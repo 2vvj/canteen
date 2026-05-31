@@ -101,31 +101,41 @@ void SearchWidget::onRemoveTag() {
     auto *chip = qobject_cast<QPushButton *>(sender());
     if (!chip) return;
 
-    // 从按钮文字提取标签名（去掉 " ×" 后缀）
     QString tag = chip->text();
-    tag.chop(2); // 去掉 " ×"
+    tag.chop(2);
     m_fuzzy.removeTempTag(tag);
 
-    // 用剩余标签重新搜索
     if (m_fuzzy.tempTags().isEmpty()) {
         m_resultList->clear();
         m_statusLabel->setText(QString::fromUtf8("标签已清空"));
         m_lastResults.clear();
         emit searchResultsChanged({});
     } else {
-        // 用剩余标签重新打分（不添加新标签）
         m_lastResults = m_fuzzy.rescoreWithCurrentTags(m_allDishes, m_user);
         m_resultList->clear();
-        for (const auto &r : m_lastResults) {
-            QString text = QString("%1 — %2  ¥%3  %4kcal")
-                               .arg(r.dish.name)
-                               .arg(r.dish.restaurant)
-                               .arg(r.dish.price, 0, 'f', 1)
-                               .arg(r.dish.calories, 0, 'f', 0);
-            if (r.score > 0.5) text += QString::fromUtf8(" [匹配]");
-            m_resultList->addItem(text);
+        if (m_lastResults.isEmpty()) {
+            auto *noResult = new QListWidgetItem(QString::fromUtf8("没有匹配到任何菜品，试试其他搜索词吧"));
+            noResult->setFlags(noResult->flags() & ~Qt::ItemIsSelectable);
+            noResult->setForeground(QColor("#9A9590"));
+            QFont noResFont;
+            noResFont.setPointSize(15);
+            noResult->setFont(noResFont);
+            noResult->setTextAlignment(Qt::AlignCenter);
+            m_resultList->addItem(noResult);
+        } else {
+            for (const auto &r : m_lastResults) {
+                QString text = QString("%1 — %2  ¥%3  %4kcal")
+                                   .arg(r.dish.name)
+                                   .arg(r.dish.restaurant)
+                                   .arg(r.dish.price, 0, 'f', 1)
+                                   .arg(r.dish.calories, 0, 'f', 0);
+                if (r.score > 0.5) text += QString::fromUtf8(" [匹配]");
+                m_resultList->addItem(text);
+            }
         }
-        m_statusLabel->setText(QString::fromUtf8("匹配 ") + QString::number(m_lastResults.size()) + QString::fromUtf8(" 道菜"));
+        m_statusLabel->setText(m_lastResults.isEmpty()
+            ? QString::fromUtf8("未匹配到任何菜品")
+            : QString::fromUtf8("匹配 ") + QString::number(m_lastResults.size()) + QString::fromUtf8(" 道菜"));
         emit searchResultsChanged(m_lastResults);
     }
 
@@ -140,20 +150,33 @@ void SearchWidget::onSearch() {
     m_lastResults = m_fuzzy.search(query, m_allDishes, m_user);
 
     m_resultList->clear();
-    for (const auto &r : m_lastResults) {
-        QString text = QString("%1 — %2  ¥%3  %4kcal")
-                           .arg(r.dish.name)
-                           .arg(r.dish.restaurant)
-                           .arg(r.dish.price, 0, 'f', 1)
-                           .arg(r.dish.calories, 0, 'f', 0);
-        if (r.score > 0.5) text += QString::fromUtf8(" [匹配]");
-        m_resultList->addItem(text);
+    if (m_lastResults.isEmpty()) {
+        auto *noResult = new QListWidgetItem(QString::fromUtf8("没有匹配到任何菜品，试试其他搜索词吧"));
+        noResult->setFlags(noResult->flags() & ~Qt::ItemIsSelectable);
+        noResult->setForeground(QColor("#9A9590"));
+        QFont noResFont;
+        noResFont.setPointSize(15);
+        noResult->setFont(noResFont);
+        noResult->setTextAlignment(Qt::AlignCenter);
+        m_resultList->addItem(noResult);
+    } else {
+        for (const auto &r : m_lastResults) {
+            QString text = QString("%1 — %2  ¥%3  %4kcal")
+                               .arg(r.dish.name)
+                               .arg(r.dish.restaurant)
+                               .arg(r.dish.price, 0, 'f', 1)
+                               .arg(r.dish.calories, 0, 'f', 0);
+            if (r.score > 0.5) text += QString::fromUtf8(" [匹配]");
+            m_resultList->addItem(text);
+        }
     }
 
     rebuildTagChips();
 
     QStringList tags = m_fuzzy.tempTags();
-    m_statusLabel->setText(QString::fromUtf8("匹配 ") + QString::number(m_lastResults.size()) + QString::fromUtf8(" 道菜"));
+    m_statusLabel->setText(m_lastResults.isEmpty()
+        ? QString::fromUtf8("未匹配到任何菜品")
+        : QString::fromUtf8("匹配 ") + QString::number(m_lastResults.size()) + QString::fromUtf8(" 道菜"));
     m_searchInput->clear();
 
     emit searchResultsChanged(m_lastResults);

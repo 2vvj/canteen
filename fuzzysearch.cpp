@@ -6,6 +6,18 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+static QMap<QString, QString> restaurantAbbrevs() {
+    return {
+        {"家二", "家园二层"},
+        {"家一", "家园一层"},
+        {"家三", "家园三层"},
+        {"勺二", "勺园二层"},
+        {"勺一", "勺园一层"},
+        {"农二", "农园二层"},
+        {"农一", "农园一层"},
+    };
+}
+
 FuzzySearch::FuzzySearch() {}
 
 // ============ 同义词 ============
@@ -147,18 +159,6 @@ QVector<SearchResult> FuzzySearch::rescoreWithCurrentTags(
         return all;
     }
 
-    // 预计算标签命中数（使用反向索引）
-    QMap<int, int> tagHits;
-    for (const auto &t : m_tempTags) {
-        QStringList resolved = resolveSynonyms(t);
-        if (!resolved.isEmpty()) {
-            for (const auto &rtag : resolved) {
-                for (int idx : m_tagIndex.value(rtag))
-                    tagHits[idx]++;
-            }
-        }
-    }
-
     QVector<SearchResult> results;
     results.reserve(allDishes.size());
 
@@ -167,32 +167,65 @@ QVector<SearchResult> FuzzySearch::rescoreWithCurrentTags(
         SearchResult sr;
         sr.dish = d;
 
-        // 名字匹配：用所有标签分别匹配菜名和食堂名，取最高分
-        sr.nameScore = 0;
+        // 交集匹配：每个临时标签都必须通过名字或标签匹配
+        bool matchesAll = true;
+        bool hasNameMatch = false;
+        double minNameScore = 1.0;
+        int matchedTagCount = 0;
+
         for (const auto &tag : m_tempTags) {
             double dishSim = nameSimilarity(tag, d.name);
             double restSim = restaurantSimilarity(tag, d.restaurant);
-            sr.nameScore = qMax(sr.nameScore, qMax(dishSim, restSim));
-        }
+            if (restSim == 0.0) {
+                QString expanded = restaurantAbbrevs().value(tag);
+                if (!expanded.isEmpty())
+                    restSim = restaurantSimilarity(expanded, d.restaurant);
+            }
+            double bestName = qMax(dishSim, restSim);
 
-        // 标签匹配
-        sr.matchedTags = tagHits.value(i, 0);
-
-        // 兜底：对未命中同义词的临时标签做子串匹配
-        for (const auto &t : m_tempTags) {
-            if (resolveSynonyms(t).isEmpty()) {
+            bool tagOk = false;
+            QStringList resolved = resolveSynonyms(tag);
+            if (!resolved.isEmpty()) {
                 for (const auto &dtag : d.tags) {
-                    if (dtag.contains(t, Qt::CaseInsensitive)
-                        || t.contains(dtag, Qt::CaseInsensitive))
-                        sr.matchedTags++;
+                    if (resolved.contains(dtag, Qt::CaseInsensitive)) {
+                        tagOk = true;
+                        break;
+                    }
+                }
+            } else {
+                for (const auto &dtag : d.tags) {
+                    if (dtag.contains(tag, Qt::CaseInsensitive)
+                        || tag.contains(dtag, Qt::CaseInsensitive)) {
+                        tagOk = true;
+                        break;
+                    }
                 }
             }
+
+            if (bestName == 0.0 && !tagOk) {
+                matchesAll = false;
+                break;
+            }
+
+            if (bestName > 0.0) {
+                hasNameMatch = true;
+                minNameScore = qMin(minNameScore, bestName);
+            }
+            if (tagOk) matchedTagCount++;
         }
-        int totalRelevant = qMax(d.tags.size() + m_tempTags.size(), 1);
-        double tagScore = static_cast<double>(sr.matchedTags) / totalRelevant;
+
+        if (!matchesAll) {
+            sr.nameScore = 0.0;
+            sr.matchedTags = 0;
+        } else {
+            sr.nameScore = hasNameMatch ? minNameScore : 0.0;
+            sr.matchedTags = matchedTagCount;
+        }
+
+        int tagCount = m_tempTags.size();
+        double tagScore = (tagCount > 0) ? static_cast<double>(sr.matchedTags) / tagCount : 0.0;
 
         sr.score = sr.nameScore * 0.6 + tagScore * 0.4;
-        // 只有搜索真正匹配到的菜才加上历史偏好加分
         if (sr.nameScore > 0.0 || sr.matchedTags > 0)
             sr.score += historyBonus(d, user);
         results.append(sr);
@@ -207,7 +240,7 @@ QVector<SearchResult> FuzzySearch::rescoreWithCurrentTags(
     for (const auto &r : results) {
         if (r.nameScore > 0.0 || r.matchedTags > 0) out.append(r);
     }
-    return out.isEmpty() ? results : out;
+    return out;
 }
 
 QStringList FuzzySearch::tempTags() const {
@@ -232,27 +265,6 @@ QVector<SearchResult> FuzzySearch::search(const QString &query,
     // 先把关键词本身加入临时标签
     addTempTag(q);
 
-    // 预计算标签命中数（使用反向索引加速同义词路径）
-    QMap<int, int> tagHits;  // dish索引 → 命中次数
-
-    QStringList resolved = resolveSynonyms(q);
-    if (!resolved.isEmpty()) {
-        for (const auto &rtag : resolved) {
-            for (int idx : m_tagIndex.value(rtag))
-                tagHits[idx]++;
-        }
-    }
-    // 处理临时标签（同样逻辑）
-    for (const auto &t : m_tempTags) {
-        QStringList tresolved = resolveSynonyms(t);
-        if (!tresolved.isEmpty()) {
-            for (const auto &rtag : tresolved) {
-                for (int idx : m_tagIndex.value(rtag))
-                    tagHits[idx]++;
-            }
-        }
-    }
-
     QVector<SearchResult> results;
     results.reserve(allDishes.size());
 
@@ -261,38 +273,67 @@ QVector<SearchResult> FuzzySearch::search(const QString &query,
         SearchResult sr;
         sr.dish = d;
 
-        // 名字匹配：菜名和食堂名都算，取较高分
-        double dishNameSim = nameSimilarity(q, d.name);
-        double restSim = restaurantSimilarity(q, d.restaurant);
-        sr.nameScore = qMax(dishNameSim, restSim);
+        // 交集匹配：每个临时标签都必须通过名字或标签匹配
+        bool matchesAll = true;
+        bool hasNameMatch = false;
+        double minNameScore = 1.0;
+        int matchedTagCount = 0;
 
-        // 标签匹配
-        sr.matchedTags = tagHits.value(i, 0);
-
-        // 如果同义词没命中，走兜底子串匹配
-        if (resolved.isEmpty()) {
-            for (const auto &dtag : d.tags) {
-                if (q.contains(dtag, Qt::CaseInsensitive) || dtag.contains(q, Qt::CaseInsensitive))
-                    sr.matchedTags++;
+        for (const auto &tag : m_tempTags) {
+            // 名字/食堂匹配
+            double dishSim = nameSimilarity(tag, d.name);
+            double restSim = restaurantSimilarity(tag, d.restaurant);
+            if (restSim == 0.0) {
+                QString expanded = restaurantAbbrevs().value(tag);
+                if (!expanded.isEmpty())
+                    restSim = restaurantSimilarity(expanded, d.restaurant);
             }
-        }
-        for (const auto &t : m_tempTags) {
-            if (resolveSynonyms(t).isEmpty()) {
+            double bestName = qMax(dishSim, restSim);
+
+            // 标签匹配（同义词 → 子串兜底）
+            bool tagOk = false;
+            QStringList resolved = resolveSynonyms(tag);
+            if (!resolved.isEmpty()) {
                 for (const auto &dtag : d.tags) {
-                    if (dtag.contains(t, Qt::CaseInsensitive) || t.contains(dtag, Qt::CaseInsensitive))
-                        sr.matchedTags++;
+                    if (resolved.contains(dtag, Qt::CaseInsensitive)) {
+                        tagOk = true;
+                        break;
+                    }
+                }
+            } else {
+                for (const auto &dtag : d.tags) {
+                    if (dtag.contains(tag, Qt::CaseInsensitive)
+                        || tag.contains(dtag, Qt::CaseInsensitive)) {
+                        tagOk = true;
+                        break;
+                    }
                 }
             }
+
+            if (bestName == 0.0 && !tagOk) {
+                matchesAll = false;
+                break;
+            }
+
+            if (bestName > 0.0) {
+                hasNameMatch = true;
+                minNameScore = qMin(minNameScore, bestName);
+            }
+            if (tagOk) matchedTagCount++;
         }
 
-        // 归一化标签分
-        int totalRelevant = qMax(d.tags.size() + m_tempTags.size(), 1);
-        double tagScore = static_cast<double>(sr.matchedTags) / totalRelevant;
+        if (!matchesAll) {
+            sr.nameScore = 0.0;
+            sr.matchedTags = 0;
+        } else {
+            sr.nameScore = hasNameMatch ? minNameScore : 0.0;
+            sr.matchedTags = matchedTagCount;
+        }
 
-        // 综合打分：名字60% + 标签40%
+        int tagCount = m_tempTags.size();
+        double tagScore = (tagCount > 0) ? static_cast<double>(sr.matchedTags) / tagCount : 0.0;
+
         sr.score = sr.nameScore * 0.6 + tagScore * 0.4;
-
-        // 只有真正匹配到的菜才加历史偏好
         if (sr.nameScore > 0.0 || sr.matchedTags > 0)
             sr.score += historyBonus(d, user);
 
@@ -309,5 +350,5 @@ QVector<SearchResult> FuzzySearch::search(const QString &query,
         if (r.nameScore > 0.0 || r.matchedTags > 0)
             out.append(r);
     }
-    return out.isEmpty() ? results : out;
+    return out;
 }
