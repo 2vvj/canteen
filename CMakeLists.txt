@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Sql Network)
 
 set(SOURCES
     main.cpp
@@ -29,6 +29,9 @@ set(SOURCES
     userdata.cpp
     calendarwindow.cpp
     statisticswindow.cpp
+    aireportdialog.cpp
+    achievementmanager.cpp
+    achievementpage.cpp
 )
 
 set(HEADERS
@@ -53,6 +56,10 @@ set(HEADERS
     userdata.h
     calendarwindow.h
     statisticswindow.h
+    aireportdialog.h
+    achievementdata.h
+    achievementmanager.h
+    achievementpage.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
@@ -62,6 +69,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Gui
     Qt6::Widgets
     Qt6::Sql
+    Qt6::Network
 )
 
 # Windows: ensure GUI app (no console window), link qtmain entry point

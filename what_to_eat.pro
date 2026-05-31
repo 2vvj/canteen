@@ -1,4 +1,4 @@
-QT += core gui widgets sql
+QT += core gui widgets sql network
 
 TARGET = what_to_eat
 TEMPLATE = app
@@ -25,7 +25,8 @@ SOURCES += main.cpp \
            calendarwindow.cpp \
            statisticswindow.cpp \
            achievementmanager.cpp \
-           achievementpage.cpp
+           achievementpage.cpp \
+           aireportdialog.cpp
 
 HEADERS += mainwindow.h \
            mealpage.h \
@@ -50,4 +51,5 @@ HEADERS += mainwindow.h \
            statisticswindow.h \
            achievementdata.h \
            achievementmanager.h \
-           achievementpage.h
+           achievementpage.h \
+           aireportdialog.h
