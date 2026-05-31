@@ -84,7 +84,7 @@ private:
     QCalendarWidget *m_calendar;
     CalendarFrameWidget *m_calendarFrame;
     RecordCardWidget *m_recordCard;
-    QPushButton *m_closeBtn;
+    SketchyButton *m_closeBtn;
     QDate m_currentDate;
     QMap<QString, DailyRecord> m_records;
     QPoint m_dragPos;

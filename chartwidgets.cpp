@@ -4,19 +4,14 @@
 #include <QPainterPath>
 #include <QRadialGradient>
 #include <QLinearGradient>
+#include <QMouseEvent>
+#include <QToolTip>
 #include <QtMath>
 #include <algorithm>
 
-// 莫兰迪暖色系（图表柱状图用 — 暖调低饱和）
+// 柱状图用色 — 统一暖调
 static const QList<QColor> kChartColors = {
-    QColor("#D4C5B8"),  // 暖米金
-    QColor("#C8B8A5"),  // 暖土
-    QColor("#B8B8A0"),  // 暖绿
-    QColor("#C0B0B8"),  // 暖紫
-    QColor("#D0C0A8"),  // 暖杏
-    QColor("#C0B0A0"),  // 暖棕
-    QColor("#A8B8B0"),  // 暖青
-    QColor("#C8B0A8"),  // 暖粉
+    QColor(160, 140, 120),
 };
 
 // ==========================================
@@ -39,6 +34,10 @@ static void drawCloud(QPainter &painter, const QPointF &pos, float size, const Q
 LineChartWidget::LineChartWidget(QWidget *parent) : QWidget(parent) {
     m_lineColor = QColor(200, 150, 120);
     setMinimumHeight(220);
+    setMouseTracking(true);
+    setStyleSheet("QToolTip { background-color: #FDFBF7; color: #3A3530; "
+                  "border: 1px solid #C8BAB0; padding: 4px 8px; "
+                  "font-family: 'Microsoft YaHei'; font-size: 11px; }");
 }
 
 void LineChartWidget::setData(const QVector<DataPoint> &points, const QString &title,
@@ -54,8 +53,14 @@ void LineChartWidget::setYAxisLabel(const QString &label) {
     update();
 }
 
+void LineChartWidget::setAverageLine(double value, const QColor &color) {
+    m_avgValue = value;
+    m_avgColor = color;
+    update();
+}
+
 QRectF LineChartWidget::calcChartArea() const {
-    return QRectF(50, 12, width() - 68, height() - 52);
+    return QRectF(50, 14, width() - 64, height() - 48);
 }
 
 void LineChartWidget::paintEvent(QPaintEvent *event) {
@@ -182,6 +187,25 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
         painter.drawEllipse(pts[i], 4.0, 4.0);
     }
 
+    // 9.5 均值虚线 — 线用数据色，标签用表头 accent 色
+    if (m_avgValue > 0 && niceMax > 0) {
+        double avgY = chartArea.bottom() - (m_avgValue / niceMax) * chartArea.height();
+        avgY = qBound(chartArea.top(), avgY, chartArea.bottom());
+        QPen avgPen(QColor(160, 140, 120), 0.8, Qt::DashLine, Qt::RoundCap);
+        avgPen.setDashPattern({6.0, 5.0});
+        painter.setPen(avgPen);
+        painter.drawLine(QPointF(chartArea.left(), avgY), QPointF(chartArea.right(), avgY));
+
+        // 均值标签 — 表头 accent 色
+        QFont avgFont("Microsoft YaHei", 8);
+        avgFont.setItalic(true);
+        painter.setFont(avgFont);
+        painter.setPen(m_avgColor);
+        QString avgText = QString::fromUtf8("均值 %1").arg(m_avgValue, 0, 'f', 1);
+        painter.drawText(QRectF(chartArea.right() - 90, avgY - 16, 86, 14),
+                         Qt::AlignRight | Qt::AlignVCenter, avgText);
+    }
+
     // 10. Y轴标签
     if (!m_yAxisLabel.isEmpty()) {
         painter.save();
@@ -202,11 +226,47 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
     }
 }
 
+void LineChartWidget::mouseMoveEvent(QMouseEvent *event) {
+    if (m_points.isEmpty()) return;
+
+    QRectF chartArea = calcChartArea();
+    int n = m_points.size();
+
+    // 计算每个数据点的屏幕坐标
+    for (int i = 0; i < n; ++i) {
+        double x = chartArea.left() + chartArea.width() * i / (n - 1);
+        double maxVal = 1.0;
+        for (const auto &pt : m_points)
+            if (pt.value > maxVal) maxVal = pt.value;
+        double niceMax = std::ceil(maxVal / 5.0) * 5.0;
+        double normalized = m_points[i].value / niceMax;
+        double y = chartArea.bottom() - normalized * chartArea.height();
+        // 加上手绘偏移
+        double wobble = 1.2 * qSin(i * 1.7);
+        QPointF ptPos(x + wobble, y + 1.0 * qCos(i * 2.3));
+
+        double dist = QLineF(event->position(), ptPos).length();
+        if (dist < 15.0) {
+            QString tip = QString("%1\n%2: %3")
+                .arg(m_points[i].label)
+                .arg(m_yAxisLabel)
+                .arg(m_points[i].value, 0, 'f', 1);
+            QToolTip::showText(event->globalPosition().toPoint(), tip, this);
+            return;
+        }
+    }
+    QToolTip::hideText();
+}
+
 // ==========================================
 // BarChartWidget 实现
 // ==========================================
 BarChartWidget::BarChartWidget(QWidget *parent) : QWidget(parent) {
     setMinimumHeight(220);
+    setMouseTracking(true);
+    setStyleSheet("QToolTip { background-color: #FDFBF7; color: #3A3530; "
+                  "border: 1px solid #C8BAB0; padding: 4px 8px; "
+                  "font-family: 'Microsoft YaHei'; font-size: 11px; }");
 }
 
 void BarChartWidget::setData(const QVector<BarData> &bars, const QString &title) {
@@ -215,8 +275,14 @@ void BarChartWidget::setData(const QVector<BarData> &bars, const QString &title)
     update();
 }
 
+void BarChartWidget::setAverageLine(double value, const QColor &color) {
+    m_avgValue = value;
+    m_avgColor = color;
+    update();
+}
+
 QRectF BarChartWidget::calcChartArea() const {
-    return QRectF(50, 12, width() - 68, height() - 52);
+    return QRectF(50, 14, width() - 64, height() - 48);
 }
 
 void BarChartWidget::paintEvent(QPaintEvent *event) {
@@ -288,17 +354,19 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
                          QString::number(val, 'f', 0));
     }
 
-    // 7. 绘制柱状条
-    double slotWidth = chartArea.width() / n;
-    double barWidth = slotWidth * 0.65;
-    double gap = slotWidth * 0.35;
+    // 7. 绘制柱状条 — 固定柱宽，间距自适应
+    const double kFixedBarW = 52.0;
+    double totalBarsW = n * kFixedBarW;
+    double barWidth = qMin(kFixedBarW, chartArea.width() / (n * 1.6));
+    totalBarsW = n * barWidth;
+    double gap = (chartArea.width() - totalBarsW) / (n + 1);
 
     QFont valFont("Microsoft YaHei", 8);
     QFont xFont("Microsoft YaHei", 7);
 
     for (int i = 0; i < n; ++i) {
         double barH = (m_bars[i].value / niceMax) * chartArea.height();
-        double x = chartArea.left() + slotWidth * i + gap * 0.5;
+        double x = chartArea.left() + gap + i * (barWidth + gap);
         double y = chartArea.bottom() - barH;
         double bw = barWidth;
 
@@ -312,17 +380,37 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
         painter.setPen(QPen(barColor.darker(130), 1));
         painter.drawPath(barPath);
 
-        // 值标签
+        // 值标签 — 居中于柱子
         painter.setPen(DecoPainter::titleBrown());
         painter.setFont(valFont);
-        painter.drawText(QRectF(x - 8, y - 17, bw + 16, 15),
+        double valW = qMax(bw + 20, 40.0);
+        painter.drawText(QRectF(x - (valW - bw) / 2.0, y - 17, valW, 15),
                          Qt::AlignCenter, QString::number(m_bars[i].value, 'f', 0));
 
-        // X轴标签
+        // X轴标签 — 居中于柱子
         painter.setPen(DecoPainter::textBrown());
         painter.setFont(xFont);
-        painter.drawText(QRectF(x - 12, chartArea.bottom() + 4, bw + 24, 18),
+        double labelW = qMax(bw + 24, 50.0);
+        painter.drawText(QRectF(x - (labelW - bw) / 2.0, chartArea.bottom() + 4, labelW, 18),
                          Qt::AlignHCenter | Qt::AlignTop, m_bars[i].label);
+    }
+
+    // 7.5 均值虚线 — 线用数据色，标签用表头 accent 色
+    if (m_avgValue > 0 && niceMax > 0) {
+        double avgY = chartArea.bottom() - (m_avgValue / niceMax) * chartArea.height();
+        avgY = qBound(chartArea.top(), avgY, chartArea.bottom());
+        QPen avgPen(QColor(160, 140, 120), 0.8, Qt::DashLine, Qt::RoundCap);
+        avgPen.setDashPattern({6.0, 5.0});
+        painter.setPen(avgPen);
+        painter.drawLine(QPointF(chartArea.left(), avgY), QPointF(chartArea.right(), avgY));
+
+        QFont avgFont("Microsoft YaHei", 8);
+        avgFont.setItalic(true);
+        painter.setFont(avgFont);
+        painter.setPen(m_avgColor);
+        QString avgText = QString::fromUtf8("均值 %1").arg(m_avgValue, 0, 'f', 1);
+        painter.drawText(QRectF(chartArea.right() - 90, avgY - 16, 86, 14),
+                         Qt::AlignRight | Qt::AlignVCenter, avgText);
     }
 
     // 8. 底部标题
@@ -332,4 +420,37 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
         painter.drawText(rect().adjusted(0, 0, 0, -8),
                          Qt::AlignBottom | Qt::AlignHCenter, m_title);
     }
+}
+
+void BarChartWidget::mouseMoveEvent(QMouseEvent *event) {
+    if (m_bars.isEmpty()) return;
+
+    QRectF chartArea = calcChartArea();
+    int n = m_bars.size();
+
+    double maxVal = 1.0;
+    for (const auto &bar : m_bars)
+        if (bar.value > maxVal) maxVal = bar.value;
+    double niceMax = std::ceil(maxVal / 5.0) * 5.0;
+
+    const double kFixedBarW = 52.0;
+    double barWidth = qMin(kFixedBarW, chartArea.width() / (n * 1.6));
+    double totalBarsW = n * barWidth;
+    double gap = (chartArea.width() - totalBarsW) / (n + 1);
+
+    for (int i = 0; i < n; ++i) {
+        double barH = (m_bars[i].value / niceMax) * chartArea.height();
+        double x = chartArea.left() + gap + i * (barWidth + gap);
+        double y = chartArea.bottom() - barH;
+        QRectF barRect(x, y, barWidth, barH);
+
+        if (barRect.contains(event->position())) {
+            QString tip = QString("%1: %2")
+                .arg(m_bars[i].label)
+                .arg(m_bars[i].value, 0, 'f', 1);
+            QToolTip::showText(event->globalPosition().toPoint(), tip, this);
+            return;
+        }
+    }
+    QToolTip::hideText();
 }

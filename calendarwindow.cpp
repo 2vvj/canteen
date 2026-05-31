@@ -185,25 +185,16 @@ CalendarWindow::CalendarWindow(QWidget *parent)
         "border:none;background:transparent;");
     mainLayout->addWidget(titleLabel);
 
-    // ── 关闭按钮 — 绝对定位在右上角 ──
-    m_closeBtn = new QPushButton(QString::fromUtf8("×"), this);
-    m_closeBtn->setFixedSize(28, 28);
+    // ── 关闭按钮 — SketchyButton，匹配手绘风格 ──
+    m_closeBtn = new SketchyButton(QString::fromUtf8("×"),
+        QColor("#E0D7CC"), QColor("#3A3530"), this);
+    m_closeBtn->setFixedSize(36, 36);
     m_closeBtn->setCursor(Qt::PointingHandCursor);
     m_closeBtn->setStyleSheet(
-        "QPushButton {"
-        "  border: 1.5px solid #C8BEB4; border-radius: 8px;"
-        "  background-color: #F5F0E8;"
-        "  color: #2B2B2B; font-size: 16px; font-weight: bold;"
-        "  font-family: 'Microsoft YaHei';"
-        "}"
-        "QPushButton:hover {"
-        "  background-color: #EDE4D8; border-color: #B8A898;"
-        "}"
-        "QPushButton:pressed {"
-        "  background-color: #E0D4C4;"
-        "}");
+        "font-size:18px;font-weight:bold;color:#2B2B2B;"
+        "font-family:'Microsoft YaHei';");
     connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::close);
-    m_closeBtn->move(width() - 36 - 28, 36);
+    m_closeBtn->move(width() - 36 - 36, 30);
 
     mainLayout->addSpacing(4);
 
