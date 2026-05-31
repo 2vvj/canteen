@@ -20,9 +20,11 @@ public:
     void setData(const QVector<DataPoint> &points, const QString &title,
                  const QColor &lineColor);
     void setYAxisLabel(const QString &label);
+    void setAverageLine(double value, const QColor &color);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
 
 private:
     QRectF calcChartArea() const;
@@ -30,6 +32,8 @@ private:
     QString m_title;
     QString m_yAxisLabel;
     QColor m_lineColor;
+    double m_avgValue = -1;
+    QColor m_avgColor;
 };
 
 class BarChartWidget : public QWidget {
@@ -43,14 +47,18 @@ public:
     explicit BarChartWidget(QWidget *parent = nullptr);
 
     void setData(const QVector<BarData> &bars, const QString &title);
+    void setAverageLine(double value, const QColor &color);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
 
 private:
     QRectF calcChartArea() const;
     QVector<BarData> m_bars;
     QString m_title;
+    double m_avgValue = -1;
+    QColor m_avgColor;
 };
 
 #endif

@@ -5,8 +5,10 @@
 #include <QLabel>
 #include <QMap>
 #include <QColor>
+#include <QPoint>
 #include "calendarwindow.h"
 
+class SketchyButton;
 class LineChartWidget;
 class BarChartWidget;
 
@@ -38,6 +40,9 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
 
 private:
     void loadData();
@@ -49,9 +54,10 @@ private:
     LineChartWidget *m_calorieChart;
     BarChartWidget *m_monthlyBarChart;
     QLabel *m_emptyLabel;
-    QLabel *m_expenseAvgLabel;
-    QLabel *m_calorieAvgLabel;
     QMap<QString, DailyRecord> m_records;
+    SketchyButton *m_closeBtn;
+    QPoint m_dragPos;
+    bool m_dragging = false;
 };
 
 #endif

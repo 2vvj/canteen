@@ -1,14 +1,23 @@
 #include "statisticswindow.h"
 #include "chartwidgets.h"
 #include "decopainter.h"
+#include "sketchyui.h"
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QScrollArea>
 #include <QPainter>
 #include <QPainterPath>
 #include <QLinearGradient>
 #include <QDate>
+#include <QScreen>
+#include <QGuiApplication>
+#include <QMouseEvent>
 #include <algorithm>
 #include <cmath>
+
+static const QColor C_CREAM_S  = QColor("#FDFBF7");
+static const QColor C_INK_S    = QColor("#2B2B2B");
+static const QColor C_SHADOW_S = QColor("#3A3530");
 
 // ========== ChartCardWidget ==========
 ChartCardWidget::ChartCardWidget(const QString &title, const QColor &accentColor,
@@ -16,11 +25,11 @@ ChartCardWidget::ChartCardWidget(const QString &title, const QColor &accentColor
     : QWidget(parent), m_title(title), m_accentColor(accentColor)
 {
     m_cardColor = QColor("#FAF8F5");
-    setMinimumHeight(200);
+    setMinimumHeight(350);
 
     QVBoxLayout *lay = new QVBoxLayout(this);
-    lay->setContentsMargins(16, 38, 16, 14);
-    lay->setSpacing(6);
+    lay->setContentsMargins(16, 44, 16, 22);
+    lay->setSpacing(8);
 }
 
 void ChartCardWidget::setChartWidget(QWidget *chart) {
@@ -32,8 +41,9 @@ void ChartCardWidget::setSummaryLabel(QLabel *label) {
     QVBoxLayout *lay = qobject_cast<QVBoxLayout*>(layout());
     if (lay) {
         label->setStyleSheet(
-            "color:#5D4B3A;font-size:12px;font-family:'Microsoft YaHei';"
-            "padding-left:12px;border:none;background:transparent;");
+            "color:#6B5C4F;font-size:13px;font-family:'Microsoft YaHei';"
+            "padding:4px 0 2px 18px;border:none;background:transparent;"
+            "font-style:italic;letter-spacing:1px;");
         lay->addWidget(label);
     }
 }
@@ -87,36 +97,54 @@ void ChartCardWidget::paintEvent(QPaintEvent *event) {
 // ========== StatisticsWindow ==========
 StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     setWindowTitle(QString::fromUtf8("数据统计"));
-    resize(800, 920);
-    setStyleSheet("QDialog { background: transparent; }");
+    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+    setAttribute(Qt::WA_TranslucentBackground);
+
+    // 自动高度匹配全屏
+    QScreen *screen = QGuiApplication::primaryScreen();
+    int screenH = screen ? screen->availableGeometry().height() : 900;
+    setFixedSize(960, screenH);
 
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(24, 20, 24, 20);
-    mainLayout->setSpacing(14);
+    mainLayout->setContentsMargins(36, 36, 36, 28);
+    mainLayout->setSpacing(10);
 
-    // 标题
+    // ── 标题 ──
     QLabel *titleLabel = new QLabel(QString::fromUtf8("数 据 统 计"), this);
-    titleLabel->setStyleSheet(
-        "font-size:24px;font-weight:bold;color:#2B2B2B;padding:10px 0 4px 0;"
-        "letter-spacing:10px;font-family:'Microsoft YaHei';");
     titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setStyleSheet(
+        "font-size:20px;font-weight:bold;color:#2B2B2B;"
+        "letter-spacing:8px;font-family:'Microsoft YaHei';"
+        "border:none;background:transparent;");
     mainLayout->addWidget(titleLabel);
 
-    // 手绘分隔线占位
-    QLabel *divider = new QLabel(this);
-    divider->setFixedHeight(6);
-    divider->setStyleSheet("background:transparent;border:none;");
-    mainLayout->addWidget(divider);
+    // ── 关闭按钮 — SketchyButton，匹配设置界面风格 ──
+    m_closeBtn = new SketchyButton(QString::fromUtf8("×"),
+        QColor("#E0D7CC"), QColor("#3A3530"), this);
+    m_closeBtn->setFixedSize(36, 36);
+    m_closeBtn->setCursor(Qt::PointingHandCursor);
+    m_closeBtn->setStyleSheet(
+        "font-size:18px;font-weight:bold;color:#2B2B2B;"
+        "font-family:'Microsoft YaHei';");
+    connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::close);
+    m_closeBtn->move(width() - 36 - 36, 30);
 
-    // 滚动区域
+    mainLayout->addSpacing(4);
+
+    // ── 手绘分隔线 ──
+    mainLayout->addWidget(new ScratchyDivider(this));
+
+    // ── 滚动区域 ──
     QScrollArea *scroll = new QScrollArea(this);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
     scroll->setStyleSheet(
         "QScrollArea { background: transparent; }"
-        "QScrollBar:vertical { background: #E8E0D8; width: 8px; border-radius: 4px; }"
-        "QScrollBar::handle:vertical { background: #C8BAB0; border-radius: 4px; min-height: 40px; }"
-        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }");
+        "QScrollBar:vertical { background: transparent; width: 10px; margin: 4px 2px; }"
+        "QScrollBar::handle:vertical { background: #C8BAB0; border-radius: 5px; min-height: 36px; }"
+        "QScrollBar::handle:vertical:hover { background: #B0A090; }"
+        "QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }"
+        "QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: none; }");
 
     QWidget *content = new QWidget();
     content->setStyleSheet("background: transparent;");
@@ -127,7 +155,8 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     // 空数据提示
     m_emptyLabel = new QLabel(QString::fromUtf8("暂无数据，请先在历史记录中查看"), this);
     m_emptyLabel->setStyleSheet(
-        "color:#C4B8A8;font-size:14px;padding:60px 0;font-family:'Microsoft YaHei';");
+        "color:#B0A090;font-size:15px;padding:60px 0;font-family:'Microsoft YaHei';"
+        "background:transparent;border:none;");
     m_emptyLabel->setAlignment(Qt::AlignCenter);
     m_emptyLabel->hide();
 
@@ -135,29 +164,25 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     m_expenseCard = new ChartCardWidget(
         QString::fromUtf8("每日支出"), QColor("#C86A5A"), this);
     m_expenseChart = new LineChartWidget(this);
-    m_expenseChart->setMinimumHeight(230);
+    m_expenseChart->setMinimumHeight(290);
     m_expenseChart->setYAxisLabel(QString::fromUtf8("金额 (元)"));
     m_expenseCard->setChartWidget(m_expenseChart);
-    m_expenseAvgLabel = new QLabel(this);
-    m_expenseCard->setSummaryLabel(m_expenseAvgLabel);
     contentLayout->addWidget(m_expenseCard);
 
     // 每日热量卡片
     m_calorieCard = new ChartCardWidget(
-        QString::fromUtf8("每日热量"), QColor("#B8A080"), this);
+        QString::fromUtf8("每日热量"), QColor("#B0C29A"), this);
     m_calorieChart = new LineChartWidget(this);
-    m_calorieChart->setMinimumHeight(230);
+    m_calorieChart->setMinimumHeight(290);
     m_calorieChart->setYAxisLabel(QString::fromUtf8("热量 (千卡)"));
     m_calorieCard->setChartWidget(m_calorieChart);
-    m_calorieAvgLabel = new QLabel(this);
-    m_calorieCard->setSummaryLabel(m_calorieAvgLabel);
     contentLayout->addWidget(m_calorieCard);
 
     // 每月支出卡片
     m_monthlyCard = new ChartCardWidget(
         QString::fromUtf8("每月支出"), QColor("#80A0A8"), this);
     m_monthlyBarChart = new BarChartWidget(this);
-    m_monthlyBarChart->setMinimumHeight(230);
+    m_monthlyBarChart->setMinimumHeight(290);
     m_monthlyCard->setChartWidget(m_monthlyBarChart);
     contentLayout->addWidget(m_monthlyCard);
 
@@ -172,41 +197,49 @@ void StatisticsWindow::setRecords(const QMap<QString, DailyRecord> &records) {
     loadData();
 }
 
-void StatisticsWindow::paintEvent(QPaintEvent *event) {
-    QDialog::paintEvent(event);
-    QPainter painter(this);
-    painter.setRenderHint(QPainter::Antialiasing);
-    int w = width(), h = height();
+void StatisticsWindow::paintEvent(QPaintEvent *) {
+    QPainter p(this);
+    p.setRenderHint(QPainter::Antialiasing);
 
-    // 主背景 — 米黄纸张
-    painter.setBrush(QColor(250, 247, 243, 215));
-    painter.setPen(Qt::NoPen);
-    painter.drawPath(DecoPainter::makeOrganicRect(QRectF(0, 0, w, h), 3.2f, 11));
+    QRectF card(12, 12, width() - 24, height() - 24);
+    int seed = 59;
 
-    // 左上复古蓝撞色
-    painter.setBrush(QColor(208, 227, 239, 55));
-    painter.drawPath(DecoPainter::makeOrganicRect(QRectF(-5, h * 0.08f, w * 0.28f, h * 0.15f), 4.5f, 13));
+    // 阴影层
+    QRectF shadow = card.translated(2.5, 3.5);
+    QPainterPath sp = sketchyRect(shadow, seed + 100, 2.8);
+    p.setBrush(C_SHADOW_S);
+    p.setPen(Qt::NoPen);
+    p.drawPath(sp);
 
-    // 右下芥末绿撞色
-    painter.setBrush(QColor(242, 233, 212, 90));
-    painter.drawPath(DecoPainter::makeOrganicRect(QRectF(w * 0.72f, h * 0.86f, w * 0.32f, h * 0.18f), 4.0f, 17));
+    // 卡片层 — 奶油纸色 + 墨水晕染 + 黑边
+    QPainterPath cp = sketchyRect(card, seed, 2.8);
+    drawInkWash(&p, cp, C_CREAM_S, 18);
+    drawInkBorder(&p, cp, C_INK_S, 3, 0.7);
+}
 
-    // 纸张纹理
-    DecoPainter::drawPaperTexture(painter, QRect(0, 0, w, h));
+void StatisticsWindow::mousePressEvent(QMouseEvent *e) {
+    if (e->button() == Qt::LeftButton) {
+        QWidget *child = childAt(e->pos());
+        if (!child || child == this) {
+            m_dragPos = e->globalPosition().toPoint() - frameGeometry().topLeft();
+            m_dragging = true;
+        }
+    }
+    QDialog::mousePressEvent(e);
+}
 
-    // 标题下方分隔线
-    DecoPainter::drawScratchyLine(painter,
-        QPointF(w * 0.22f, 60), QPointF(w * 0.78f, 60),
-        QColor(43, 43, 43, 35), 0.7f, 1.3f);
+void StatisticsWindow::mouseMoveEvent(QMouseEvent *e) {
+    if (m_dragging && (e->buttons() & Qt::LeftButton)) {
+        QPoint delta = e->globalPosition().toPoint() - frameGeometry().topLeft() - m_dragPos;
+        if (delta.manhattanLength() > 4)
+            move(e->globalPosition().toPoint() - m_dragPos);
+    }
+    QDialog::mouseMoveEvent(e);
+}
 
-    // 装饰元素
-    float s = qMin(w, h) / 29.0f;
-    DecoPainter::drawSakura(painter, QPointF(w * 0.04f, h * 0.02f), s * 0.55f);
-    DecoPainter::drawPetal(painter, QPointF(w * 0.12f, h * 0.06f), s * 0.28f, 40);
-    DecoPainter::drawXiaolongbao(painter, QPointF(w * 0.03f, h * 0.94f), s * 0.65f);
-    DecoPainter::drawTinyCat(painter, QPointF(w * 0.96f, h * 0.93f), s * 0.72f);
-    DecoPainter::drawRoughCircle(painter, QPointF(w * 0.50f, h * 0.02f), 14, QColor(200, 106, 90, 28));
-    DecoPainter::drawScallion(painter, QPointF(w * 0.93f, h * 0.55f), s * 0.42f, 18);
+void StatisticsWindow::mouseReleaseEvent(QMouseEvent *e) {
+    m_dragging = false;
+    QDialog::mouseReleaseEvent(e);
 }
 
 void StatisticsWindow::loadData() {
@@ -223,45 +256,49 @@ void StatisticsWindow::loadData() {
     m_monthlyCard->show();
 
     QStringList allDates = m_records.keys();
-    std::sort(allDates.begin(), allDates.end());
 
-    // 只取最近28天
+    // 基于今天生成固定28天日期范围，无数据的填0
     QDate today = QDate::currentDate();
-    QDate cutoff = today.addDays(-28);
+    QDate cutoff = today.addDays(-27);
     QStringList dates;
-    for (const auto &date : allDates) {
-        QDate d = QDate::fromString(date, "yyyy-MM-dd");
-        if (d.isValid() && d >= cutoff) dates.append(date);
-    }
+    for (QDate d = cutoff; d <= today; d = d.addDays(1))
+        dates.append(d.toString("yyyy-MM-dd"));
 
     // 每日支出 + 每日热量折线
     QVector<LineChartWidget::DataPoint> expensePts, caloriePts;
     double expSum = 0, calSum = 0;
+    int countWithData = 0;
     for (const auto &date : dates) {
         const auto &r = m_records[date];
         QString label = date.mid(5);
         expensePts.append({label, r.totalPrice});
         caloriePts.append({label, r.totalCalories});
-        expSum += r.totalPrice;
-        calSum += r.totalCalories;
+        bool isLast = (date == dates.last());
+        if (!isLast || r.totalPrice > 0) {
+            expSum += r.totalPrice;
+            calSum += r.totalCalories;
+            countWithData++;
+        }
     }
-    m_expenseChart->setData(expensePts, QString(), QColor(200, 130, 110));
-    m_calorieChart->setData(caloriePts, QString(), QColor(160, 140, 120));
 
     int n = dates.size();
-    if (n > 0) {
-        m_expenseAvgLabel->setText(
-            QString::fromUtf8("过去%1天日均支出：¥%2 / 天")
-                .arg(n).arg(expSum / n, 0, 'f', 1));
-        m_calorieAvgLabel->setText(
-            QString::fromUtf8("过去%1天日均热量：%2 kcal / 天")
-                .arg(n).arg(calSum / n, 0, 'f', 0));
-        m_expenseAvgLabel->show();
-        m_calorieAvgLabel->show();
-    } else {
-        m_expenseAvgLabel->hide();
-        m_calorieAvgLabel->hide();
+    // 日均基于有数据的天数（如果今天为0则排除今天）
+    int avgDiv = countWithData > 0 ? countWithData : n;
+    double expAvg = expSum / avgDiv;
+    double calAvg = calSum / avgDiv;
+
+    // 如果今天没数据，把今天的点替换为均值
+    if (!expensePts.isEmpty() && expensePts.last().value == 0) {
+        expensePts.last().value = expAvg;
     }
+    if (!caloriePts.isEmpty() && caloriePts.last().value == 0) {
+        caloriePts.last().value = calAvg;
+    }
+
+    m_expenseChart->setData(expensePts, QString(), QColor(160, 140, 120));
+    m_expenseChart->setAverageLine(expAvg, QColor("#C86A5A"));
+    m_calorieChart->setData(caloriePts, QString(), QColor(160, 140, 120));
+    m_calorieChart->setAverageLine(calAvg, QColor("#B0C29A"));
 
     // 每月支出柱状图
     QMap<QString, double> monthly;
@@ -270,7 +307,12 @@ void StatisticsWindow::loadData() {
         monthly[month] += m_records[date].totalPrice;
     }
     QVector<BarChartWidget::BarData> monthlyBars;
-    for (auto it = monthly.begin(); it != monthly.end(); ++it)
+    double monthlySum = 0;
+    for (auto it = monthly.begin(); it != monthly.end(); ++it) {
         monthlyBars.append({it.key(), it.value()});
+        monthlySum += it.value();
+    }
+    double monthlyAvg = monthly.isEmpty() ? 0 : monthlySum / monthly.size();
     m_monthlyBarChart->setData(monthlyBars, QString());
+    m_monthlyBarChart->setAverageLine(monthlyAvg, QColor("#80A0A8"));
 }
