@@ -5,6 +5,7 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QComboBox>
+#include <QSlider>
 #include <QPushButton>
 #include <QPoint>
 #include "userdata.h"
@@ -14,6 +15,9 @@ class SettingsDialog : public QDialog {
 public:
     explicit SettingsDialog(const UserSettings &current, QWidget *parent = nullptr);
     UserSettings result() const { return m_result; }
+
+signals:
+    void bgmVolumeChanged(int vol);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -40,6 +44,7 @@ private:
     QLineEdit *m_weightEdit;
     QLineEdit *m_ageEdit;
     QPushButton *m_closeBtn;
+    QSlider *m_bgmSlider;
     QWidget *m_genderPopup = nullptr;
     QPoint m_dragPos;
     bool m_dragging = false;

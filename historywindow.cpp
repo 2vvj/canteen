@@ -370,7 +370,7 @@ HistoryWindow::HistoryWindow(QWidget *parent) : QDialog(parent) {
     m_closeBtn->move(width() - 36 - 36, 30);
 
     // ── 副标题 ──
-    QLabel *subTitleLabel = new QLabel(QString::fromUtf8("点击星星为你吃过的菜打分"), this);
+    QLabel *subTitleLabel = new QLabel(QString::fromUtf8("为你吃过的菜打分吧！"), this);
     subTitleLabel->setAlignment(Qt::AlignCenter);
     subTitleLabel->setStyleSheet(
         "font-size: 13px; color: #8B8B8B;"

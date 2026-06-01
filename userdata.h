@@ -10,6 +10,7 @@ struct UserSettings {
     int height = 0;   // cm
     int weight = 0;   // kg
     int age = 0;
+    int bgmVolume = 50;  // 0-100
 };
 
 class UserData {
