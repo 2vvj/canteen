@@ -81,6 +81,9 @@ Testing/
 # IDE 配置
 .vscode/
 
+# Qt Creator 用户配置
+*.pro.user
+
 # 用户本地数据（不提交到 GitHub）
 user.json
 daily_records.json
