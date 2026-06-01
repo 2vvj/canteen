@@ -173,7 +173,7 @@ void MealPage::setupUI() {
     extraLayout->setContentsMargins(18, 14, 18, 14);
     extraLayout->setSpacing(12);
 
-    auto *extraLabel = new QLabel(QString::fromUtf8("核心齐了！"));
+    auto *extraLabel = new QLabel(QString::fromUtf8(""));
     extraLabel->setStyleSheet(QString("font-size:16px; font-weight:bold; color:%1; background:transparent;").arg(C_INK.name()));
     extraLayout->addWidget(extraLabel);
 
@@ -230,14 +230,36 @@ void MealPage::setupUI() {
 
 void MealPage::updateTimeDisplay() {
     QTime now = QTime::currentTime();
-    QString mode = isBreakfast() ? QString::fromUtf8("早餐模式") : QString::fromUtf8("中晚餐模式");
-    m_timeLabel->setText(QString("%1  %2 | 供应时段内").arg(now.toString("HH:mm")).arg(mode));
+    int h = now.hour();
+    QString mode;
+    QString serving;
+    if (h < 4) {
+        mode = QString::fromUtf8("深夜");
+        serving = QString::fromUtf8("非供应时段");
+    } else if (h < 10) {
+        mode = QString::fromUtf8("早餐模式");
+        serving = QString::fromUtf8("供应时段内");
+    } else if (h < 14) {
+        mode = QString::fromUtf8("中餐模式");
+        serving = QString::fromUtf8("供应时段内");
+    } else if (h < 17) {
+        mode = QString::fromUtf8("下午茶");
+        serving = QString::fromUtf8("非供应时段");
+    } else if (h < 21) {
+        mode = QString::fromUtf8("晚餐模式");
+        serving = QString::fromUtf8("供应时段内");
+    } else {
+        mode = QString::fromUtf8("宵夜");
+        serving = QString::fromUtf8("非供应时段");
+    }
+    m_timeLabel->setText(QString("%1  %2 | %3").arg(now.toString("HH:mm")).arg(mode).arg(serving));
 }
 
 // ============ 搭配系统 ============
 
 bool MealPage::isBreakfast() const {
-    return QTime::currentTime().hour() < 10;
+    int h = QTime::currentTime().hour();
+    return h >= 4 && h < 10;
 }
 
 QSet<DishRole> MealPage::filledRoles() const {

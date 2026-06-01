@@ -236,7 +236,7 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
     modeRow->setSpacing(16);
     modeRow->addStretch();
 
-    m_todayBtn = new QPushButton(QString::fromUtf8("  当日饮食报告  "), this);
+    m_todayBtn = new QPushButton(QString::fromUtf8("  今日饮食报告  "), this);
     m_todayBtn->setCursor(Qt::PointingHandCursor);
     m_todayBtn->setMinimumSize(160, 40);
     connect(m_todayBtn, &QPushButton::clicked, this, [this]{ onModeSelected(Today); });
@@ -248,28 +248,11 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
     connect(m_weekBtn, &QPushButton::clicked, this, [this]{ onModeSelected(Week); });
     modeRow->addWidget(m_weekBtn);
 
-    modeRow->addSpacing(10);
-
-    m_historyBtn = new QPushButton(QString::fromUtf8("  历史报告  "), this);
-    m_historyBtn->setCursor(Qt::PointingHandCursor);
-    m_historyBtn->setMinimumSize(130, 40);
-    m_historyBtn->setStyleSheet(
-        "QPushButton {"
-        "  border: 2px solid #C8BEB4; border-radius: 12px;"
-        "  background-color: #E8DDD0;"
-        "  color: #5D4E3A; font-size: 13px;"
-        "  font-family: 'Microsoft YaHei'; padding: 6px 14px;"
-        "}"
-        "QPushButton:hover { background-color: #DDD0C0; }"
-        "QPushButton:pressed { background-color: #D0C0AC; }");
-    connect(m_historyBtn, &QPushButton::clicked, this, &AiReportDialog::onHistoryClicked);
-    modeRow->addWidget(m_historyBtn);
-
     modeRow->addStretch();
     mainLayout->addLayout(modeRow);
 
     // 状态标签
-    m_statusLabel = new QLabel(QString::fromUtf8("选择报告类型，点击「生成报告」"), this);
+    m_statusLabel = new QLabel(QString::fromUtf8("点击【生成报告】生成你的今日饮食报告"), this);
     m_statusLabel->setAlignment(Qt::AlignCenter);
     m_statusLabel->setStyleSheet(
         "color:#8A7A6A;font-size:12px;font-family:'Microsoft YaHei';"
@@ -294,6 +277,23 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
     QHBoxLayout *btnRow = new QHBoxLayout;
     btnRow->addStretch();
 
+    m_historyBtn = new QPushButton(QString::fromUtf8("历史报告"), this);
+    m_historyBtn->setCursor(Qt::PointingHandCursor);
+    m_historyBtn->setFixedSize(90, 36);
+    m_historyBtn->setStyleSheet(
+        "QPushButton {"
+        "  border: 1.5px solid #C8BEB4; border-radius: 8px;"
+        "  background-color: #E8DDD0;"
+        "  color: #5D4E3A; font-size: 12px;"
+        "  font-family: 'Microsoft YaHei'; padding: 4px 12px;"
+        "}"
+        "QPushButton:hover { background-color: #DDD0C0; }"
+        "QPushButton:pressed { background-color: #D0C0AC; }");
+    connect(m_historyBtn, &QPushButton::clicked, this, &AiReportDialog::onHistoryClicked);
+    btnRow->addWidget(m_historyBtn);
+
+    btnRow->addSpacing(12);
+
     m_generateBtn = new QPushButton(QString::fromUtf8("生成报告"), this);
     m_generateBtn->setMinimumSize(130, 40);
     m_generateBtn->setCursor(Qt::PointingHandCursor);
@@ -310,7 +310,7 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
     connect(m_generateBtn, &QPushButton::clicked, this, &AiReportDialog::onGenerateReport);
     btnRow->addWidget(m_generateBtn);
 
-    btnRow->addSpacing(16);
+    btnRow->addSpacing(12);
 
     m_closeBtn = new QPushButton(QString::fromUtf8("关闭"), this);
     m_closeBtn->setMinimumSize(100, 40);
@@ -357,8 +357,8 @@ void AiReportDialog::onModeSelected(ReportMode mode) {
     updateModeButtonStyles();
 
     QString hint = (mode == Today)
-        ? QString::fromUtf8("今日饮食报告 · 点击「生成报告」")
-        : QString::fromUtf8("一周饮食报告 · 点击「生成报告」");
+        ? QString::fromUtf8("点击【生成报告】生成你的今日饮食报告")
+        : QString::fromUtf8("点击【生成报告】生成你的一周饮食报告");
     m_statusLabel->setText(hint);
     m_statusLabel->setStyleSheet(
         "color:#6A7A8A;font-size:12px;font-family:'Microsoft YaHei';"
@@ -411,7 +411,7 @@ void AiReportDialog::onGenerateReport() {
     // 加载动画
     m_loadingDots = 0;
     m_reportText->setPlainText(QString::fromUtf8("正在生成报告"));
-    m_statusLabel->setText(QString::fromUtf8("⏳ AI 分析中…"));
+    m_statusLabel->setText(QString::fromUtf8("⏳ 报告生成中…"));
     m_loadingTimer->start();
 
     QString prompt = (m_mode == Today) ? buildTodayPrompt() : buildWeekPrompt();
@@ -423,7 +423,7 @@ void AiReportDialog::onLoadingTick() {
     m_loadingDots = (m_loadingDots + 1) % 6;
     QString dots;
     for (int i = 0; i <= m_loadingDots; ++i) dots += ".";
-    m_reportText->setPlainText(QString::fromUtf8("正在生成报告%1\n\n请稍候，AI 正在分析您的饮食数据…").arg(dots));
+    m_reportText->setPlainText(QString::fromUtf8("正在生成报告%1\n\n请稍候，正在分析您的饮食数据…").arg(dots));
 }
 
 // ═══════════════════════════════════════════
