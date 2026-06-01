@@ -187,6 +187,27 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
         painter.drawEllipse(pts[i], 4.0, 4.0);
     }
 
+    // 9.25 悬停点高亮 — 光晕 + 放大实心点
+    if (m_hoveredIndex >= 0 && m_hoveredIndex < n) {
+        QPointF hp = pts[m_hoveredIndex];
+        // 外光晕
+        QRadialGradient glow(hp, 9.0);
+        QColor glowC = m_lineColor;
+        glow.setColorAt(0.0, QColor(glowC.red(), glowC.green(), glowC.blue(), 80));
+        glow.setColorAt(1.0, QColor(glowC.red(), glowC.green(), glowC.blue(), 0));
+        painter.setBrush(glow);
+        painter.setPen(Qt::NoPen);
+        painter.drawEllipse(hp, 9.0, 9.0);
+        // 外环
+        painter.setBrush(Qt::NoBrush);
+        painter.setPen(QPen(m_lineColor.lighter(140), 2.5));
+        painter.drawEllipse(hp, 7.5, 7.5);
+        // 实心点
+        painter.setBrush(m_lineColor);
+        painter.setPen(QPen(Qt::white, 1.5));
+        painter.drawEllipse(hp, 4.5, 4.5);
+    }
+
     // 9.5 均值虚线 — 线用数据色，标签用表头 accent 色
     if (m_avgValue > 0 && niceMax > 0) {
         double avgY = chartArea.bottom() - (m_avgValue / niceMax) * chartArea.height();
@@ -226,36 +247,73 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
     }
 }
 
+void LineChartWidget::mousePressEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton) {
+        m_pressPos = event->globalPosition();
+        m_pressing = true;
+    }
+    QWidget::mousePressEvent(event);
+}
+
+void LineChartWidget::mouseReleaseEvent(QMouseEvent *event) {
+    if (m_pressing) {
+        m_pressing = false;
+        int dx = event->globalPosition().toPoint().x() - m_pressPos.x();
+        if (dx > 60) {
+            emit swiped(-1);  // 右拖 → 看更早
+        } else if (dx < -60) {
+            emit swiped(+1);  // 左拖 → 看更新
+        }
+    }
+    QWidget::mouseReleaseEvent(event);
+}
+
+void LineChartWidget::leaveEvent(QEvent *) {
+    if (m_hoveredIndex != -1) {
+        m_hoveredIndex = -1;
+        update();
+        QToolTip::hideText();
+    }
+}
+
 void LineChartWidget::mouseMoveEvent(QMouseEvent *event) {
-    if (m_points.isEmpty()) return;
+    if (m_points.isEmpty()) {
+        if (m_hoveredIndex != -1) { m_hoveredIndex = -1; update(); QToolTip::hideText(); }
+        return;
+    }
 
     QRectF chartArea = calcChartArea();
     int n = m_points.size();
 
-    // 计算每个数据点的屏幕坐标
+    double maxVal = 1.0;
+    for (const auto &pt : m_points)
+        if (pt.value > maxVal) maxVal = pt.value;
+    double niceMax = std::ceil(maxVal / 5.0) * 5.0;
+
+    int newHover = -1;
     for (int i = 0; i < n; ++i) {
         double x = chartArea.left() + chartArea.width() * i / (n - 1);
-        double maxVal = 1.0;
-        for (const auto &pt : m_points)
-            if (pt.value > maxVal) maxVal = pt.value;
-        double niceMax = std::ceil(maxVal / 5.0) * 5.0;
         double normalized = m_points[i].value / niceMax;
         double y = chartArea.bottom() - normalized * chartArea.height();
-        // 加上手绘偏移
         double wobble = 1.2 * qSin(i * 1.7);
         QPointF ptPos(x + wobble, y + 1.0 * qCos(i * 2.3));
 
         double dist = QLineF(event->position(), ptPos).length();
         if (dist < 15.0) {
+            newHover = i;
             QString tip = QString("%1\n%2: %3")
                 .arg(m_points[i].label)
                 .arg(m_yAxisLabel)
                 .arg(m_points[i].value, 0, 'f', 1);
             QToolTip::showText(event->globalPosition().toPoint(), tip, this);
-            return;
+            break;
         }
     }
-    QToolTip::hideText();
+    if (newHover != m_hoveredIndex) {
+        m_hoveredIndex = newHover;
+        update();
+    }
+    if (newHover == -1) QToolTip::hideText();
 }
 
 // ==========================================
@@ -380,6 +438,21 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
         painter.setPen(QPen(barColor.darker(130), 1));
         painter.drawPath(barPath);
 
+        // 悬停高亮 — 亮边 + 光晕
+        if (i == m_hoveredIndex) {
+            QColor hlColor = barColor.lighter(150);
+            painter.setBrush(Qt::NoBrush);
+            painter.setPen(QPen(hlColor, 2.5));
+            painter.drawPath(barPath);
+            // 底部光晕条
+            QLinearGradient glowGrad(barRect.bottomLeft(), barRect.topRight());
+            glowGrad.setColorAt(0.0, QColor(hlColor.red(), hlColor.green(), hlColor.blue(), 50));
+            glowGrad.setColorAt(1.0, QColor(hlColor.red(), hlColor.green(), hlColor.blue(), 0));
+            painter.setBrush(glowGrad);
+            painter.setPen(Qt::NoPen);
+            painter.drawPath(barPath);
+        }
+
         // 值标签 — 居中于柱子
         painter.setPen(DecoPainter::titleBrown());
         painter.setFont(valFont);
@@ -422,8 +495,19 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
     }
 }
 
+void BarChartWidget::leaveEvent(QEvent *) {
+    if (m_hoveredIndex != -1) {
+        m_hoveredIndex = -1;
+        update();
+        QToolTip::hideText();
+    }
+}
+
 void BarChartWidget::mouseMoveEvent(QMouseEvent *event) {
-    if (m_bars.isEmpty()) return;
+    if (m_bars.isEmpty()) {
+        if (m_hoveredIndex != -1) { m_hoveredIndex = -1; update(); QToolTip::hideText(); }
+        return;
+    }
 
     QRectF chartArea = calcChartArea();
     int n = m_bars.size();
@@ -438,6 +522,7 @@ void BarChartWidget::mouseMoveEvent(QMouseEvent *event) {
     double totalBarsW = n * barWidth;
     double gap = (chartArea.width() - totalBarsW) / (n + 1);
 
+    int newHover = -1;
     for (int i = 0; i < n; ++i) {
         double barH = (m_bars[i].value / niceMax) * chartArea.height();
         double x = chartArea.left() + gap + i * (barWidth + gap);
@@ -445,12 +530,17 @@ void BarChartWidget::mouseMoveEvent(QMouseEvent *event) {
         QRectF barRect(x, y, barWidth, barH);
 
         if (barRect.contains(event->position())) {
+            newHover = i;
             QString tip = QString("%1: %2")
                 .arg(m_bars[i].label)
                 .arg(m_bars[i].value, 0, 'f', 1);
             QToolTip::showText(event->globalPosition().toPoint(), tip, this);
-            return;
+            break;
         }
     }
-    QToolTip::hideText();
+    if (newHover != m_hoveredIndex) {
+        m_hoveredIndex = newHover;
+        update();
+    }
+    if (newHover == -1) QToolTip::hideText();
 }

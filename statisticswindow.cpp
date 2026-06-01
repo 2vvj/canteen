@@ -48,6 +48,30 @@ void ChartCardWidget::setSummaryLabel(QLabel *label) {
     }
 }
 
+void ChartCardWidget::setDateRange(const QString &text) {
+    if (!m_rangeLabel) {
+        m_rangeLabel = new QLabel(this);
+        m_rangeLabel->setAlignment(Qt::AlignCenter);
+        m_rangeLabel->setStyleSheet(
+            "color:#A09890; font-size:12px; font-family:'Microsoft YaHei'; "
+            "border:none; background:transparent;");
+        QVBoxLayout *lay = qobject_cast<QVBoxLayout*>(layout());
+        if (lay) {
+            // 找到 chart widget 的位置，把日期标签插在它前面
+            int chartIdx = -1;
+            for (int i = 0; i < lay->count(); ++i) {
+                if (lay->itemAt(i)->widget() && lay->itemAt(i)->widget() != m_rangeLabel)
+                    { chartIdx = i; break; }
+            }
+            if (chartIdx >= 0)
+                lay->insertWidget(chartIdx, m_rangeLabel);
+            else
+                lay->addWidget(m_rangeLabel);
+        }
+    }
+    m_rangeLabel->setText(text);
+}
+
 void ChartCardWidget::paintEvent(QPaintEvent *event) {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
@@ -168,6 +192,7 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     m_expenseChart->setYAxisLabel(QString::fromUtf8("金额 (元)"));
     m_expenseCard->setChartWidget(m_expenseChart);
     contentLayout->addWidget(m_expenseCard);
+    connect(m_expenseChart, &LineChartWidget::swiped, this, &StatisticsWindow::onExpenseSwiped);
 
     // 每日热量卡片
     m_calorieCard = new ChartCardWidget(
@@ -177,6 +202,7 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     m_calorieChart->setYAxisLabel(QString::fromUtf8("热量 (千卡)"));
     m_calorieCard->setChartWidget(m_calorieChart);
     contentLayout->addWidget(m_calorieCard);
+    connect(m_calorieChart, &LineChartWidget::swiped, this, &StatisticsWindow::onCalorieSwiped);
 
     // 每月支出卡片
     m_monthlyCard = new ChartCardWidget(
@@ -255,52 +281,11 @@ void StatisticsWindow::loadData() {
     m_calorieCard->show();
     m_monthlyCard->show();
 
+    loadExpenseChart();
+    loadCalorieChart();
+
+    // 每月支出柱状图 — 始终用全部历史数据
     QStringList allDates = m_records.keys();
-
-    // 基于今天生成固定28天日期范围，无数据的填0
-    QDate today = QDate::currentDate();
-    QDate cutoff = today.addDays(-27);
-    QStringList dates;
-    for (QDate d = cutoff; d <= today; d = d.addDays(1))
-        dates.append(d.toString("yyyy-MM-dd"));
-
-    // 每日支出 + 每日热量折线
-    QVector<LineChartWidget::DataPoint> expensePts, caloriePts;
-    double expSum = 0, calSum = 0;
-    int countWithData = 0;
-    for (const auto &date : dates) {
-        const auto &r = m_records[date];
-        QString label = date.mid(5);
-        expensePts.append({label, r.totalPrice});
-        caloriePts.append({label, r.totalCalories});
-        bool isLast = (date == dates.last());
-        if (!isLast || r.totalPrice > 0) {
-            expSum += r.totalPrice;
-            calSum += r.totalCalories;
-            countWithData++;
-        }
-    }
-
-    int n = dates.size();
-    // 日均基于有数据的天数（如果今天为0则排除今天）
-    int avgDiv = countWithData > 0 ? countWithData : n;
-    double expAvg = expSum / avgDiv;
-    double calAvg = calSum / avgDiv;
-
-    // 如果今天没数据，把今天的点替换为均值
-    if (!expensePts.isEmpty() && expensePts.last().value == 0) {
-        expensePts.last().value = expAvg;
-    }
-    if (!caloriePts.isEmpty() && caloriePts.last().value == 0) {
-        caloriePts.last().value = calAvg;
-    }
-
-    m_expenseChart->setData(expensePts, QString(), QColor(160, 140, 120));
-    m_expenseChart->setAverageLine(expAvg, QColor("#C86A5A"));
-    m_calorieChart->setData(caloriePts, QString(), QColor(160, 140, 120));
-    m_calorieChart->setAverageLine(calAvg, QColor("#B0C29A"));
-
-    // 每月支出柱状图
     QMap<QString, double> monthly;
     for (const auto &date : allDates) {
         QString month = date.left(7);
@@ -315,4 +300,86 @@ void StatisticsWindow::loadData() {
     double monthlyAvg = monthly.isEmpty() ? 0 : monthlySum / monthly.size();
     m_monthlyBarChart->setData(monthlyBars, QString());
     m_monthlyBarChart->setAverageLine(monthlyAvg, QColor("#80A0A8"));
+}
+
+static void buildLineChartData(const QMap<QString, DailyRecord> &records, int offset,
+                                QVector<LineChartWidget::DataPoint> &pts,
+                                double &sum, int &count, QDate &wStart, QDate &wEnd) {
+    QDate today = QDate::currentDate();
+    wEnd = today.addDays(offset);
+    wStart = wEnd.addDays(-27);
+    sum = 0;
+    count = 0;
+    for (QDate d = wStart; d <= wEnd; d = d.addDays(1)) {
+        QString dateStr = d.toString("yyyy-MM-dd");
+        const auto &r = records[dateStr];
+        QString label = dateStr.mid(5);
+        pts.append({label, r.totalPrice});
+        if (r.totalPrice > 0) { sum += r.totalPrice; count++; }
+    }
+}
+
+static void buildCalorieChartData(const QMap<QString, DailyRecord> &records, int offset,
+                                   QVector<LineChartWidget::DataPoint> &pts,
+                                   double &sum, int &count, QDate &wStart, QDate &wEnd) {
+    QDate today = QDate::currentDate();
+    wEnd = today.addDays(offset);
+    wStart = wEnd.addDays(-27);
+    sum = 0;
+    count = 0;
+    for (QDate d = wStart; d <= wEnd; d = d.addDays(1)) {
+        QString dateStr = d.toString("yyyy-MM-dd");
+        const auto &r = records[dateStr];
+        QString label = dateStr.mid(5);
+        pts.append({label, r.totalCalories});
+        if (r.totalCalories > 0) { sum += r.totalCalories; count++; }
+    }
+}
+
+void StatisticsWindow::loadExpenseChart() {
+    QVector<LineChartWidget::DataPoint> pts;
+    double sum = 0;
+    int count = 0;
+    QDate wStart, wEnd;
+    buildLineChartData(m_records, m_expenseOffset, pts, sum, count, wStart, wEnd);
+
+    double avg = count > 0 ? sum / count : 0;
+    if (m_expenseOffset == 0 && !pts.isEmpty() && pts.last().value == 0)
+        pts.last().value = avg;
+
+    m_expenseChart->setData(pts, QString(), QColor(160, 140, 120));
+    m_expenseChart->setAverageLine(avg, QColor("#C86A5A"));
+    m_expenseCard->setDateRange(
+        QString::fromUtf8("%1  ~  %2")
+            .arg(wStart.toString("MM-dd"))
+            .arg(wEnd.toString("MM-dd")));
+}
+
+void StatisticsWindow::loadCalorieChart() {
+    QVector<LineChartWidget::DataPoint> pts;
+    double sum = 0;
+    int count = 0;
+    QDate wStart, wEnd;
+    buildCalorieChartData(m_records, m_calorieOffset, pts, sum, count, wStart, wEnd);
+
+    double avg = count > 0 ? sum / count : 0;
+    if (m_calorieOffset == 0 && !pts.isEmpty() && pts.last().value == 0)
+        pts.last().value = avg;
+
+    m_calorieChart->setData(pts, QString(), QColor(160, 140, 120));
+    m_calorieChart->setAverageLine(avg, QColor("#B0C29A"));
+    m_calorieCard->setDateRange(
+        QString::fromUtf8("%1  ~  %2")
+            .arg(wStart.toString("MM-dd"))
+            .arg(wEnd.toString("MM-dd")));
+}
+
+void StatisticsWindow::onExpenseSwiped(int direction) {
+    m_expenseOffset += direction * 28;
+    loadExpenseChart();
+}
+
+void StatisticsWindow::onCalorieSwiped(int direction) {
+    m_calorieOffset += direction * 28;
+    loadCalorieChart();
 }

@@ -194,6 +194,7 @@ private:
     QMap<QString, QString> m_ratingDates;  // 菜名 -> 评分日期
     QMap<QString, QString> m_eatingTimes;  // 菜名 -> 食用时间 "yyyy-MM-dd HH:mm"
     QMap<QString, int> m_restaurantZoneMap; // 食堂名 -> 区域ID
+    bool m_isObese = false;
 };
 
 #endif

@@ -48,7 +48,7 @@ cp dishes.json synonyms.json zones.json distances.json background.png \
 程序从 exe 所在目录读写以下文件：
 
 | 文件 | 说明 |
-|------|------|
+| ------ | ------ |
 | `dishes.json` | 菜品数据库 |
 | `synonyms.json` | 标签同义词 |
 | `zones.json` | 校园区域 |

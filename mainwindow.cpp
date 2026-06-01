@@ -30,6 +30,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QSet>
 #include <cmath>
 #include <algorithm>
 
@@ -454,6 +455,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     m_stack->addWidget(m_achievementPage);
 
     connect(m_sidebar, &Sidebar::achievementsClicked, this, [this]() {
+        m_achievementPage->setIsObese(m_isObese);
         m_achievementPage->refresh();
         m_stack->setCurrentWidget(m_achievementPage);
     });
@@ -710,17 +712,37 @@ void MainWindow::onReview() {
     hw->setAttribute(Qt::WA_DeleteOnClose);
     hw->setWindowTitle(QString::fromUtf8("菜品评价"));
 
-    // 从 eatingTimes（精确的"菜名|食堂"键）直接构建
+    // 从 eatingTimes + dailyRecords 双源构建完整的评价列表
     QMap<QString, QString> eatingDates;
     QVector<Dish> eatenDishes;
+    QSet<QString> seenKeys;
+
+    // 第一源：eatingTimes（精确的 "菜名|食堂" 键 + 时分）
     for (auto it = m_eatingTimes.begin(); it != m_eatingTimes.end(); ++it) {
-        const QString &key = it.key();  // "菜名|食堂"
+        const QString &key = it.key();
         eatingDates[key] = it.value();
-        // 从菜品库中找到对应 Dish
+        seenKeys.insert(key);
         for (const auto &d : m_allDishes) {
             if (d.name + "|" + d.restaurant == key) {
                 eatenDishes.append(d);
                 break;
+            }
+        }
+    }
+
+    // 第二源：dailyRecords（全历史数据，补充 eatingTimes 中缺失的菜品）
+    for (auto it = m_dailyRecords.begin(); it != m_dailyRecords.end(); ++it) {
+        const QString &date = it.key();
+        for (const auto &dishName : it->dishes) {
+            // 在 allDishes 中匹配完整 key
+            for (const auto &d : m_allDishes) {
+                QString key = d.name + "|" + d.restaurant;
+                if (d.name == dishName && !seenKeys.contains(key)) {
+                    eatingDates[key] = date + " 12:00";
+                    seenKeys.insert(key);
+                    eatenDishes.append(d);
+                    break;
+                }
             }
         }
     }
@@ -944,9 +966,9 @@ void MainWindow::updateLionSprite() {
         else
             bmr = 10.0 * s.weight + 6.25 * s.height - 5.0 * s.age + 5;
     }
-    bool isObese = (m_userProfile.todayCalories > bmr + 300);
+    m_isObese = (m_userProfile.todayCalories > bmr + 300);
     QString skinKey = m_achievementManager ? m_achievementManager->activeSkin() : "first_record";
-    QString path = "lion_" + skinKey + (isObese ? "_obese.png" : "_slim.png");
+    QString path = "lion_" + skinKey + (m_isObese ? "_obese.png" : "_slim.png");
     m_character->setSprite(path);
 }
 

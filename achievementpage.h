@@ -27,6 +27,7 @@ protected:
 private:
     QString m_key;
     bool m_unlocked;
+    bool m_isActive;
 };
 
 class AchievementPage : public QWidget {
@@ -34,6 +35,7 @@ class AchievementPage : public QWidget {
 public:
     explicit AchievementPage(AchievementManager *mgr, QWidget *parent = nullptr);
     void refresh();
+    void setIsObese(bool obese) { m_isObese = obese; }
 
 signals:
     void backToMap();
@@ -50,6 +52,7 @@ private:
     QGridLayout *m_gridLayout;
     QLabel *m_currentSkinPreview;
     QLabel *m_currentSkinName;
+    bool m_isObese = false;
 };
 
 #endif // ACHIEVEMENTPAGE_H
