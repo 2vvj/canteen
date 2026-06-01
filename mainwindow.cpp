@@ -141,13 +141,15 @@ Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
     connect(m_settingsBtn,&QPushButton::clicked, this, &Sidebar::settingsClicked);
 
     layout->addWidget(m_cardBtn); layout->addWidget(m_historyBtn);
-    layout->addWidget(m_reviewBtn); layout->addWidget(m_settingsBtn);
+    layout->addWidget(m_reviewBtn);
 
     // 成就按钮（暖金色）
     m_achievementBtn = new SketchyButton(QString::fromUtf8("  勋章成就"),
                                          QColor("#F2E5C7"), C_SHADOW_DK);
     m_achievementBtn->setFixedHeight(56);
     layout->addWidget(m_achievementBtn);
+
+    layout->addWidget(m_settingsBtn);
 
     // 红色角标
     m_achievementDot = new QLabel(m_achievementBtn);

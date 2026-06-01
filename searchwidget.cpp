@@ -27,7 +27,7 @@ void SearchWidget::setupUI() {
     auto *searchRow = new QHBoxLayout;
     searchRow->setSpacing(10);
     m_searchInput = new QLineEdit;
-    m_searchInput->setPlaceholderText(QString::fromUtf8("搜索菜名、食堂、标签...（如：面食、辣的、便宜）"));
+    m_searchInput->setPlaceholderText(QString::fromUtf8("搜搜想吃的菜、食堂或口味吧~"));
     m_searchInput->setMinimumHeight(46);
     m_searchInput->setStyleSheet(QString(
         "QLineEdit{font-size:15px; padding:4px 14px;"
