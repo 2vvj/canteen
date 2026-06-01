@@ -21,6 +21,7 @@ public:
 
     void setChartWidget(QWidget *chart);
     void setSummaryLabel(QLabel *label);
+    void setDateRange(const QString &text);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -29,6 +30,7 @@ private:
     QString m_title;
     QColor m_accentColor;
     QColor m_cardColor;
+    QLabel *m_rangeLabel = nullptr;
 };
 
 class StatisticsWindow : public QDialog {
@@ -46,6 +48,10 @@ protected:
 
 private:
     void loadData();
+    void loadExpenseChart();
+    void loadCalorieChart();
+    void onExpenseSwiped(int direction);
+    void onCalorieSwiped(int direction);
 
     ChartCardWidget *m_expenseCard;
     ChartCardWidget *m_calorieCard;
@@ -58,6 +64,8 @@ private:
     SketchyButton *m_closeBtn;
     QPoint m_dragPos;
     bool m_dragging = false;
+    int m_expenseOffset = 0;
+    int m_calorieOffset = 0;
 };
 
 #endif
