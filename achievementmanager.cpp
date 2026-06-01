@@ -67,13 +67,18 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
                                    const QMap<QString, DailyRecord> &dailyRecords,
                                    double currentMealTotalPrice) {
     QDate today = currentTime.date();
-    bool hasRecordToday = dailyRecords.contains(today.toString("yyyy-MM-dd"));
 
     // ── 一次性成就 ──
 
-    if (hasRecordToday) {
+    // first_record：只要有任意一条历史记录即解锁
+    if (!dailyRecords.isEmpty()) {
         auto &fr = m_data.states["first_record"];
-        if (!fr.unlocked) unlock("first_record", today);
+        if (!fr.unlocked) {
+            QStringList keys = dailyRecords.keys();
+            keys.sort();
+            QDate firstDate = QDate::fromString(keys.first(), "yyyy-MM-dd");
+            unlock("first_record", firstDate.isValid() ? firstDate : today);
+        }
     }
 
     if (currentTime.time().hour() >= 21) {
@@ -86,32 +91,48 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
         if (!lx.unlocked) unlock("luxury", today);
     }
 
-    // ── 连续型成就：统计连续天数 ──
+    // ── 连续型成就：扫描全部数据，找最长连续天数 ──
 
-    // 从 today 往回数，满足条件则+1，遇不满足则断
-    auto countReverseStreak = [&](auto predicate) -> int {
-        int streak = 0;
-        QDate cursor = today;
-        // 如果今天没有记录，从昨天开始检查
-        if (!dailyRecords.contains(cursor.toString("yyyy-MM-dd")))
-            cursor = cursor.addDays(-1);
-        while (true) {
-            QString key = cursor.toString("yyyy-MM-dd");
-            if (!dailyRecords.contains(key)) break;
-            if (!predicate(dailyRecords[key])) break;
-            streak++;
-            cursor = cursor.addDays(-1);
+    // 遍历所有日期（排序），找到满足条件的最长连续段
+    // 注意：日期中断（无记录）即断连
+    auto findMaxStreak = [&](auto predicate) -> int {
+        QStringList keys = dailyRecords.keys();
+        if (keys.isEmpty()) return 0;
+        keys.sort();
+
+        int best = 0, current = 0;
+        QDate prev;
+
+        for (const auto &key : keys) {
+            QDate d = QDate::fromString(key, "yyyy-MM-dd");
+            if (!d.isValid()) continue;
+
+            bool ok = predicate(dailyRecords[key]);
+
+            if (current == 0) {
+                if (ok) { current = 1; best = qMax(best, current); }
+            } else {
+                if (d == prev.addDays(1) && ok) {
+                    current++;
+                    best = qMax(best, current);
+                } else if (ok) {
+                    current = 1;  // 日期不连续，重新开始
+                } else {
+                    current = 0;  // 条件不满足，中断
+                }
+            }
+            prev = d;
         }
-        return streak;
+        return best;
     };
 
-    int underStreak = countReverseStreak([bmr](const DailyRecord &r) {
+    int underStreak = findMaxStreak([bmr](const DailyRecord &r) {
         return r.totalCalories <= bmr + 300;
     });
-    int overStreak = countReverseStreak([bmr](const DailyRecord &r) {
+    int overStreak = findMaxStreak([bmr](const DailyRecord &r) {
         return r.totalCalories > bmr + 300;
     });
-    int recordStreak = countReverseStreak([](const DailyRecord &) { return true; });
+    int recordStreak = findMaxStreak([](const DailyRecord &) { return true; });
 
     auto updateStreak = [&](const QString &key, int target, int currentStreak) {
         auto &st = m_data.states[key];
