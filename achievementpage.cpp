@@ -137,8 +137,10 @@ private:
 // ── AchievementCard methods ──
 
 AchievementCard::AchievementCard(const AchievementDef &def, const AchievementState &state,
-                                 bool isNew, bool isActive, QWidget *parent)
-    : QWidget(parent), m_key(def.key), m_unlocked(state.unlocked), m_isActive(isActive)
+                                 bool isNew, bool isActive, bool showObese,
+                                 QWidget *parent)
+    : QWidget(parent), m_key(def.key), m_unlocked(state.unlocked), m_isActive(isActive),
+      m_showObese(showObese)
 {
     setFixedHeight(174);
     setCursor(m_unlocked ? Qt::PointingHandCursor : Qt::ArrowCursor);
@@ -181,24 +183,19 @@ AchievementCard::AchievementCard(const AchievementDef &def, const AchievementSta
     textCol->addStretch();
     lay->addLayout(textCol, 1);
 
-    // 双版本皮肤缩略图 — 右侧，等大
-    auto *thumbsRow = new QHBoxLayout;
-    thumbsRow->setSpacing(4);
-    const int kThumbW = 58, kThumbH = 64;
-    for (const QString &suffix : {def.skinSuffix + "_slim", def.skinSuffix + "_obese"}) {
-        auto *thumb = new QLabel;
-        thumb->setFixedSize(kThumbW, kThumbH);
-        thumb->setAlignment(Qt::AlignCenter);
-        thumb->setStyleSheet("background: transparent; border: none;");
-        QString path = "lion_" + suffix + ".png";
-        QPixmap pm(path);
-        if (!pm.isNull())
-            thumb->setPixmap(pm.scaled(kThumbW, kThumbH, Qt::IgnoreAspectRatio, Qt::SmoothTransformation));
-        else
-            thumb->setText(QString::fromUtf8("\xF0\x9F\xA6\x81"));
-        thumbsRow->addWidget(thumb);
-    }
-    lay->addLayout(thumbsRow);
+    // 皮肤缩略图 — 右侧，按当前胖瘦状态展示单张
+    const int kThumbW = 100, kThumbH = 100;
+    auto *thumb = new QLabel;
+    thumb->setFixedSize(kThumbW, kThumbH);
+    thumb->setAlignment(Qt::AlignCenter);
+    thumb->setStyleSheet("background: transparent; border: none;");
+    QString suffix = m_showObese ? "_obese.png" : "_slim.png";
+    QPixmap pm("lion_" + def.skinSuffix + suffix);
+    if (!pm.isNull())
+        thumb->setPixmap(pm.scaled(kThumbW, kThumbH, Qt::KeepAspectRatio, Qt::SmoothTransformation));
+    else
+        thumb->setText(QString::fromUtf8("\xF0\x9F\xA6\x81"));
+    lay->addWidget(thumb);
 
     // 角标列 — 固定宽度保证图片位置一致
     auto *badgeCol = new QVBoxLayout;
@@ -429,7 +426,7 @@ void AchievementPage::refresh() {
         const auto &st = m_mgr->state(d.key);
         bool isNew = newly.contains(d.key);
         bool isActive = (d.key == activeSkin);
-        auto *card = new AchievementCard(d, st, isNew, isActive);
+        auto *card = new AchievementCard(d, st, isNew, isActive, m_isObese);
         connect(card, &AchievementCard::clicked,
                 this, &AchievementPage::onCardClicked);
         m_gridLayout->addWidget(card, i / 2, i % 2);

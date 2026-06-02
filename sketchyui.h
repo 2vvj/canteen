@@ -49,6 +49,8 @@ public:
     double hover() const { return m_hover; }
     void setHover(double v);
     void setIconType(SketchyIcon icon) { m_iconType = icon; update(); }
+    void setCardColor(const QColor &c) { m_cardColor = c; update(); }
+    void setInkColor(const QColor &c) { m_inkColor = c; update(); }
 
 protected:
     void paintEvent(QPaintEvent *e) override;

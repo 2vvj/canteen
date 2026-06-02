@@ -93,6 +93,9 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
     DecoPainter::drawWatercolorSplotch(painter, QPointF(w * 0.85f, h * 0.88f), 15,
                                        QColor(245, 230, 215, 22));
 
+    // 裁剪到背景框内，确保折线图不溢出
+    painter.setClipPath(bgPath);
+
     // 3. 计算图表区域
     QRectF chartArea = calcChartArea();
 
