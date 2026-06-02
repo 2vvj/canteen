@@ -349,10 +349,6 @@ void StatisticsWindow::loadExpenseChart() {
 
     m_expenseChart->setData(pts, QString(), QColor(160, 140, 120));
     m_expenseChart->setAverageLine(avg, QColor("#C86A5A"));
-    m_expenseCard->setDateRange(
-        QString::fromUtf8("%1  ~  %2")
-            .arg(wStart.toString("MM-dd"))
-            .arg(wEnd.toString("MM-dd")));
 }
 
 void StatisticsWindow::loadCalorieChart() {
@@ -368,10 +364,6 @@ void StatisticsWindow::loadCalorieChart() {
 
     m_calorieChart->setData(pts, QString(), QColor(160, 140, 120));
     m_calorieChart->setAverageLine(avg, QColor("#B0C29A"));
-    m_calorieCard->setDateRange(
-        QString::fromUtf8("%1  ~  %2")
-            .arg(wStart.toString("MM-dd"))
-            .arg(wEnd.toString("MM-dd")));
 }
 
 void StatisticsWindow::onExpenseSwiped(int direction) {

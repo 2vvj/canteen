@@ -34,14 +34,15 @@
 #include <cmath>
 #include <algorithm>
 
-static const QColor C_CREAM      = QColor("#FDFBF7");
-static const QColor C_INK        = QColor("#2B2B2B");
-static const QColor C_INK_LIGHT  = QColor("#4A4540");
-static const QColor C_SHADOW_DK  = QColor("#3A3530");
-static const QColor C_CARD_SAGE  = QColor("#DCE4D3");
-static const QColor C_CARD_BLUE  = QColor("#D0DDE8");
-static const QColor C_CARD_ROSE  = QColor("#EAD7D2");
+static const QColor C_CREAM = QColor("#FDFBF7");
+static const QColor C_INK = QColor("#2B2B2B");
+static const QColor C_INK_LIGHT = QColor("#4A4540");
+static const QColor C_SHADOW_DK = QColor("#3A3530");
+static const QColor C_CARD_SAGE = QColor("#DCE4D3");
+static const QColor C_CARD_BLUE = QColor("#D0DDE8");
+static const QColor C_CARD_ROSE = QColor("#EAD7D2");
 static const QColor C_CARD_TAUPE = QColor("#E0D7CC");
+static const QColor C_CARD_GOLD = QColor("#F2E5C7");
 
 // ── CharacterItem ──────────────────────────────────────────────
 CharacterItem::CharacterItem(const QString &spritePath, int size, QGraphicsItem *parent)
@@ -128,28 +129,25 @@ Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
     label->setStyleSheet(QString("color: %1; padding-left: 4px;").arg(C_INK_LIGHT.name()));
     layout->addWidget(label); layout->addSpacing(6);
 
-    m_cardBtn    = new SketchyButton(QString::fromUtf8("去吃饭"),   C_CARD_SAGE, C_SHADOW_DK);
+    m_cardBtn = new SketchyButton(QString::fromUtf8("去吃饭"), C_CARD_SAGE, C_SHADOW_DK);
     m_historyBtn = new SketchyButton(QString::fromUtf8("历史记录"), C_CARD_BLUE, C_SHADOW_DK);
-    m_reviewBtn  = new SketchyButton(QString::fromUtf8("菜品评价"), C_CARD_ROSE, C_SHADOW_DK);
-    m_settingsBtn= new SketchyButton(QString::fromUtf8("设置"),     C_CARD_TAUPE, C_SHADOW_DK);
+    m_reviewBtn = new SketchyButton(QString::fromUtf8("菜品评价"), C_CARD_ROSE, C_SHADOW_DK);
+    m_settingsBtn = new SketchyButton(QString::fromUtf8("设置"), C_CARD_TAUPE, C_SHADOW_DK);
+    m_achievementBtn = new SketchyButton(QString::fromUtf8("勋章成就"), C_CARD_GOLD, C_SHADOW_DK);
 
-    for (auto *b : {m_cardBtn, m_historyBtn, m_reviewBtn, m_settingsBtn}) {
-        b->setIconType(ICON_NONE); b->setFixedHeight(56);
+    for (auto *b : {m_cardBtn, m_historyBtn, m_reviewBtn, m_settingsBtn, m_achievementBtn}) {
+        b->setIconType(ICON_NONE);
+        b->setFixedHeight(56);
     }
-    connect(m_cardBtn,    &QPushButton::clicked, this, &Sidebar::goEatClicked);
+    connect(m_cardBtn, &QPushButton::clicked, this, &Sidebar::goEatClicked);
     connect(m_historyBtn, &QPushButton::clicked, this, &Sidebar::historyClicked);
-    connect(m_reviewBtn,  &QPushButton::clicked, this, &Sidebar::reviewClicked);
-    connect(m_settingsBtn,&QPushButton::clicked, this, &Sidebar::settingsClicked);
+    connect(m_reviewBtn, &QPushButton::clicked, this, &Sidebar::reviewClicked);
+    connect(m_settingsBtn, &QPushButton::clicked, this, &Sidebar::settingsClicked);
 
-    layout->addWidget(m_cardBtn); layout->addWidget(m_historyBtn);
+    layout->addWidget(m_cardBtn);
+    layout->addWidget(m_historyBtn);
     layout->addWidget(m_reviewBtn);
-
-    // 成就按钮（暖金色）
-    m_achievementBtn = new SketchyButton(QString::fromUtf8("  勋章成就"),
-                                         QColor("#F2E5C7"), C_SHADOW_DK);
-    m_achievementBtn->setFixedHeight(56);
     layout->addWidget(m_achievementBtn);
-
     layout->addWidget(m_settingsBtn);
 
     // 红色角标

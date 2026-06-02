@@ -106,6 +106,7 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
         for (const auto &key : keys) {
             QDate d = QDate::fromString(key, "yyyy-MM-dd");
             if (!d.isValid()) continue;
+            if (d >= today) continue;  // 只统计已结束的日期，排除今天
 
             bool ok = predicate(dailyRecords[key]);
 

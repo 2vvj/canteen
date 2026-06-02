@@ -14,7 +14,8 @@ class AchievementCard : public QWidget {
     Q_OBJECT
 public:
     AchievementCard(const AchievementDef &def, const AchievementState &state,
-                    bool isNew, bool isActive, QWidget *parent = nullptr);
+                    bool isNew, bool isActive, bool showObese,
+                    QWidget *parent = nullptr);
     QString key() const { return m_key; }
 
 signals:
@@ -28,6 +29,7 @@ private:
     QString m_key;
     bool m_unlocked;
     bool m_isActive;
+    bool m_showObese;
 };
 
 class AchievementPage : public QWidget {

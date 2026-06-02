@@ -219,10 +219,4 @@ void RadarChartWidget::paintEvent(QPaintEvent *event) {
                          Qt::AlignBottom | Qt::AlignHCenter, m_itemName);
     }
 
-    // ==========================================
-    // 8. 角落小装饰
-    // ==========================================
-    DecoPainter::drawSesame(painter, QPointF(w * 0.06f, h * 0.94f), 4, 30);
-    DecoPainter::drawSesame(painter, QPointF(w * 0.93f, h * 0.94f), 3, -20);
-    DecoPainter::drawScallion(painter, QPointF(w * 0.06f, h * 0.06f), 10, 20);
 }

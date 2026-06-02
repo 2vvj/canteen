@@ -10,14 +10,12 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFile>
-#include <QInputDialog>
-#include <QMessageBox>
+#include <QLineEdit>
 #include <QDate>
 #include <QUrl>
 #include <QNetworkRequest>
 #include <QCoreApplication>
 #include <QTextCursor>
-#include <QFrame>
 #include <QRandomGenerator>
 #include <algorithm>
 
@@ -114,24 +112,18 @@ ReportHistoryDialog::ReportHistoryDialog(QWidget *parent)
     titleRow->addWidget(title);
     titleRow->addStretch();
 
-    m_closeBtn = new QPushButton(QString::fromUtf8("×"), this);
-    m_closeBtn->setFixedSize(28, 28);
+    m_closeBtn = new SketchyButton(QString::fromUtf8("×"),
+        QColor("#E0D7CC"), QColor("#3A3530"), this);
+    m_closeBtn->setFixedSize(36, 36);
     m_closeBtn->setCursor(Qt::PointingHandCursor);
-    m_closeBtn->setStyleSheet(
-        "QPushButton { border: 1.5px solid #C8BEB4; border-radius: 8px;"
-        "  background-color: #F5F0E8; color: #2B2B2B; font-size: 16px; font-weight: bold;"
-        "  font-family:'Microsoft YaHei'; }"
-        "QPushButton:hover { background-color: #EDE4D8; border-color: #B8A898; }");
+    static_cast<SketchyButton*>(m_closeBtn)->setInkColor(QColor("#2B2B2B"));
+    QFont cf = m_closeBtn->font();
+    cf.setBold(true);
+    cf.setPointSize(13);
+    m_closeBtn->setFont(cf);
     connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::close);
     titleRow->addWidget(m_closeBtn);
     inner->addLayout(titleRow);
-
-    // 分割线
-    QFrame *line = new QFrame(this);
-    line->setFrameShape(QFrame::HLine);
-    line->setStyleSheet("border:none;border-top:1.5px solid #C8BEB4;background:transparent;");
-    line->setFixedHeight(2);
-    inner->addWidget(line);
 
     // 分割面板
     QSplitter *split = new QSplitter(Qt::Horizontal, this);
@@ -231,20 +223,27 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
         "border:none;background:transparent;");
     mainLayout->addWidget(titleLabel);
 
+    // 手绘分割线
+    mainLayout->addWidget(new ScratchyDivider(this));
+
     // ── 模式选择 ──
     QHBoxLayout *modeRow = new QHBoxLayout;
     modeRow->setSpacing(16);
     modeRow->addStretch();
 
-    m_todayBtn = new QPushButton(QString::fromUtf8("  今日饮食报告  "), this);
+    m_todayBtn = new SketchyButton(QString::fromUtf8("今日饮食报告"),
+                                    QColor("#D0DDE8"), C_SHADOW, this);
+    m_todayBtn->setMinimumSize(150, 42);
     m_todayBtn->setCursor(Qt::PointingHandCursor);
-    m_todayBtn->setMinimumSize(160, 40);
+    static_cast<SketchyButton*>(m_todayBtn)->setInkColor(QColor("#2B2B2B"));
     connect(m_todayBtn, &QPushButton::clicked, this, [this]{ onModeSelected(Today); });
     modeRow->addWidget(m_todayBtn);
 
-    m_weekBtn = new QPushButton(QString::fromUtf8("  一周饮食报告  "), this);
+    m_weekBtn = new SketchyButton(QString::fromUtf8("一周饮食报告"),
+                                   QColor("#E0D7CC"), C_SHADOW, this);
+    m_weekBtn->setMinimumSize(150, 42);
     m_weekBtn->setCursor(Qt::PointingHandCursor);
-    m_weekBtn->setMinimumSize(160, 40);
+    static_cast<SketchyButton*>(m_weekBtn)->setInkColor(QColor("#2B2B2B"));
     connect(m_weekBtn, &QPushButton::clicked, this, [this]{ onModeSelected(Week); });
     modeRow->addWidget(m_weekBtn);
 
@@ -277,75 +276,42 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
     QHBoxLayout *btnRow = new QHBoxLayout;
     btnRow->addStretch();
 
-    m_historyBtn = new QPushButton(QString::fromUtf8("历史报告"), this);
+    m_historyBtn = new SketchyButton(QString::fromUtf8("历史报告"),
+                                      QColor("#E8DDD0"), C_SHADOW, this);
+    m_historyBtn->setFixedSize(100, 40);
     m_historyBtn->setCursor(Qt::PointingHandCursor);
-    m_historyBtn->setFixedSize(90, 36);
-    m_historyBtn->setStyleSheet(
-        "QPushButton {"
-        "  border: 1.5px solid #C8BEB4; border-radius: 8px;"
-        "  background-color: #E8DDD0;"
-        "  color: #5D4E3A; font-size: 12px;"
-        "  font-family: 'Microsoft YaHei'; padding: 4px 12px;"
-        "}"
-        "QPushButton:hover { background-color: #DDD0C0; }"
-        "QPushButton:pressed { background-color: #D0C0AC; }");
+    static_cast<SketchyButton*>(m_historyBtn)->setInkColor(QColor("#5D4E3A"));
     connect(m_historyBtn, &QPushButton::clicked, this, &AiReportDialog::onHistoryClicked);
     btnRow->addWidget(m_historyBtn);
 
     btnRow->addSpacing(12);
 
-    m_generateBtn = new QPushButton(QString::fromUtf8("生成报告"), this);
-    m_generateBtn->setMinimumSize(130, 40);
+    m_generateBtn = new SketchyButton(QString::fromUtf8("生成报告"),
+                                       QColor("#D0DDE8"), C_SHADOW, this);
+    m_generateBtn->setMinimumSize(130, 42);
     m_generateBtn->setCursor(Qt::PointingHandCursor);
-    m_generateBtn->setStyleSheet(
-        "QPushButton {"
-        "  border: 1.5px solid #B8A898; border-radius: 10px;"
-        "  background-color: #D0DDE8;"
-        "  color: #2B2B2B; font-size: 14px; font-weight: bold;"
-        "  font-family: 'Microsoft YaHei'; padding: 6px 24px;"
-        "}"
-        "QPushButton:hover { background-color: #C0D0DC; }"
-        "QPushButton:pressed { background-color: #B0C0CC; }"
-        "QPushButton:disabled { background-color: #E0D8D0; color: #B0A898; }");
+    static_cast<SketchyButton*>(m_generateBtn)->setInkColor(QColor("#2B2B2B"));
+    QFont genFont = m_generateBtn->font();
+    genFont.setBold(true);
+    m_generateBtn->setFont(genFont);
     connect(m_generateBtn, &QPushButton::clicked, this, &AiReportDialog::onGenerateReport);
     btnRow->addWidget(m_generateBtn);
-
-    btnRow->addSpacing(12);
-
-    m_closeBtn = new QPushButton(QString::fromUtf8("关闭"), this);
-    m_closeBtn->setMinimumSize(100, 40);
-    m_closeBtn->setCursor(Qt::PointingHandCursor);
-    m_closeBtn->setStyleSheet(
-        "QPushButton {"
-        "  border: 1.5px solid #C8BEB4; border-radius: 10px;"
-        "  background-color: #F0EBE4;"
-        "  color: #2B2B2B; font-size: 14px;"
-        "  font-family: 'Microsoft YaHei'; padding: 6px 20px;"
-        "}"
-        "QPushButton:hover { background-color: #E5E0D8; }"
-        "QPushButton:pressed { background-color: #D8D0C8; }");
-    connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::close);
-    btnRow->addWidget(m_closeBtn);
 
     btnRow->addStretch();
     mainLayout->addLayout(btnRow);
 
     // ── 右上角 × ──
-    QPushButton *xBtn = new QPushButton(QString::fromUtf8("×"), this);
-    xBtn->setObjectName("closeXBtn");
-    xBtn->setFixedSize(28, 28);
+    SketchyButton *xBtn = new SketchyButton(QString::fromUtf8("×"),
+        QColor("#E0D7CC"), C_SHADOW, this);
+    xBtn->setFixedSize(36, 36);
     xBtn->setCursor(Qt::PointingHandCursor);
-    xBtn->setStyleSheet(
-        "QPushButton {"
-        "  border: 1.5px solid #C8BEB4; border-radius: 8px;"
-        "  background-color: #F5F0E8;"
-        "  color: #2B2B2B; font-size: 16px; font-weight: bold;"
-        "  font-family: 'Microsoft YaHei';"
-        "}"
-        "QPushButton:hover { background-color: #EDE4D8; border-color: #B8A898; }"
-        "QPushButton:pressed { background-color: #E0D4C4; }");
+    xBtn->setInkColor(QColor("#2B2B2B"));
+    QFont xFont = xBtn->font();
+    xFont.setBold(true);
+    xFont.setPointSize(14);
+    xBtn->setFont(xFont);
     connect(xBtn, &QPushButton::clicked, this, &QDialog::close);
-    xBtn->move(width() - 38, 28);
+    xBtn->move(width() - 36 - 36, 28);
 
     onModeSelected(Today);
     m_apiKey = loadApiKey();
@@ -377,30 +343,212 @@ void AiReportDialog::onGenerateReport() {
     if (m_mode == Today) {
         QString today = QDate::currentDate().toString("yyyy-MM-dd");
         if (!m_records.contains(today) || m_records[today].dishes.isEmpty()) {
-            QMessageBox box(this);
-            box.setWindowTitle(QString::fromUtf8("提示"));
-            box.setText(QString::fromUtf8("今天还没有饮食记录，快去吃饭吧！"));
-            box.setIcon(QMessageBox::Information);
-            box.setStyleSheet(
-                "QLabel{font-family:'Microsoft YaHei';font-size:14px;}"
-                "QPushButton{font-family:'Microsoft YaHei';padding:4px 20px;}");
-            box.exec();
+            struct NoRecordDialog : QDialog {
+                QPoint m_dragPos;
+                NoRecordDialog(QWidget *parent) : QDialog(parent) {
+                    setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+                    setAttribute(Qt::WA_TranslucentBackground);
+                    setFixedSize(420, 220);
+                    setModal(true);
+
+                    auto *btn = new SketchyButton(QString::fromUtf8("我知道了"),
+                        QColor("#DCE4D3"), QColor("#3A3530"), this);
+                    btn->setFixedSize(110, 42);
+                    btn->setCursor(Qt::PointingHandCursor);
+                    int bx = (width() - btn->width()) / 2;
+                    btn->move(bx, height() - btn->height() - 28);
+                    connect(btn, &QPushButton::clicked, this, &QDialog::accept);
+                }
+            protected:
+                void paintEvent(QPaintEvent *) override {
+                    QPainter p(this);
+                    p.setRenderHint(QPainter::Antialiasing);
+
+                    QRectF card(18, 18, width() - 36, height() - 36);
+                    int seed = 73;
+
+                    QPainterPath sp = sketchyRect(card.translated(2.5, 3.5), seed + 100, 2.8);
+                    p.setBrush(QColor("#3A3530"));
+                    p.setPen(Qt::NoPen);
+                    p.drawPath(sp);
+
+                    QPainterPath cp = sketchyRect(card, seed, 2.8);
+                    drawInkWash(&p, cp, QColor("#FDFBF7"), 18);
+                    drawInkBorder(&p, cp, QColor("#2B2B2B"), 3, 0.7);
+
+                    QPointF lineStart(card.left() + 25, card.top() + 52);
+                    QPointF lineEnd(card.left() + 25 + 60, card.top() + 52);
+                    QPen decoPen(QColor("#4A4540"));
+                    decoPen.setWidthF(1.0);
+                    decoPen.setCapStyle(Qt::RoundCap);
+                    p.setPen(decoPen);
+                    QPainterPath wavy;
+                    wavy.moveTo(lineStart);
+                    wavy.cubicTo(lineStart + QPointF(20, -3), lineStart + QPointF(40, 3), lineEnd);
+                    p.drawPath(wavy);
+                    decoPen.setWidthF(0.5);
+                    p.setPen(decoPen);
+                    p.translate(0.3, 0.4);
+                    p.drawPath(wavy);
+                    p.resetTransform();
+
+                    QFont f = font();
+                    f.setPointSize(13);
+                    f.setBold(true);
+                    f.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+                    p.setFont(f);
+                    p.setPen(QColor("#2B2B2B"));
+                    p.drawText(QRectF(card.left() + 25, card.top() + 18, card.width() - 50, 30),
+                               Qt::AlignLeft | Qt::AlignVCenter,
+                               QString::fromUtf8("提示"));
+
+                    f.setPointSize(10);
+                    f.setBold(false);
+                    f.setLetterSpacing(QFont::AbsoluteSpacing, 1.0);
+                    p.setFont(f);
+                    p.setPen(QColor("#4A4540"));
+                    p.drawText(QRectF(card.left() + 25, card.top() + 65, card.width() - 50, 70),
+                               Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap,
+                               QString::fromUtf8("今天还没有饮食记录，快去吃饭吧！"));
+                }
+                void mousePressEvent(QMouseEvent *e) override {
+                    m_dragPos = e->globalPosition().toPoint() - frameGeometry().topLeft();
+                }
+                void mouseMoveEvent(QMouseEvent *e) override {
+                    if (e->buttons() & Qt::LeftButton)
+                        move(e->globalPosition().toPoint() - m_dragPos);
+                }
+            };
+
+            NoRecordDialog dlg(this);
+            dlg.exec();
             return;
         }
     }
 
     // 检查 API Key
     if (m_apiKey.isEmpty()) {
-        bool ok = false;
-        QString key = QInputDialog::getText(
-            this,
-            QString::fromUtf8("请输入 API Key"),
-            QString::fromUtf8("请在智谱AI控制台创建 API Key 并粘贴到这里：\n"
-                              "https://open.bigmodel.cn/usercenter/apikeys"),
-            QLineEdit::Password, {}, &ok);
-        if (!ok || key.isEmpty()) return;
-        m_apiKey = key;
-        saveApiKey(key);
+        struct ApiKeyDialog : QDialog {
+            QString key;
+            QPoint m_dragPos;
+            QLineEdit *m_input;
+
+            ApiKeyDialog(QWidget *parent) : QDialog(parent) {
+                setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
+                setAttribute(Qt::WA_TranslucentBackground);
+                setFixedSize(440, 290);
+                setModal(true);
+
+                m_input = new QLineEdit(this);
+                m_input->setEchoMode(QLineEdit::Password);
+                m_input->setPlaceholderText(QString::fromUtf8("在此粘贴 API Key…"));
+                m_input->setStyleSheet(
+                    "QLineEdit {"
+                    "  border: 1.5px solid #C8BEB4; border-radius: 8px;"
+                    "  padding: 8px 12px; background-color: #FAF8F5;"
+                    "  color: #2B2B2B; font-size: 13px;"
+                    "  font-family:'Microsoft YaHei';"
+                    "}"
+                    "QLineEdit:focus { border-color: #8A7A6A; }");
+                // 卡片内：card = (18,18,404,254)，输入框放在约 card.top+120
+                QRectF card(18, 18, width() - 36, height() - 36);
+                m_input->setGeometry(card.left() + 25, card.top() + 118,
+                                     card.width() - 50, 36);
+
+                auto *confirmBtn = new SketchyButton(QString::fromUtf8("确认"),
+                    QColor("#D0DDE8"), QColor("#3A3530"), this);
+                confirmBtn->setFixedSize(100, 42);
+                confirmBtn->setCursor(Qt::PointingHandCursor);
+                auto *cancelBtn = new SketchyButton(QString::fromUtf8("取消"),
+                    QColor("#E0D7CC"), QColor("#3A3530"), this);
+                cancelBtn->setFixedSize(100, 42);
+                cancelBtn->setCursor(Qt::PointingHandCursor);
+
+                int totalBtnW = confirmBtn->width() + cancelBtn->width() + 16;
+                int btnX = (width() - totalBtnW) / 2;
+                int btnY = card.bottom() - 52;
+                confirmBtn->move(btnX, btnY);
+                cancelBtn->move(btnX + confirmBtn->width() + 16, btnY);
+
+                connect(confirmBtn, &QPushButton::clicked, this, [this]() {
+                    key = m_input->text().trimmed();
+                    accept();
+                });
+                connect(cancelBtn, &QPushButton::clicked, this, &QDialog::reject);
+            }
+
+        protected:
+            void paintEvent(QPaintEvent *) override {
+                QPainter p(this);
+                p.setRenderHint(QPainter::Antialiasing);
+
+                QRectF card(18, 18, width() - 36, height() - 36);
+                int seed = 73;
+
+                // Shadow
+                QPainterPath sp = sketchyRect(card.translated(2.5, 3.5), seed + 100, 2.8);
+                p.setBrush(QColor("#3A3530"));
+                p.setPen(Qt::NoPen);
+                p.drawPath(sp);
+
+                // Card
+                QPainterPath cp = sketchyRect(card, seed, 2.8);
+                drawInkWash(&p, cp, QColor("#FDFBF7"), 18);
+                drawInkBorder(&p, cp, QColor("#2B2B2B"), 3, 0.7);
+
+                // Decorative wavy line below title
+                QPointF lineStart(card.left() + 25, card.top() + 52);
+                QPointF lineEnd(card.left() + 25 + 60, card.top() + 52);
+                QPen decoPen(QColor("#4A4540"));
+                decoPen.setWidthF(1.0);
+                decoPen.setCapStyle(Qt::RoundCap);
+                p.setPen(decoPen);
+                QPainterPath wavy;
+                wavy.moveTo(lineStart);
+                wavy.cubicTo(lineStart + QPointF(20, -3), lineStart + QPointF(40, 3), lineEnd);
+                p.drawPath(wavy);
+                decoPen.setWidthF(0.5);
+                p.setPen(decoPen);
+                p.translate(0.3, 0.4);
+                p.drawPath(wavy);
+                p.resetTransform();
+
+                // Title
+                QFont f = font();
+                f.setPointSize(13);
+                f.setBold(true);
+                f.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+                p.setFont(f);
+                p.setPen(QColor("#2B2B2B"));
+                p.drawText(QRectF(card.left() + 25, card.top() + 18, card.width() - 50, 30),
+                           Qt::AlignLeft | Qt::AlignVCenter,
+                           QString::fromUtf8("请输入 API Key"));
+
+                // Hint text
+                f.setPointSize(10);
+                f.setBold(false);
+                f.setLetterSpacing(QFont::AbsoluteSpacing, 1.0);
+                p.setFont(f);
+                p.setPen(QColor("#4A4540"));
+                p.drawText(QRectF(card.left() + 25, card.top() + 58, card.width() - 50, 56),
+                           Qt::AlignLeft | Qt::AlignVCenter | Qt::TextWordWrap,
+                           QString::fromUtf8("请在智谱AI控制台创建 API Key 并粘贴到这里：\n"
+                                             "https://open.bigmodel.cn/usercenter/apikeys"));
+            }
+
+            void mousePressEvent(QMouseEvent *e) override {
+                m_dragPos = e->globalPosition().toPoint() - frameGeometry().topLeft();
+            }
+            void mouseMoveEvent(QMouseEvent *e) override {
+                if (e->buttons() & Qt::LeftButton)
+                    move(e->globalPosition().toPoint() - m_dragPos);
+            }
+        };
+
+        ApiKeyDialog dlg(this);
+        if (dlg.exec() != QDialog::Accepted || dlg.key.isEmpty()) return;
+        m_apiKey = dlg.key;
+        saveApiKey(dlg.key);
     }
 
     setButtonsEnabled(false);
@@ -843,9 +991,6 @@ void AiReportDialog::paintEvent(QPaintEvent *) {
     drawInkWash(&p, cp, C_CREAM, 18);
     drawInkBorder(&p, cp, C_INK, 3, 0.7);
 
-    QPushButton *xBtn = findChild<QPushButton*>("closeXBtn");
-    if (xBtn) xBtn->move(width() - 38, 28);
-
     p.end();
 }
 
@@ -854,23 +999,37 @@ void AiReportDialog::paintEvent(QPaintEvent *) {
 // ═══════════════════════════════════════════
 
 void AiReportDialog::updateModeButtonStyles() {
-    QString activeStyle =
-        "QPushButton {"
-        "  border: 2px solid #8A7A6A; border-radius: 12px;"
-        "  background-color: #D0DDE8;"
-        "  color: #2B2B2B; font-size: 14px; font-weight: bold;"
-        "  font-family: 'Microsoft YaHei'; padding: 6px 18px;"
-        "}"
-        "QPushButton:hover { background-color: #C0D0DC; }";
-    QString inactiveStyle =
-        "QPushButton {"
-        "  border: 2px solid #C8BEB4; border-radius: 12px;"
-        "  background-color: #F5F0E8;"
-        "  color: #8A7A6A; font-size: 14px;"
-        "  font-family: 'Microsoft YaHei'; padding: 6px 18px;"
-        "}"
-        "QPushButton:hover { background-color: #EDE4D8; }";
+    QColor activeColor("#D0DDE8");
+    QColor inactiveColor("#E0D7CC");
 
-    m_todayBtn->setStyleSheet(m_mode == Today ? activeStyle : inactiveStyle);
-    m_weekBtn->setStyleSheet(m_mode == Week ? activeStyle : inactiveStyle);
+    auto *todaySk = static_cast<SketchyButton*>(m_todayBtn);
+    auto *weekSk  = static_cast<SketchyButton*>(m_weekBtn);
+    if (todaySk) todaySk->setCardColor(m_mode == Today ? activeColor : inactiveColor);
+    if (weekSk)  weekSk->setCardColor(m_mode == Week  ? activeColor : inactiveColor);
+}
+
+// ── 窗口拖拽 ──
+void AiReportDialog::mousePressEvent(QMouseEvent *e) {
+    if (e->button() == Qt::LeftButton) {
+        QWidget *child = childAt(e->pos());
+        if (!child || child == this) {
+            m_dragPos = e->globalPosition().toPoint() - frameGeometry().topLeft();
+            m_dragging = true;
+        }
+    }
+    QDialog::mousePressEvent(e);
+}
+
+void AiReportDialog::mouseMoveEvent(QMouseEvent *e) {
+    if (m_dragging && (e->buttons() & Qt::LeftButton)) {
+        QPoint delta = e->globalPosition().toPoint() - frameGeometry().topLeft() - m_dragPos;
+        if (delta.manhattanLength() > 4)
+            move(e->globalPosition().toPoint() - m_dragPos);
+    }
+    QDialog::mouseMoveEvent(e);
+}
+
+void AiReportDialog::mouseReleaseEvent(QMouseEvent *e) {
+    m_dragging = false;
+    QDialog::mouseReleaseEvent(e);
 }

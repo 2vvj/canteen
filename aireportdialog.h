@@ -12,6 +12,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QTimer>
+#include <QMouseEvent>
 #include "calendarwindow.h"
 
 // ── 历史报告条目 ──
@@ -49,6 +50,11 @@ public:
 
     void setApiKey(const QString &key);
 
+protected:
+    void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+
 private slots:
     void onModeSelected(ReportMode mode);
     void onGenerateReport();
@@ -69,7 +75,6 @@ private:
 
     QTextEdit *m_reportText;
     QPushButton *m_generateBtn;
-    QPushButton *m_closeBtn;
     QLabel *m_statusLabel;
     QPushButton *m_todayBtn;
     QPushButton *m_weekBtn;
@@ -88,6 +93,10 @@ private:
     // Loading 动画
     QTimer *m_loadingTimer;
     int m_loadingDots = 0;
+
+    // 窗口拖拽
+    QPoint m_dragPos;
+    bool m_dragging = false;
 };
 
 #endif
