@@ -339,6 +339,7 @@ QVector<Dish> MealPage::allSearchDishes() const {
 void MealPage::doDraw(const QVector<Dish> &candidates, const QMap<QString, double> &weights) {
     if (candidates.isEmpty()) return;
     auto *gacha = new GachaWidget(this);
+    m_currentGacha = gacha;
     gacha->resize(this->window()->size());
     connect(gacha, &GachaWidget::dishSelected, this, &MealPage::onGachaDishSelected);
     gacha->startDraw(candidates, weights);
@@ -378,6 +379,7 @@ void MealPage::showNoDishes() {
 // ============ 抽卡结果 ============
 
 void MealPage::onGachaDishSelected(const Dish &dish) {
+    m_currentGacha = nullptr;
     m_latestDish = dish;
     QString roleName;
     switch (dish.role) {
@@ -553,6 +555,11 @@ void MealPage::removeDishFromMenu(int index) {
 
     m_mealSelected.removeAt(index);
 
+    if (m_mealSelected.isEmpty()) {
+        resetMeal();
+        return;
+    }
+
     recomputePhase();
     updatePhaseLabel();
     refreshMenuList();
@@ -590,6 +597,11 @@ QStringList MealPage::activeTags() const {
 }
 
 void MealPage::resetMeal() {
+    if (m_currentGacha) {
+        m_currentGacha->hide();
+        m_currentGacha->deleteLater();
+        m_currentGacha = nullptr;
+    }
     m_searchWidget->resetMealSession();
     m_mealExcluded.clear();
     m_mealSelected.clear();

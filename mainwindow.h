@@ -61,6 +61,7 @@ private:
     double m_fadeIn = 0;
     QPropertyAnimation *m_fadeAnim;
     QPixmap m_bgPixmap;
+    QPixmap m_titleArt;
 };
 
 // 侧边栏 — 4个按钮
@@ -171,7 +172,6 @@ private:
     CharacterItem *m_character;
     Sidebar *m_sidebar;
     QTimer *m_roamTimer;
-    QTimer *m_welcomeTimer;
     QPointF m_targetPos;
     bool m_roaming = true;
 
