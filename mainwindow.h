@@ -11,6 +11,8 @@
 #include <QPropertyAnimation>
 #include <QPixmap>
 #include <QPushButton>
+#include <QMediaPlayer>
+#include <QAudioOutput>
 
 #include "dishdata.h"
 #include "userdata.h"
@@ -195,6 +197,10 @@ private:
     QMap<QString, QString> m_eatingTimes;  // 菜名 -> 食用时间 "yyyy-MM-dd HH:mm"
     QMap<QString, int> m_restaurantZoneMap; // 食堂名 -> 区域ID
     bool m_isObese = false;
+
+    // BGM
+    QMediaPlayer *m_bgmPlayer;
+    QAudioOutput *m_bgmOutput;
 };
 
 #endif

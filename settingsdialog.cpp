@@ -192,7 +192,34 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     privacy->setFont(privFont);
     privacy->setStyleSheet(QString("color: %1;").arg(C_HINT2.name()));
     mainLay->addWidget(privacy);
-    mainLay->addStretch();
+    // ── BGM 音量滑条（左下角） ──
+    QHBoxLayout *bgmRow = new QHBoxLayout;
+    QLabel *bgmIcon = new QLabel(QString::fromUtf8("🎵"), this);
+    bgmIcon->setStyleSheet("font-size:14px;background:transparent;border:none;");
+    bgmRow->addWidget(bgmIcon);
+    m_bgmSlider = new QSlider(Qt::Horizontal, this);
+    m_bgmSlider->setRange(0, 100);
+    m_bgmSlider->setValue(m_result.bgmVolume);
+    m_bgmSlider->setFixedWidth(120);
+    m_bgmSlider->setStyleSheet(
+        "QSlider::groove:horizontal {"
+        "  height: 6px; background: #D8D0C8; border-radius: 3px;"
+        "}"
+        "QSlider::handle:horizontal {"
+        "  width: 16px; height: 16px; margin: -6px 0;"
+        "  background: #E8DDD0; border: 1.5px solid #8A7A6A; border-radius: 9px;"
+        "}"
+        "QSlider::handle:horizontal:hover { background: #DDD0C0; }"
+        "QSlider::sub-page:horizontal {"
+        "  background: #8A9A7A; border-radius: 3px;"
+        "}");
+    connect(m_bgmSlider, &QSlider::valueChanged, this, [this](int val) {
+        m_result.bgmVolume = val;
+        emit bgmVolumeChanged(val);
+    });
+    bgmRow->addWidget(m_bgmSlider);
+    bgmRow->addStretch();
+    mainLay->addLayout(bgmRow);
 
     // ── Buttons ──
     QHBoxLayout *btnRow = new QHBoxLayout;

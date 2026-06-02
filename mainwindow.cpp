@@ -535,6 +535,19 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             f.close();
         }
     }
+
+    // ── BGM ──
+    m_bgmPlayer = new QMediaPlayer(this);
+    m_bgmOutput = new QAudioOutput(this);
+    m_bgmPlayer->setAudioOutput(m_bgmOutput);
+    QString bgmPath = QCoreApplication::applicationDirPath() + "/久石让+-+Summer+-+菊次郎的夏天+-+钢琴独奏版.mp3";
+    m_bgmPlayer->setSource(QUrl::fromLocalFile(bgmPath));
+    m_bgmPlayer->setLoops(QMediaPlayer::Infinite);
+    {
+        int vol = qBound(0, m_userData.settings.bgmVolume, 100);
+        m_bgmOutput->setVolume(vol / 100.0);
+        if (vol > 0) m_bgmPlayer->play();
+    }
 }
 
 bool MainWindow::eventFilter(QObject *obj, QEvent *event) {
@@ -732,20 +745,37 @@ void MainWindow::onReview() {
         }
     }
 
-    // 第二源：dailyRecords（全历史数据，补充 eatingTimes 中缺失的菜品）
+    // 第二源：dailyRecords（补充 eatingTimes 中缺失的菜品）
+    // 注意：dailyRecords 只存菜名不存食堂，所以只添加该菜名仅对应唯一食堂的情况
     for (auto it = m_dailyRecords.begin(); it != m_dailyRecords.end(); ++it) {
         const QString &date = it.key();
         for (const auto &dishName : it->dishes) {
-            // 在 allDishes 中匹配完整 key
-            for (const auto &d : m_allDishes) {
-                QString key = d.name + "|" + d.restaurant;
-                if (d.name == dishName && !seenKeys.contains(key)) {
-                    eatingDates[key] = date + " 12:00";
-                    seenKeys.insert(key);
-                    eatenDishes.append(d);
+            // 如果 eatingTimes 已有该菜名+食堂的记录则跳过
+            bool alreadyInEatingTimes = false;
+            for (auto et = m_eatingTimes.begin(); et != m_eatingTimes.end(); ++et) {
+                if (et.key().startsWith(dishName + "|")) {
+                    alreadyInEatingTimes = true;
                     break;
                 }
             }
+            if (alreadyInEatingTimes) continue;
+
+            // 找出所有食堂中提供该菜名的菜品
+            QVector<const Dish*> candidates;
+            for (const auto &d : m_allDishes) {
+                if (d.name == dishName) candidates.append(&d);
+            }
+            // 只有唯一食堂提供时才记录，避免张冠李戴
+            if (candidates.size() == 1) {
+                const Dish &d = *candidates.first();
+                QString key = d.name + "|" + d.restaurant;
+                if (!seenKeys.contains(key)) {
+                    eatingDates[key] = date + " 12:00";
+                    seenKeys.insert(key);
+                    eatenDishes.append(d);
+                }
+            }
+            // 多个食堂都有同名菜→无法确定在哪吃的，跳过
         }
     }
 
@@ -773,7 +803,22 @@ void MainWindow::onReview() {
 
 void MainWindow::onSettings() {
     SettingsDialog dlg(m_userData.settings, this);
-    if(dlg.exec()==QDialog::Accepted){ m_userData.settings=dlg.result(); m_userData.save("user.json"); applyUserSettings(); }
+    connect(&dlg, &SettingsDialog::bgmVolumeChanged, this, [this](int vol) {
+        double v = qBound(0, vol, 100) / 100.0;
+        m_bgmOutput->setVolume(v);
+        if (vol > 0) m_bgmPlayer->play();
+        else m_bgmPlayer->stop();
+    });
+    if(dlg.exec()==QDialog::Accepted){
+        m_userData.settings=dlg.result();
+        m_userData.save("user.json");
+        applyUserSettings();
+        // 如果用户没拖动滑块直接保存，也应用音量
+        int vol = qBound(0, m_userData.settings.bgmVolume, 100);
+        m_bgmOutput->setVolume(vol / 100.0);
+        if (vol > 0) m_bgmPlayer->play();
+        else m_bgmPlayer->stop();
+    }
 }
 
 void MainWindow::onMealReadyForReview(const QVector<Dish> &selected) {

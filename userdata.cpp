@@ -20,6 +20,7 @@ bool UserData::load(const QString &filePath)
     settings.height = obj.value("height").toInt(0);
     settings.weight = obj.value("weight").toInt(0);
     settings.age = obj.value("age").toInt(0);
+    settings.bgmVolume = obj.value("bgmVolume").toInt(50);
     return true;
 }
 
@@ -40,6 +41,7 @@ bool UserData::save(const QString &filePath) const
     obj["height"] = settings.height;
     obj["weight"] = settings.weight;
     obj["age"] = settings.age;
+    obj["bgmVolume"] = settings.bgmVolume;
 
     QFile file(filePath);
     if (!file.open(QIODevice::WriteOnly))
