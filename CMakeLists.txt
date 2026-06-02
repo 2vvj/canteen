@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Sql Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Sql Network Multimedia)
 
 set(SOURCES
     main.cpp
@@ -70,6 +70,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     Qt6::Widgets
     Qt6::Sql
     Qt6::Network
+    Qt6::Multimedia
 )
 
 # Windows: ensure GUI app (no console window), link qtmain entry point
