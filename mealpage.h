@@ -86,6 +86,7 @@ private:
     SketchyButton *m_extraDoneBtn;
 
     QListWidget *m_menuList;
+    GachaWidget *m_currentGacha = nullptr;
 
     // 状态
     QVector<SearchResult> m_lastResults;

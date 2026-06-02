@@ -67,6 +67,7 @@ void CharacterItem::setSprite(const QString &path) {
 WelcomePage::WelcomePage(QWidget *parent) : QWidget(parent) {
     setCursor(Qt::PointingHandCursor);
     m_bgPixmap = QPixmap("start_page_background.png");
+    m_titleArt = QPixmap("title-art.png");
     m_fadeAnim = new QPropertyAnimation(this, "fadeIn", this);
     m_fadeAnim->setDuration(900); m_fadeAnim->setStartValue(0.0);
     m_fadeAnim->setEndValue(1.0); m_fadeAnim->setEasingCurve(QEasingCurve::OutCubic);
@@ -95,23 +96,24 @@ void WelcomePage::paintEvent(QPaintEvent *) {
     QPainterPath cardPath = sketchyRect(cardRect, 42, 2.8);
     drawInkWash(&p, cardPath, QColor("#FAF7F0"), 15);
     drawInkBorder(&p, cardPath, C_INK, 3, 0.8);
-    QFont titleFont; titleFont.setPointSize(qMin(h*0.075,36.0)); titleFont.setWeight(QFont::Bold);
-    p.setFont(titleFont); p.setPen(C_INK);
-    p.drawText(QRectF(cardX,cardY+cardH*0.08,cardW,cardH*0.38), Qt::AlignCenter,
-               QString::fromUtf8("今天吃什么"));
-    double sepY=cardY+cardH*0.48, sepW=cardW*0.30, sepX0=cardX+(cardW-sepW)/2.0;
-    QPainterPath sepPath; sepPath.moveTo(sepX0,sepY);
-    sepPath.quadTo((sepX0+sepX0+sepW)/2.0, sepY-1.5, sepX0+sepW, sepY+0.8);
-    QPen sepPen(C_INK_LIGHT); sepPen.setWidthF(1.2); sepPen.setCapStyle(Qt::RoundCap);
-    p.setPen(sepPen); p.setBrush(Qt::NoBrush); p.drawPath(sepPath);
-    sepPen.setWidthF(0.6); sepPen.setColor(QColor("#7A7570")); p.setPen(sepPen); p.drawPath(sepPath);
-    QFont subFont; subFont.setPointSize(qMin(h*0.026,13.0));
-    subFont.setLetterSpacing(QFont::AbsoluteSpacing,2); p.setFont(subFont); p.setPen(C_INK_LIGHT);
-    p.drawText(QRectF(cardX,cardY+cardH*0.50,cardW,cardH*0.22), Qt::AlignCenter,
-               QString::fromUtf8("让命运替你决定，偶尔也需要一点意外"));
+    if (!m_titleArt.isNull()) {
+        double pad = 5;  // 留出边框宽度
+        double maxW = cardW - pad * 2, maxH = cardH - pad * 2;
+        QSizeF sz = m_titleArt.size();
+        double s = qMin(maxW / sz.width(), maxH / sz.height());
+        double iw = sz.width() * s, ih = sz.height() * s;
+        double imgX = cardX + pad + (maxW - iw) / 2.0 + 3;  // 微右移
+        p.drawPixmap(QRectF(imgX, cardY + pad + (maxH - ih) / 2.0, iw, ih),
+                     m_titleArt, m_titleArt.rect());
+    } else {
+        QFont titleFont; titleFont.setPointSize(qMin(h*0.075,36.0)); titleFont.setWeight(QFont::Bold);
+        p.setFont(titleFont); p.setPen(C_INK);
+        p.drawText(QRectF(cardX,cardY+cardH*0.08,cardW,cardH*0.38), Qt::AlignCenter,
+                   QString::fromUtf8("今天吃什么"));
+    }
     QFont hintFont; hintFont.setPointSize(qMin(h*0.020,10.0)); p.setFont(hintFont);
     p.setPen(QColor("#9A9590"));
-    p.drawText(QRectF(cardX,cardY+cardH*0.72,cardW,cardH*0.20), Qt::AlignCenter,
+    p.drawText(QRectF(cardX,cardY+cardH,cardW,h*0.08), Qt::AlignCenter,
                QString::fromUtf8("—— 点击任意位置进入 ——"));
     p.restore();
 }
@@ -209,7 +211,7 @@ void Sidebar::setTodayCalories(int kcal) {
     m_calorieLabel->setText(QString::fromUtf8("今日已摄入 %1 kcal").arg(kcal));
 }
 void Sidebar::setBMR(int bmr) {
-    m_bmrLabel->setText(QString::fromUtf8("基础代谢 %1  kcal/天").arg(bmr));
+    m_bmrLabel->setText(QString::fromUtf8("建议摄入 %1  kcal/天").arg(bmr));
 }
 void Sidebar::setAchievementDot(bool show) {
     if (m_achievementDot) m_achievementDot->setVisible(show);
@@ -303,7 +305,7 @@ ReviewDialog::ReviewDialog(const QVector<Dish> &dishes, int userZoneId,
             bmr = 10.0*m_userData.weight + 6.25*m_userData.height - 5.0*m_userData.age - 161;
         else
             bmr = 10.0*m_userData.weight + 6.25*m_userData.height - 5.0*m_userData.age + 5;
-        calBaseline = isBreakfast ? bmr*0.3 : (hour < 16 ? bmr*0.4 : bmr*0.3);
+        calBaseline = (isBreakfast ? bmr*0.3 : (hour < 16 ? bmr*0.4 : bmr*0.3)) * 1.35;
     }
 
     int restZone = findZoneForRestaurant(restaurant);
@@ -475,10 +477,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     m_stack->addWidget(m_welcomePage); m_stack->addWidget(m_mapPage);
     m_stack->addWidget(m_mealPage); m_stack->setCurrentWidget(m_welcomePage);
 
-    m_welcomeTimer = new QTimer(this); m_welcomeTimer->setSingleShot(true);
-    m_welcomeTimer->start(5000);
-    connect(m_welcomeTimer, &QTimer::timeout, this, &MainWindow::enterMap);
-
     setMinimumSize(800,600); setWindowTitle(QString::fromUtf8("干饭人"));
     showMaximized();
 
@@ -595,7 +593,7 @@ void MainWindow::setupMapPage() {
     mainLayout->addWidget(m_sidebar); mainLayout->addWidget(m_mapView,1);
 }
 
-void MainWindow::enterMap() { m_welcomeTimer->stop(); m_stack->setCurrentWidget(m_mapPage);
+void MainWindow::enterMap() { m_stack->setCurrentWidget(m_mapPage);
     m_mapView->resetTransform();
     double s = m_mapView->viewport()->height() / m_mapScene->sceneRect().height();
     m_mapView->scale(s, s);
@@ -969,7 +967,7 @@ void MainWindow::onFinishEating() {
     m_mealPage->resetMeal(); m_currentMealDishes.clear(); m_stack->setCurrentWidget(m_mapPage);
 }
 
-void MainWindow::backFromMeal() { m_stack->setCurrentWidget(m_mapPage); }
+void MainWindow::backFromMeal() { m_mealPage->resetMeal(); m_stack->setCurrentWidget(m_mapPage); }
 
 void MainWindow::onSceneLeftClicked(QPointF scenePos) {
     int zoneId = m_zoneManager->zoneAtPoint(scenePos);
@@ -992,8 +990,8 @@ void MainWindow::applyUserSettings() {
     if(s.height>0 && s.weight>0 && s.age>0 && !s.gender.isEmpty()){
         int bmr;
         if(s.gender==QString::fromUtf8("女"))
-            bmr=static_cast<int>(10.0*s.weight+6.25*s.height-5.0*s.age-161);
-        else bmr=static_cast<int>(10.0*s.weight+6.25*s.height-5.0*s.age+5);
+            bmr=static_cast<int>((10.0*s.weight+6.25*s.height-5.0*s.age-161)*1.35);
+        else bmr=static_cast<int>((10.0*s.weight+6.25*s.height-5.0*s.age+5)*1.35);
         m_sidebar->setBMR(bmr);
     }
     updateSidebarUserInfo();
