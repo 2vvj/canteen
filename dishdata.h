@@ -81,7 +81,7 @@ struct UserProfile {
     double dailyCalorieLimit = 2500;
     double todayCalories = 0;
     QMap<QString, int> chooseCount;     // 菜名 -> 被选次数
-    QMap<QString, double> ratings;      // 菜名 -> 用户评分 (0-10)
+    QMap<QString, double> ratings;      // "菜名|食堂" -> 用户评分 (0-10)
     QStringList recentChoices;
 
     QJsonObject toJson() const;

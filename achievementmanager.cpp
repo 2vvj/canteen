@@ -4,7 +4,9 @@
 #include <QJsonObject>
 #include <QDate>
 #include <QSet>
+#include <QTime>
 #include <algorithm>
+#include <QPair>
 
 AchievementManager::AchievementManager(QObject *parent) : QObject(parent) {
     m_defs = achievementDefs();
@@ -62,15 +64,16 @@ void AchievementManager::unlock(const QString &key, const QDate &date) {
 }
 
 void AchievementManager::checkAll(const QDateTime &currentTime,
-                                   double todayCalories,
                                    double bmr,
                                    const QMap<QString, DailyRecord> &dailyRecords,
-                                   double currentMealTotalPrice) {
+                                   double currentMealTotalPrice,
+                                   const QMap<QString, QString> &eatingTimes,
+                                   const QMap<QString, double> &dishPrices) {
     QDate today = currentTime.date();
 
     // ── 一次性成就 ──
 
-    // first_record：只要有任意一条历史记录即解锁
+    // first_record：只要有一条历史记录即解锁
     if (!dailyRecords.isEmpty()) {
         auto &fr = m_data.states["first_record"];
         if (!fr.unlocked) {
@@ -81,88 +84,153 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
         }
     }
 
-    if (currentTime.time().hour() >= 21) {
+    // late_meal：当前餐次 >=21:00，或在历史 eatingTimes 中有 >=21:00 的记录
+    {
         auto &lm = m_data.states["late_meal"];
-        if (!lm.unlocked) unlock("late_meal", today);
+        if (!lm.unlocked) {
+            QDate lateDate;
+            bool found = false;
+            if (currentTime.time().hour() >= 21) {
+                lateDate = today;
+                found = true;
+            }
+            if (!found) {
+                for (auto it = eatingTimes.begin(); it != eatingTimes.end(); ++it) {
+                    QString dtStr = it.value();
+                    QDateTime dt = QDateTime::fromString(dtStr, "yyyy-MM-dd HH:mm");
+                    if (dt.isValid() && dt.time().hour() >= 21) {
+                        lateDate = dt.date();
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            if (found) unlock("late_meal", lateDate);
+        }
     }
 
-    if (currentMealTotalPrice > 50.0) {
+    // luxury：当前单餐 >50元，或在历史 eatingTimes 中有单餐 >50元
+    {
         auto &lx = m_data.states["luxury"];
-        if (!lx.unlocked) unlock("luxury", today);
+        if (!lx.unlocked) {
+            QDate luxDate;
+            bool found = false;
+            if (currentMealTotalPrice > 50.0) {
+                luxDate = today;
+                found = true;
+            }
+            if (!found) {
+                // 按日期+餐段分组汇总价格：key = (dateStr, period)
+                // period: 0=早餐(5-10), 1=午餐(10-15), 2=晚餐(15-23)
+                QMap<QPair<QString, int>, double> mealPrices;
+                for (auto it = eatingTimes.begin(); it != eatingTimes.end(); ++it) {
+                    QString ts = it.value();
+                    QDateTime dt = QDateTime::fromString(ts, "yyyy-MM-dd HH:mm");
+                    if (!dt.isValid()) continue;
+                    int h = dt.time().hour();
+                    int period = (h < 10) ? 0 : (h < 15) ? 1 : 2;
+                    QString dateStr = dt.date().toString("yyyy-MM-dd");
+
+                    // 从键提取 "name|restaurant"：键格式为 "name|rest|timestamp"
+                    QString fullKey = it.key();
+                    QString dishKey = fullKey.left(fullKey.length() - ts.length() - 1);
+
+                    auto priceIt = dishPrices.find(dishKey);
+                    if (priceIt != dishPrices.end())
+                        mealPrices[{dateStr, period}] += priceIt.value();
+                }
+                // 按日期升序查找第一个超50元的餐段
+                QStringList mealKeys;
+                for (auto it = mealPrices.begin(); it != mealPrices.end(); ++it)
+                    mealKeys.append(it.key().first + "|" + QString::number(it.key().second));
+                mealKeys.sort();
+                for (const auto &mk : mealKeys) {
+                    QString dateStr = mk.section('|', 0, 0);
+                    int period = mk.section('|', 1, 1).toInt();
+                    if (mealPrices[{dateStr, period}] > 50.0) {
+                        luxDate = QDate::fromString(dateStr, "yyyy-MM-dd");
+                        if (luxDate.isValid()) { found = true; break; }
+                    }
+                }
+            }
+            if (found) unlock("luxury", luxDate);
+        }
     }
 
-    // ── 连续型成就：扫描全部数据，找最长连续天数 ──
+    // ── 连续型成就 ──
+    QStringList keys = dailyRecords.keys();
+    keys.sort();
 
-    // 遍历所有日期（排序），找到满足条件的最长连续段
-    // 注意：日期中断（无记录）即断连
-    auto findMaxStreak = [&](auto predicate) -> int {
-        QStringList keys = dailyRecords.keys();
-        if (keys.isEmpty()) return 0;
-        keys.sort();
-
+    // findStreakInfo returns {maxStreak, dateWhenTarget3Reached, dateWhenTarget7Reached}
+    auto findStreakInfo = [&](auto predicate) -> QPair<int, QPair<QDate, QDate>> {
         int best = 0, current = 0;
-        QDate prev;
+        QDate prev, d3, d7;
 
         for (const auto &key : keys) {
             QDate d = QDate::fromString(key, "yyyy-MM-dd");
-            if (!d.isValid()) continue;
-            if (d >= today) continue;  // 只统计已结束的日期，排除今天
+            if (!d.isValid() || d >= today) continue;
 
-            bool ok = predicate(dailyRecords[key]);
-
-            if (current == 0) {
-                if (ok) { current = 1; best = qMax(best, current); }
-            } else {
-                if (d == prev.addDays(1) && ok) {
-                    current++;
-                    best = qMax(best, current);
-                } else if (ok) {
-                    current = 1;  // 日期不连续，重新开始
-                } else {
-                    current = 0;  // 条件不满足，中断
-                }
+            if (!predicate(dailyRecords[key])) {
+                current = 0; prev = d; continue;
             }
+
+            if (current == 0 || d != prev.addDays(1))
+                current = 1;
+            else
+                current++;
+
+            if (current > best) best = current;
+            if (!d3.isValid() && current >= 3) d3 = d;
+            if (!d7.isValid() && current >= 7) d7 = d;
             prev = d;
         }
-        return best;
+        return {best, {d3, d7}};
     };
 
-    int underStreak = findMaxStreak([bmr](const DailyRecord &r) {
-        return r.totalCalories <= bmr + 300;
-    });
-    int overStreak = findMaxStreak([bmr](const DailyRecord &r) {
-        return r.totalCalories > bmr + 300;
-    });
-    int recordStreak = findMaxStreak([](const DailyRecord &) { return true; });
+    auto underInfo = findStreakInfo([bmr](const DailyRecord &r) { return r.totalCalories <= bmr + 300; });
+    auto overInfo  = findStreakInfo([bmr](const DailyRecord &r) { return r.totalCalories > bmr + 300; });
+    auto recInfo   = findStreakInfo([](const DailyRecord &) { return true; });
 
-    auto updateStreak = [&](const QString &key, int target, int currentStreak) {
+    auto updateStreak = [&](const QString &key, int target, int currentStreak, const QDate &achieveDate) {
         auto &st = m_data.states[key];
         if (st.unlocked) return;
         st.progress = currentStreak;
-        if (currentStreak >= target) unlock(key, today);
+        if (currentStreak >= target)
+            unlock(key, achieveDate.isValid() ? achieveDate : today);
     };
 
-    updateStreak("streak_calorie_3", 3, underStreak);
-    updateStreak("streak_calorie_7", 7, underStreak);
-    updateStreak("streak_over_3",    3, overStreak);
-    updateStreak("streak_over_7",    7, overStreak);
-    updateStreak("streak_record_7",  7, recordStreak);
+    updateStreak("streak_calorie_3", 3, underInfo.first, underInfo.second.first);
+    updateStreak("streak_calorie_7", 7, underInfo.first, underInfo.second.second);
+    updateStreak("streak_over_3",    3, overInfo.first,  overInfo.second.first);
+    updateStreak("streak_over_7",    7, overInfo.first,  overInfo.second.second);
+    updateStreak("streak_record_7",  7, recInfo.first,   recInfo.second.second);
 
-    // ── 累计型成就：统计所有历史不重复菜品 ──
+    // ── 累计型成就：统计历史不重复菜品，找到达成目标的日期 ──
 
-    QSet<QString> allDishes;
-    for (auto it = dailyRecords.begin(); it != dailyRecords.end(); ++it) {
-        for (const auto &dish : it->dishes)
-            allDishes.insert(dish);
+    QSet<QString> seen;
+    QDate taste50Date, taste100Date;
+    for (const auto &key : keys) {
+        QDate d = QDate::fromString(key, "yyyy-MM-dd");
+        if (!d.isValid()) continue;
+        if (d >= today) continue;
+        for (const auto &dish : dailyRecords[key].dishes)
+            seen.insert(dish);
+        if (!taste50Date.isValid() && seen.size() >= 50)
+            taste50Date = d;
+        if (!taste100Date.isValid() && seen.size() >= 100)
+            taste100Date = d;
     }
 
-    auto updateCumulative = [&](const QString &key, int target, int count) {
+    auto updateCumulative = [&](const QString &key, int target, int count, const QDate &achieveDate) {
         auto &st = m_data.states[key];
         if (st.unlocked) return;
         st.progress = count;
-        if (count >= target) unlock(key, today);
+        if (count >= target) {
+            QDate useDate = achieveDate.isValid() ? achieveDate : today;
+            unlock(key, useDate);
+        }
     };
 
-    updateCumulative("taste_50",  50, allDishes.size());
-    updateCumulative("taste_100", 100, allDishes.size());
+    updateCumulative("taste_50",  50, seen.size(), taste50Date);
+    updateCumulative("taste_100", 100, seen.size(), taste100Date);
 }

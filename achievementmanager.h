@@ -17,10 +17,11 @@ public:
 
     // 每餐后调用，检查所有未解锁成就
     void checkAll(const QDateTime &currentTime,
-                  double todayCalories,
                   double bmr,
                   const QMap<QString, DailyRecord> &dailyRecords,
-                  double currentMealTotalPrice);
+                  double currentMealTotalPrice,
+                  const QMap<QString, QString> &eatingTimes = {},
+                  const QMap<QString, double> &dishPrices = {});
 
     // 皮肤
     QString activeSkin() const;

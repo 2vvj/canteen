@@ -769,7 +769,7 @@ void MainWindow::onReview() {
             if (alreadyInEatingTimes) continue;
             QVector<const Dish*> candidates;
             for (const auto &d : m_allDishes) {
-                if (d.name == dishName) candidates.append(&d);
+                if (d.name + "|" + d.restaurant == dishName) candidates.append(&d);
             }
             if (candidates.size() == 1) {
                 const Dish &d = *candidates.first();
@@ -854,7 +854,7 @@ void MainWindow::onMealReadyForReview(const QVector<Dish> &selected) {
         // 保存到每日记录
         QString today = QDate::currentDate().toString("yyyy-MM-dd");
         DailyRecord &rec = m_dailyRecords[today];
-        for (const auto &d : selected) rec.dishes.append(d.name);
+        for (const auto &d : selected) rec.dishes.append(d.name + "|" + d.restaurant);
         rec.totalCalories += totalCal;
         rec.totalPrice += 0;
         for (const auto &d : selected) rec.totalPrice += d.price;
@@ -969,12 +969,18 @@ void MainWindow::onFinishEating() {
         double mealPrice = 0;
         for (const auto &d : m_currentMealDishes) mealPrice += d.price;
 
+        // 构建菜品价格表："name|restaurant" → price
+        QMap<QString, double> dishPrices;
+        for (const auto &d : m_allDishes)
+            dishPrices[d.name + "|" + d.restaurant] = d.price;
+
         m_achievementManager->checkAll(
             QDateTime::currentDateTime(),
-            m_userProfile.todayCalories,
             bmr,
             m_dailyRecords,
-            mealPrice);
+            mealPrice,
+            m_eatingTimes,
+            dishPrices);
 
         m_sidebar->setAchievementDot(m_achievementManager->hasNewAchievements());
     }
@@ -1027,7 +1033,7 @@ void MainWindow::updateLionSprite() {
         else
             bmr = 10.0 * s.weight + 6.25 * s.height - 5.0 * s.age + 5;
     }
-    m_isObese = (m_userProfile.todayCalories > bmr + 300);
+    m_isObese = (m_userProfile.todayCalories > bmr * 1.35 + 300);
     QString skinKey = m_achievementManager ? m_achievementManager->activeSkin() : "first_record";
     QString path = "lion_" + skinKey + (m_isObese ? "_obese.png" : "_slim.png");
     m_character->setSprite(path);
