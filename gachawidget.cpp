@@ -204,11 +204,6 @@ void GachaWidget::paintEvent(QPaintEvent *) {
         int a = static_cast<int>(m_revealAlpha * 255);
         int cardY = by + dispH + 20;
 
-        // 食物emoji
-        QFont emojiFont("Segoe UI Emoji", 48);
-        p.setFont(emojiFont);
-        p.drawText(QRectF(cx - 60, cardY - 60, 120, 60), Qt::AlignCenter, "🍱");
-
         // 菜名卡片
         p.setBrush(QColor(255, 252, 245, a));
         p.setPen(QPen(QColor(200, 165, 120, a), 2.5));
@@ -227,21 +222,13 @@ void GachaWidget::paintEvent(QPaintEvent *) {
         p.drawText(QRectF(cx - 160, cardY + 38, 320, 28), Qt::AlignHCenter, detail);
     }
 
-    // ---- 关闭按钮 ----
+    // ---- 关闭提示 ----
     if (m_showCloseBtn) {
-        int btnY = by + dispH + 115;
-        QRectF btnR(cx - 55, btnY, 110, 38);
-        p.setBrush(QColor(255, 255, 250, 230));
-        p.setPen(QPen(QColor(190, 150, 110), 2));
-        p.drawRoundedRect(btnR, 19, 19);
-        p.setPen(QColor(110, 70, 35));
-        QFont btnFont("Microsoft YaHei", 14, QFont::Bold);
-        p.setFont(btnFont);
-        p.drawText(btnR, Qt::AlignCenter, "确 认");
-        p.setPen(QColor(255, 255, 255, 120));
-        QFont hintFont("Microsoft YaHei", 10);
+        int cardBottom = by + dispH + 100;
+        p.setPen(QColor(255, 255, 255, 140));
+        QFont hintFont("Microsoft YaHei", 11);
         p.setFont(hintFont);
-        p.drawText(QRectF(cx - 120, btnY + 42, 240, 18), Qt::AlignCenter, "点击任意位置关闭");
+        p.drawText(QRectF(cx - 120, cardBottom + 18, 240, 22), Qt::AlignCenter, "点击任意位置关闭");
     }
 }
 
@@ -278,7 +265,7 @@ void GachaWidget::onBurstTick() {
             m_revealAlpha += 0.055;
             if (m_revealAlpha >= 1.0) {
                 m_revealAlpha = 1.0; revealTimer->stop(); revealTimer->deleteLater();
-                m_particleTimer->stop(); m_showCloseBtn = true;
+                m_particleTimer->stop(); m_particles.clear(); m_showCloseBtn = true;
             }
             update();
         });
