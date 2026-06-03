@@ -723,30 +723,42 @@ void MainWindow::onReview() {
     hw->setAttribute(Qt::WA_DeleteOnClose);
     hw->setWindowTitle(QString::fromUtf8("菜品评价"));
 
-    // 从 eatingTimes + dailyRecords 双源构建完整的评价列表
-    QMap<QString, QString> eatingDates;
-    QVector<Dish> eatenDishes;
-    QSet<QString> seenKeys;
+    // ── 构建菜品列表，每道菜绑定自己的时间戳 ──
+    struct EatenItem {
+        Dish dish;
+        QString time;  // "yyyy-MM-dd HH:mm" 显示用
+    };
+    QVector<EatenItem> items;
+    QSet<QString> seenDishKeys; // 用于 dailyRecords 去重
 
-    // 第一源：eatingTimes（精确的 "菜名|食堂" 键 + 时分）
+    // 第一源：eatingTimes（每条记录独立，同菜多份各自保留时间）
     for (auto it = m_eatingTimes.begin(); it != m_eatingTimes.end(); ++it) {
-        const QString &key = it.key();
-        eatingDates[key] = it.value();
-        seenKeys.insert(key);
+        const QString &fullKey = it.key();
+        int lastSep = fullKey.lastIndexOf('|');
+        if (lastSep < 0) continue;
+        int secondSep = fullKey.lastIndexOf('|', lastSep - 1);
+        QString dishRestKey;
+        if (secondSep >= 0)
+            dishRestKey = fullKey.left(lastSep);
+        else
+            dishRestKey = fullKey;
+
+        QString timeStr = it.value();
+        if (timeStr.length() > 16) timeStr = timeStr.left(16); // 去秒
+
         for (const auto &d : m_allDishes) {
-            if (d.name + "|" + d.restaurant == key) {
-                eatenDishes.append(d);
+            if (d.name + "|" + d.restaurant == dishRestKey) {
+                items.append({d, timeStr});
+                seenDishKeys.insert(dishRestKey);
                 break;
             }
         }
     }
 
-    // 第二源：dailyRecords（补充 eatingTimes 中缺失的菜品）
-    // 注意：dailyRecords 只存菜名不存食堂，所以只添加该菜名仅对应唯一食堂的情况
+    // 第二源：dailyRecords（补充 eatingTimes 中不存在的菜品）
     for (auto it = m_dailyRecords.begin(); it != m_dailyRecords.end(); ++it) {
         const QString &date = it.key();
         for (const auto &dishName : it->dishes) {
-            // 如果 eatingTimes 已有该菜名+食堂的记录则跳过
             bool alreadyInEatingTimes = false;
             for (auto et = m_eatingTimes.begin(); et != m_eatingTimes.end(); ++et) {
                 if (et.key().startsWith(dishName + "|")) {
@@ -755,37 +767,37 @@ void MainWindow::onReview() {
                 }
             }
             if (alreadyInEatingTimes) continue;
-
-            // 找出所有食堂中提供该菜名的菜品
             QVector<const Dish*> candidates;
             for (const auto &d : m_allDishes) {
                 if (d.name == dishName) candidates.append(&d);
             }
-            // 只有唯一食堂提供时才记录，避免张冠李戴
             if (candidates.size() == 1) {
                 const Dish &d = *candidates.first();
                 QString key = d.name + "|" + d.restaurant;
-                if (!seenKeys.contains(key)) {
-                    eatingDates[key] = date + " 12:00";
-                    seenKeys.insert(key);
-                    eatenDishes.append(d);
+                if (!seenDishKeys.contains(key)) {
+                    items.append({d, date + " 12:00"});
+                    seenDishKeys.insert(key);
                 }
             }
-            // 多个食堂都有同名菜→无法确定在哪吃的，跳过
         }
     }
 
-    // 按食用日期降序排列（最新在最上方）
-    std::sort(eatenDishes.begin(), eatenDishes.end(), [&eatingDates](const Dish &a, const Dish &b) {
-        return eatingDates.value(a.name + "|" + a.restaurant, "0000") >
-               eatingDates.value(b.name + "|" + b.restaurant, "0000");
+    // 按时间降序排列（最新在最上面）
+    std::sort(items.begin(), items.end(), [](const EatenItem &a, const EatenItem &b) {
+        return a.time > b.time;
     });
 
-    QMap<int, QString> idxToKey;
-    for (int i = 0; i < eatenDishes.size(); ++i)
-        idxToKey[i] = eatenDishes[i].name + "|" + eatenDishes[i].restaurant;
+    // 提取排序后的 dish 列表和键映射
+    QVector<Dish> eatenDishes;
+    QMap<QString, QString> displayDates; // QString::number(i) → 时间
+    QMap<int, QString> idxToKey;          // dishId → "菜名|食堂"
+    for (int i = 0; i < items.size(); ++i) {
+        eatenDishes.append(items[i].dish);
+        displayDates[QString::number(i)] = items[i].time;
+        idxToKey[i] = items[i].dish.name + "|" + items[i].dish.restaurant;
+    }
 
-    hw->loadDishes(eatenDishes, m_userProfile, eatingDates);
+    hw->loadDishes(eatenDishes, m_userProfile, displayDates);
     connect(hw, &HistoryWindow::dishRated, this, [this, idxToKey](int dishId, int rating) {
         if (idxToKey.contains(dishId)) {
             const QString &key = idxToKey[dishId];
@@ -847,11 +859,11 @@ void MainWindow::onMealReadyForReview(const QVector<Dish> &selected) {
         rec.totalPrice += 0;
         for (const auto &d : selected) rec.totalPrice += d.price;
         saveDailyRecords();
-        // 记录食用时间（含具体分钟），使用 "菜名|食堂" 复合键
+        // 记录食用时间，使用 "菜名|食堂|yyyy-MM-dd HH:mm:ss" 复合键（含秒保证唯一）
         {
-            QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm");
+            QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
             for (const auto &d : selected)
-                m_eatingTimes[d.name + "|" + d.restaurant] = now;
+                m_eatingTimes[d.name + "|" + d.restaurant + "|" + now] = now;
             saveEatingTimes();
         }
         updateSidebarUserInfo(); updateLionSprite();
@@ -920,12 +932,18 @@ void MainWindow::onFinishEating() {
     m_mealActive=false;
     HistoryWindow *hw = new HistoryWindow(this); hw->setAttribute(Qt::WA_DeleteOnClose);
     hw->setWindowTitle(QString::fromUtf8("为这顿饭打分"));
-    // 传入当前日期时间作为食用时间（复合键）
+    // 传入当前日期时间作为食用时间，用索引位置做键保证独立
     QMap<QString, QString> eatingDates;
     QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm");
-    for (const auto &d : m_currentMealDishes)
-        eatingDates[d.name + "|" + d.restaurant] = now;
-    hw->loadDishes(m_currentMealDishes, m_userProfile, eatingDates);
+    for (int i = 0; i < m_currentMealDishes.size(); ++i)
+        eatingDates[QString::number(i)] = now;
+    // 每次吃完打分独立，不受之前评分影响：将当前菜品的评分临时设为 0
+    UserProfile tempProfile = m_userProfile;
+    for (const auto &d : m_currentMealDishes) {
+        QString k = d.name + "|" + d.restaurant;
+        tempProfile.ratings[k] = 0;
+    }
+    hw->loadDishes(m_currentMealDishes, tempProfile, eatingDates);
     connect(hw, &HistoryWindow::dishRated, this, [this](int dishId, int rating){
         if(dishId>=0 && dishId<m_currentMealDishes.size()) {
             const QString &name = m_currentMealDishes[dishId].name;

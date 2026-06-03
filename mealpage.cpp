@@ -291,11 +291,7 @@ void MealPage::updatePhaseLabel() {
         if (r.contains(FULL_MEAL)) {
             m_phaseLabel->setText(QString::fromUtf8("已点整餐"));
         } else {
-            QStringList missing;
-            missing << (r.contains(MEAT)   ? QString::fromUtf8("荤✅") : QString::fromUtf8("荤❌"));
-            missing << (r.contains(VEGGIE) ? QString::fromUtf8("素✅") : QString::fromUtf8("素❌"));
-            missing << (r.contains(STAPLE) ? QString::fromUtf8("主食✅") : QString::fromUtf8("主食❌"));
-            m_phaseLabel->setText(missing.join(" "));
+            m_phaseLabel->setText(QString());
         }
     } else {
         m_phaseLabel->setText(filledRoles().contains(BEVERAGE)

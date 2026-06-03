@@ -4,6 +4,8 @@
 #include <QWidget>
 #include <QTimer>
 #include <QPropertyAnimation>
+#include <QMediaPlayer>
+#include <QAudioOutput>
 #include <QMap>
 #include <QPixmap>
 #include "dishdata.h"
@@ -64,6 +66,9 @@ private:
     QPixmap m_ribbon;
     QVector<Particle> m_particles;
     QVector<Sparkle> m_sparkles;
+
+    QMediaPlayer *m_gachaSfx;
+    QAudioOutput *m_gachaSfxOutput;
 
     double m_revealAlpha;
     double m_idleBob;
