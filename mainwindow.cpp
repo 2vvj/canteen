@@ -475,7 +475,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     m_stack->addWidget(m_welcomePage); m_stack->addWidget(m_mapPage);
     m_stack->addWidget(m_mealPage); m_stack->setCurrentWidget(m_welcomePage);
 
-    setMinimumSize(800,600); setWindowTitle(QString::fromUtf8("干饭人"));
+    setMinimumSize(800,600); setWindowTitle(QString::fromUtf8("寻味燕园"));
     showMaximized();
 
     m_zoneManager->loadFromFile("zones.json");
