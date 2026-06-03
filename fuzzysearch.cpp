@@ -120,8 +120,9 @@ double FuzzySearch::historyBonus(const Dish &dish, const UserProfile &user) cons
     double bonus = 0.0;
 
     // 用户评分高的菜加分（最多+0.15）
-    if (user.ratings.contains(dish.name)) {
-        double rating = user.ratings[dish.name];
+    QString ratingKey = dish.name + "|" + dish.restaurant;
+    if (user.ratings.contains(ratingKey)) {
+        double rating = user.ratings[ratingKey];
         bonus += (rating / 10.0) * 0.15;
     }
 

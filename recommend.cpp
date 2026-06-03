@@ -35,6 +35,25 @@ QMap<QString, double> computeWeights(const QVector<Dish> &candidates,
         weights[d.name] = qMax(weight, 0.01);
     }
 
+    // 米饭在主食中基础概率提升到50%
+    double otherStapleWeight = 0;
+    int riceStapleCount = 0;
+    for (const auto &d : candidates) {
+        if (d.role == STAPLE) {
+            if (d.name == QString::fromUtf8("米饭"))
+                riceStapleCount++;
+            else
+                otherStapleWeight += weights[d.name];
+        }
+    }
+    if (riceStapleCount > 0 && otherStapleWeight > 0) {
+        double perRiceWeight = otherStapleWeight / riceStapleCount;
+        for (const auto &d : candidates) {
+            if (d.role == STAPLE && d.name == QString::fromUtf8("米饭"))
+                weights[d.name] = perRiceWeight;
+        }
+    }
+
     return weights;
 }
 
