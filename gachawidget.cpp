@@ -258,6 +258,10 @@ void GachaWidget::startBurst() {
         sp.alpha = 200 + QRandomGenerator::global()->generateDouble() * 55;
         m_sparkles.append(sp);
     }
+    // 闪光瞬间播放音效
+    m_gachaSfx->stop();
+    m_gachaSfx->setPosition(0);
+    m_gachaSfx->play();
     m_burstTimer->start(); m_particleTimer->start();
 }
 
@@ -269,10 +273,6 @@ void GachaWidget::onBurstTick() {
     }
     if (m_burstFrame > 28) {
         m_burstTimer->stop(); m_state = REVEAL; m_revealAlpha = 0;
-        // 揭示音效
-        m_gachaSfx->stop();
-        m_gachaSfx->setPosition(0);
-        m_gachaSfx->play();
         auto *revealTimer = new QTimer(this);
         connect(revealTimer, &QTimer::timeout, this, [this, revealTimer]() {
             m_revealAlpha += 0.055;

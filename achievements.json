@@ -1,0 +1,40 @@
+{
+    "achievements": {
+        "first_record": {
+            "unlockDate": "2026-06-03",
+            "unlocked": true
+        },
+        "late_meal": {
+            "unlocked": false
+        },
+        "luxury": {
+            "unlocked": false
+        },
+        "streak_calorie_3": {
+            "unlocked": false
+        },
+        "streak_calorie_7": {
+            "unlocked": false
+        },
+        "streak_over_3": {
+            "unlocked": false
+        },
+        "streak_over_7": {
+            "unlocked": false
+        },
+        "streak_record_7": {
+            "unlocked": false
+        },
+        "taste_100": {
+            "progress": 1,
+            "unlocked": false
+        },
+        "taste_50": {
+            "progress": 1,
+            "unlocked": false
+        }
+    },
+    "activeSkin": "first_record",
+    "newlyUnlocked": [
+    ]
+}
