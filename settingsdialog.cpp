@@ -200,7 +200,7 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     m_bgmSlider = new QSlider(Qt::Horizontal, this);
     m_bgmSlider->setRange(0, 100);
     m_bgmSlider->setValue(m_result.bgmVolume);
-    m_bgmSlider->setFixedWidth(120);
+    m_bgmSlider->setFixedSize(120, 24);
     m_bgmSlider->setStyleSheet(
         "QSlider::groove:horizontal {"
         "  height: 6px; background: #D8D0C8; border-radius: 3px;"
