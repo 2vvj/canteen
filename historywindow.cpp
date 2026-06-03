@@ -466,7 +466,8 @@ void HistoryWindow::loadDishes(const QVector<Dish> &dishes, const UserProfile &u
         const auto &d = dishes[i];
         QString key = d.name + "|" + d.restaurant;
         int rating = static_cast<int>(user.ratings.value(key, 0));
-        QString dateStr = eatingDates.value(key);
+        // eatingDates 的键是位置索引 QString::number(i)，保证每个实例独立
+        QString dateStr = eatingDates.value(QString::number(i));
         bool locked = (rating > 0);
         QColor cardColor = kCardColors[colorIndex % kCardColors.size()];
         colorIndex++;

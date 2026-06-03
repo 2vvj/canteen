@@ -3,6 +3,7 @@
 #include <QPainterPath>
 #include <QMouseEvent>
 #include <QRandomGenerator>
+#include <QCoreApplication>
 #include <QtMath>
 
 GachaWidget::GachaWidget(QWidget *parent)
@@ -16,6 +17,14 @@ GachaWidget::GachaWidget(QWidget *parent)
 
     m_bento = QPixmap("bento.png");
     m_ribbon = QPixmap("ribbon.png");
+
+    // 抽卡揭示音效
+    m_gachaSfx = new QMediaPlayer(this);
+    m_gachaSfxOutput = new QAudioOutput(this);
+    m_gachaSfxOutput->setVolume(0.5);
+    m_gachaSfx->setAudioOutput(m_gachaSfxOutput);
+    m_gachaSfx->setSource(QUrl::fromLocalFile(
+        QCoreApplication::applicationDirPath() + "/11724.mp3"));
 
     m_burstTimer = new QTimer(this);
     m_burstTimer->setInterval(25);
@@ -273,6 +282,10 @@ void GachaWidget::onBurstTick() {
     }
     if (m_burstFrame > 28) {
         m_burstTimer->stop(); m_state = REVEAL; m_revealAlpha = 0;
+        // 揭示音效
+        m_gachaSfx->stop();
+        m_gachaSfx->setPosition(0);
+        m_gachaSfx->play();
         auto *revealTimer = new QTimer(this);
         connect(revealTimer, &QTimer::timeout, this, [this, revealTimer]() {
             m_revealAlpha += 0.055;
