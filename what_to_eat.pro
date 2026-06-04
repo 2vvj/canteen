@@ -26,7 +26,8 @@ SOURCES += main.cpp \
            statisticswindow.cpp \
            achievementmanager.cpp \
            achievementpage.cpp \
-           aireportdialog.cpp
+           aireportdialog.cpp \
+           manualwindow.cpp
 
 HEADERS += mainwindow.h \
            mealpage.h \
@@ -52,4 +53,5 @@ HEADERS += mainwindow.h \
            achievementdata.h \
            achievementmanager.h \
            achievementpage.h \
-           aireportdialog.h
+           aireportdialog.h \
+           manualwindow.h

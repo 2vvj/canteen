@@ -343,7 +343,7 @@ void HistoryItemWidget::onRatingRequested(int proposedRating) {
 HistoryWindow::HistoryWindow(QWidget *parent) : QDialog(parent) {
     setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
-    setFixedSize(500, 640);
+    setFixedSize(520, 680);
 
     mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(36, 36, 36, 28);

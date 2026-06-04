@@ -32,6 +32,7 @@ set(SOURCES
     aireportdialog.cpp
     achievementmanager.cpp
     achievementpage.cpp
+    manualwindow.cpp
 )
 
 set(HEADERS
@@ -60,6 +61,7 @@ set(HEADERS
     achievementdata.h
     achievementmanager.h
     achievementpage.h
+    manualwindow.h
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})

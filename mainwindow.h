@@ -80,6 +80,7 @@ signals:
     void reviewClicked();
     void settingsClicked();
     void achievementsClicked();
+    void manualClicked();
 protected:
     void paintEvent(QPaintEvent *e) override;
 private:
@@ -88,6 +89,7 @@ private:
     SketchyButton *m_reviewBtn;
     SketchyButton *m_settingsBtn;
     SketchyButton *m_achievementBtn;
+    SketchyButton *m_manualBtn;
     QLabel *m_avatarLabel;
     QLabel *m_nameLabel;
     QLabel *m_calorieLabel;
@@ -146,6 +148,7 @@ private slots:
     void onHistory();
     void onReview();
     void onSettings();
+    void onManual();
     void onSceneLeftClicked(QPointF scenePos);
     void onToggleEditMode();
     void onMealReadyForReview(const QVector<Dish> &selected);

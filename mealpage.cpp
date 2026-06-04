@@ -605,6 +605,7 @@ void MealPage::resetMeal() {
     m_lockedRestaurant.clear();
     m_lastResults.clear();
     m_phase = isBreakfast() ? BREAKFAST_MAIN : MAIN_PHASE;
+    m_drawWeightedBtn->setEnabled(true);
     m_drawLimitedBtn->setEnabled(false);
     m_confirmMealBtn->setEnabled(false);
     m_resultPanel->setVisible(false);

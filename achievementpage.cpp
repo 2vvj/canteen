@@ -155,14 +155,14 @@ AchievementCard::AchievementCard(const AchievementDef &def, const AchievementSta
     textCol->setSpacing(3);
 
     auto *nameLbl = new QLabel(def.name);
-    nameLbl->setStyleSheet(QString("color:%1; font-size:19px; font-weight:bold; "
+    nameLbl->setStyleSheet(QString("color:%1; font-size:22px; font-weight:bold; "
                                    "font-family:'Microsoft YaHei'; border:none; background:transparent; "
                                    "letter-spacing:2px;")
                            .arg(m_unlocked ? "#3A3530" : "#A09890"));
     textCol->addWidget(nameLbl);
 
     auto *descLbl = new QLabel(def.description);
-    descLbl->setStyleSheet("color:#8B7D6B; font-size:15px; "
+    descLbl->setStyleSheet("color:#8B7D6B; font-size:17px; "
                            "font-family:'Microsoft YaHei'; border:none; background:transparent;");
     descLbl->setWordWrap(true);
     textCol->addWidget(descLbl);
@@ -170,13 +170,13 @@ AchievementCard::AchievementCard(const AchievementDef &def, const AchievementSta
     if (!state.unlocked && def.progressMax > 0) {
         QString progText = QString::fromUtf8("进度 %1/%2").arg(state.progress).arg(def.progressMax);
         auto *progLbl = new QLabel(progText);
-        progLbl->setStyleSheet("color:#C86A5A; font-size:14px; font-style:italic; "
+        progLbl->setStyleSheet("color:#C86A5A; font-size:16px; font-style:italic; "
                                "font-family:'Microsoft YaHei'; border:none; background:transparent;");
         textCol->addWidget(progLbl);
     }
     if (state.unlocked && !state.unlockDate.isEmpty()) {
         auto *dateLbl = new QLabel(state.unlockDate);
-        dateLbl->setStyleSheet("color:#7A8B6A; font-size:14px; "
+        dateLbl->setStyleSheet("color:#7A8B6A; font-size:16px; "
                                "font-family:'Microsoft YaHei'; border:none; background:transparent;");
         textCol->addWidget(dateLbl);
     }

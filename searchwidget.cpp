@@ -192,6 +192,7 @@ QVector<SearchResult> SearchWidget::lastResults() const {
 }
 
 void SearchWidget::resetMealSession() {
+    m_searchInput->clear();
     m_fuzzy.clearTempTags();
     m_resultList->clear();
     m_lastResults.clear();

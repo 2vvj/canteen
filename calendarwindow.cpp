@@ -430,6 +430,5 @@ void CalendarWindow::onReportClicked() {
     }
 
     AiReportDialog *dlg = new AiReportDialog(m_records, bmr, this);
-    dlg->setAttribute(Qt::WA_DeleteOnClose);
-    dlg->exec();
+    dlg->show();
 }
