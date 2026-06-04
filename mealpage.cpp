@@ -280,23 +280,29 @@ bool MealPage::m_mealSelectedContains(const QString &name) const {
 }
 
 void MealPage::updatePhaseLabel() {
+    QString phaseText;
     if (m_phase == BREAKFAST_MAIN) {
-        m_phaseLabel->setText(filledRoles().contains(FULL_MEAL)
-            ? QString::fromUtf8("已点套餐") : QString::fromUtf8("干的❌ 喝的❌"));
+        phaseText = filledRoles().contains(FULL_MEAL)
+            ? QString::fromUtf8("已点套餐") : QString::fromUtf8("干的❌ 喝的❌");
     } else if (m_phase == BREAKFAST_DRINK) {
-        m_phaseLabel->setText(filledRoles().contains(BEVERAGE)
-            ? QString::fromUtf8("干的✅ 喝的✅") : QString::fromUtf8("干的✅ 喝的❌"));
+        phaseText = filledRoles().contains(BEVERAGE)
+            ? QString::fromUtf8("干的✅ 喝的✅") : QString::fromUtf8("干的✅ 喝的❌");
     } else if (m_phase == MAIN_PHASE) {
         auto r = filledRoles();
         if (r.contains(FULL_MEAL)) {
-            m_phaseLabel->setText(QString::fromUtf8("已点整餐"));
-        } else {
-            m_phaseLabel->setText(QString());
+            phaseText = QString::fromUtf8("已点整餐");
         }
     } else {
-        m_phaseLabel->setText(filledRoles().contains(BEVERAGE)
-            ? QString::fromUtf8("饮品✅ 小吃可选") : QString::fromUtf8("饮品/小吃可选"));
+        phaseText = filledRoles().contains(BEVERAGE)
+            ? QString::fromUtf8("饮品✅ 小吃可选") : QString::fromUtf8("饮品/小吃可选");
     }
+
+    if (!m_lockedRestaurant.isEmpty() && !phaseText.isEmpty())
+        phaseText += QString::fromUtf8("  |  ") + m_lockedRestaurant;
+    else if (!m_lockedRestaurant.isEmpty())
+        phaseText = m_lockedRestaurant;
+
+    m_phaseLabel->setText(phaseText);
 }
 
 // ============ 筛菜 ============
