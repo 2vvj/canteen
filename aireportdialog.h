@@ -54,6 +54,7 @@ protected:
     void mousePressEvent(QMouseEvent *e) override;
     void mouseMoveEvent(QMouseEvent *e) override;
     void mouseReleaseEvent(QMouseEvent *e) override;
+    void closeEvent(QCloseEvent *e) override;
 
 private slots:
     void onModeSelected(ReportMode mode);
@@ -97,6 +98,7 @@ private:
     // 窗口拖拽
     QPoint m_dragPos;
     bool m_dragging = false;
+    bool m_closedWhileGenerating = false;
 };
 
 #endif

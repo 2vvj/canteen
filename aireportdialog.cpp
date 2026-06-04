@@ -15,6 +15,7 @@
 #include <QUrl>
 #include <QNetworkRequest>
 #include <QCoreApplication>
+#include <QCloseEvent>
 #include <QTextCursor>
 #include <QRandomGenerator>
 #include <algorithm>
@@ -927,6 +928,18 @@ void AiReportDialog::callApi(const QString &prompt) {
         m_currentReply = nullptr;
         m_loadingTimer->stop();
 
+        // 后台生成：窗口已关闭，保存后自行销毁
+        if (m_closedWhileGenerating) {
+            if (!m_fullText.trimmed().isEmpty()) {
+                QString typeLabel = (m_mode == Today)
+                    ? QString::fromUtf8("当日报告")
+                    : QString::fromUtf8("本周报告");
+                saveReportEntry(QDate::currentDate().toString("yyyy-MM-dd"), typeLabel, m_fullText);
+            }
+            deleteLater();
+            return;
+        }
+
         if (m_fullText.trimmed().isEmpty()) {
             m_reportText->setPlainText(QString::fromUtf8("生成失败，请检查网络连接或 API Key 是否有效。"));
             m_statusLabel->setText(QString::fromUtf8("✗ 生成失败"));
@@ -1032,4 +1045,16 @@ void AiReportDialog::mouseMoveEvent(QMouseEvent *e) {
 void AiReportDialog::mouseReleaseEvent(QMouseEvent *e) {
     m_dragging = false;
     QDialog::mouseReleaseEvent(e);
+}
+
+void AiReportDialog::closeEvent(QCloseEvent *e) {
+    if (m_currentReply) {
+        // 后台继续生成，只隐藏窗口
+        m_closedWhileGenerating = true;
+        hide();
+        e->ignore();
+        return;
+    }
+    m_loadingTimer->stop();
+    e->accept();
 }

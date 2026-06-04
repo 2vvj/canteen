@@ -181,18 +181,7 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     mainLay->addLayout(makeRow(QString::fromUtf8("年龄"), QString::fromUtf8("岁"), current.age, m_ageEdit));
     mainLay->addSpacing(4);
 
-    // ── Privacy ──
-    QLabel *privacy = new QLabel(QString::fromUtf8(
-        "本程序收集的所有个人信息仅用于计算基础代谢，"
-        "我们承诺所有数据均保存在您的设备，"
-        "开发组不做任何留存，亦不会用于任何商业用途或透露给第三方。"));
-    privacy->setWordWrap(true);
-    QFont privFont; privFont.setPointSize(9);
-    privFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
-    privacy->setFont(privFont);
-    privacy->setStyleSheet(QString("color: %1;").arg(C_HINT2.name()));
-    mainLay->addWidget(privacy);
-    // ── BGM 音量滑条（左下角） ──
+    // ── BGM 音量滑条 ──
     QHBoxLayout *bgmRow = new QHBoxLayout;
     QLabel *bgmIcon = new QLabel(QString::fromUtf8("🎵"), this);
     bgmIcon->setStyleSheet("font-size:14px;background:transparent;border:none;");
@@ -220,6 +209,26 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     bgmRow->addWidget(m_bgmSlider);
     bgmRow->addStretch();
     mainLay->addLayout(bgmRow);
+
+    // ── Privacy ──
+    QLabel *privacy = new QLabel(QString::fromUtf8(
+        "本程序收集的所有个人信息仅用于计算基础代谢，"
+        "我们承诺所有数据均保存在您的设备，"
+        "开发组不做任何留存，亦不会用于任何商业用途或透露给第三方。"));
+    privacy->setWordWrap(true);
+    QFont privFont; privFont.setPointSize(9);
+    privFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+    privacy->setFont(privFont);
+    privacy->setStyleSheet(QString("color: %1;").arg(C_HINT2.name()));
+    mainLay->addWidget(privacy);
+
+    QLabel *watermark = new QLabel(QString::fromUtf8("开发组：蛋卷脆"));
+    watermark->setAlignment(Qt::AlignLeft);
+    QFont wmFont; wmFont.setPointSize(9);
+    wmFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
+    watermark->setFont(wmFont);
+    watermark->setStyleSheet(QString("color: %1;").arg(C_HINT.name()));
+    mainLay->addWidget(watermark);
 
     // ── Buttons ──
     QHBoxLayout *btnRow = new QHBoxLayout;

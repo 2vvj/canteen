@@ -5,6 +5,7 @@ int main(int argc, char *argv[]) {
     QApplication app(argc, argv);
     app.setApplicationName(QString::fromUtf8("今天吃什么"));
     app.setApplicationVersion("2.0");
+    app.setWindowIcon(QIcon("icon.png"));
 
     MainWindow w;
     w.show();

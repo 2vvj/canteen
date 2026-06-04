@@ -6,6 +6,7 @@
 #include "distancedb.h"
 #include "zonecommon.h"
 #include "settingsdialog.h"
+#include "manualwindow.h"
 #include "decopainter.h"
 #include "achievementmanager.h"
 #include "achievementpage.h"
@@ -43,6 +44,7 @@ static const QColor C_CARD_BLUE = QColor("#D0DDE8");
 static const QColor C_CARD_ROSE = QColor("#EAD7D2");
 static const QColor C_CARD_TAUPE = QColor("#E0D7CC");
 static const QColor C_CARD_GOLD = QColor("#F2E5C7");
+static const QColor C_CARD_PURPLE = QColor("#D5CFDF");
 
 // ── CharacterItem ──────────────────────────────────────────────
 CharacterItem::CharacterItem(const QString &spritePath, int size, QGraphicsItem *parent)
@@ -133,24 +135,28 @@ Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
 
     m_cardBtn = new SketchyButton(QString::fromUtf8("去吃饭"), C_CARD_SAGE, C_SHADOW_DK);
     m_historyBtn = new SketchyButton(QString::fromUtf8("历史记录"), C_CARD_BLUE, C_SHADOW_DK);
-    m_reviewBtn = new SketchyButton(QString::fromUtf8("菜品评价"), C_CARD_ROSE, C_SHADOW_DK);
-    m_settingsBtn = new SketchyButton(QString::fromUtf8("设置"), C_CARD_TAUPE, C_SHADOW_DK);
-    m_achievementBtn = new SketchyButton(QString::fromUtf8("勋章成就"), C_CARD_GOLD, C_SHADOW_DK);
+    m_reviewBtn = new SketchyButton(QString::fromUtf8("菜品评价"), C_CARD_PURPLE, C_SHADOW_DK);
+    m_achievementBtn = new SketchyButton(QString::fromUtf8("勋章成就"), C_CARD_ROSE, C_SHADOW_DK);
+    m_settingsBtn = new SketchyButton(QString::fromUtf8("设置"), C_CARD_GOLD, C_SHADOW_DK);
+    m_manualBtn = new SketchyButton(QString::fromUtf8("用户手册"), C_CARD_TAUPE, C_SHADOW_DK);
 
-    for (auto *b : {m_cardBtn, m_historyBtn, m_reviewBtn, m_settingsBtn, m_achievementBtn}) {
+    for (auto *b : {m_cardBtn, m_historyBtn, m_reviewBtn, m_settingsBtn, m_achievementBtn, m_manualBtn}) {
         b->setIconType(ICON_NONE);
         b->setFixedHeight(56);
     }
     connect(m_cardBtn, &QPushButton::clicked, this, &Sidebar::goEatClicked);
     connect(m_historyBtn, &QPushButton::clicked, this, &Sidebar::historyClicked);
     connect(m_reviewBtn, &QPushButton::clicked, this, &Sidebar::reviewClicked);
+    connect(m_achievementBtn, &QPushButton::clicked, this, &Sidebar::achievementsClicked);
     connect(m_settingsBtn, &QPushButton::clicked, this, &Sidebar::settingsClicked);
+    connect(m_manualBtn, &QPushButton::clicked, this, &Sidebar::manualClicked);
 
     layout->addWidget(m_cardBtn);
     layout->addWidget(m_historyBtn);
     layout->addWidget(m_reviewBtn);
     layout->addWidget(m_achievementBtn);
     layout->addWidget(m_settingsBtn);
+    layout->addWidget(m_manualBtn);
 
     // 红色角标
     m_achievementDot = new QLabel(m_achievementBtn);
@@ -158,7 +164,6 @@ Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
     m_achievementDot->setStyleSheet("background:#D45A3A; border-radius:5px;");
     m_achievementDot->move(m_achievementBtn->width() - 16, 6);
     m_achievementDot->hide();
-    connect(m_achievementBtn, &QPushButton::clicked, this, &Sidebar::achievementsClicked);
 
     layout->addStretch();
 
@@ -585,6 +590,7 @@ void MainWindow::setupMapPage() {
     connect(m_sidebar, &Sidebar::historyClicked,  this, &MainWindow::onHistory);
     connect(m_sidebar, &Sidebar::reviewClicked,   this, &MainWindow::onReview);
     connect(m_sidebar, &Sidebar::settingsClicked, this, &MainWindow::onSettings);
+    connect(m_sidebar, &Sidebar::manualClicked,  this, &MainWindow::onManual);
 
     QHBoxLayout *mainLayout = new QHBoxLayout(m_mapPage);
     mainLayout->setContentsMargins(0,0,0,0); mainLayout->setSpacing(0);
@@ -827,6 +833,11 @@ void MainWindow::onSettings() {
         if (vol > 0) m_bgmPlayer->play();
         else m_bgmPlayer->stop();
     }
+}
+
+void MainWindow::onManual() {
+    ManualWindow dlg(this);
+    dlg.exec();
 }
 
 void MainWindow::onMealReadyForReview(const QVector<Dish> &selected) {
