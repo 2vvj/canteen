@@ -84,8 +84,18 @@ Testing/
 # Qt Creator 用户配置
 *.pro.user
 
-# 用户本地数据（不提交到 GitHub）
+# 辅助脚本
+bring_to_front.ps1
+capture.ps1
+capture2.ps1
+run_and_capture.ps1
+take_screenshot.ps1
+
+# 用户本地数据
 user.json
 daily_records.json
 rating_dates.json
+eating_times.json
+achievements.json
+
 *.db
