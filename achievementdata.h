@@ -12,8 +12,8 @@ struct AchievementDef {
     QString key;
     QString name;
     QString description;
-    QString skinSuffix;   // "streak_calorie_3" → lion_streak_calorie_3_slim.png
-    int progressMax = 0;  // 0=一次性，>0=连续/累计目标值
+    QString skinSuffix;
+    int progressMax = 0;  // 0一次性 >0累计
 };
 
 struct AchievementState {
@@ -22,7 +22,6 @@ struct AchievementState {
     int progress = 0;
 };
 
-// 全部成就状态 + 活跃皮肤
 struct AchievementData {
     QMap<QString, AchievementState> states;
     QString activeSkin = "first_record";

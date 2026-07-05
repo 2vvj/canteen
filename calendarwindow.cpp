@@ -11,7 +11,6 @@
 #include <QLinearGradient>
 #include <QTextCharFormat>
 #include <QMouseEvent>
-#include <cmath>
 
 static const QColor C_CREAM  = QColor("#FDFBF7");
 static const QColor C_INK    = QColor("#2B2B2B");
@@ -121,16 +120,6 @@ void RecordCardWidget::setCaloriesText(const QString &text) {
 
 void RecordCardWidget::setPriceText(const QString &text) {
     m_priceLabel->setText(text);
-}
-
-void RecordCardWidget::addButton(SketchyButton *btn) {
-    QVBoxLayout *lay = qobject_cast<QVBoxLayout*>(layout());
-    if (lay) {
-        QHBoxLayout *row = new QHBoxLayout;
-        row->addStretch();
-        row->addWidget(btn);
-        lay->addLayout(row);
-    }
 }
 
 void RecordCardWidget::paintEvent(QPaintEvent *) {

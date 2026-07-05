@@ -44,7 +44,6 @@ static void saveReportEntry(const QString &date, const QString &type, const QStr
     auto entries = loadReportEntries();
     ReportEntry e{ date, type, content };
     entries.insert(entries.begin(), e);
-    // 最多保留50条
     if (entries.size() > 50) entries.resize(50);
 
     QJsonArray arr;
@@ -1000,7 +999,7 @@ void AiReportDialog::mouseReleaseEvent(QMouseEvent *e) {
 
 void AiReportDialog::closeEvent(QCloseEvent *e) {
     if (m_currentReply) {
-        // 后台继续生成
+        // 后台生成
         m_closedWhileGenerating = true;
         hide();
         e->ignore();

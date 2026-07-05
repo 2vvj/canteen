@@ -231,18 +231,7 @@ void Sidebar::paintEvent(QPaintEvent *) {
 }
 
 int ReviewDialog::findZoneForRestaurant(const QString &restaurant) const {
-    if (m_restaurantZoneMap.contains(restaurant)) {
-        int zoneId = m_restaurantZoneMap.value(restaurant, -1);
-        if (zoneId >= 0) return zoneId;
-    }
-    // 回退到模糊匹配
-    if (!m_zoneManager) return -1;
-    const auto zones = m_zoneManager->allZones();
-    for (const auto &z : zones) {
-        if (restaurant.contains(z.name, Qt::CaseInsensitive))
-            return z.id;
-    }
-    return -1;
+    return m_restaurantZoneMap.value(restaurant, -1);
 }
 
 double ReviewDialog::getDistance(int zoneA, int zoneB) const {
@@ -429,7 +418,6 @@ void ReviewDialog::mouseReleaseEvent(QMouseEvent *e)
     QDialog::mouseReleaseEvent(e);
 }
 
-// ── MainWindow ─────────────────────────────────────────────────
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     m_allDishes = DishData::loadDishes("dishes.json");
     if(m_allDishes.isEmpty())
@@ -480,7 +468,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     m_distanceDB->open("distances.db");
     m_distanceDB->loadFromJson("distances.json");
     m_userData.load("user.json");
-    // 加载评分数据到 UserProfile
+    // 加载评分数据
     {
         QFile f("user.json");
         if (f.open(QIODevice::ReadOnly)) {
@@ -488,7 +476,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             QJsonObject ratingsObj = obj["ratings"].toObject();
             for (auto it = ratingsObj.begin(); it != ratingsObj.end(); ++it)
                 m_userProfile.ratings[it.key()] = it.value().toDouble();
-            // 恢复今日热量（仅当天有效）
+            // 恢复今日热量
             QString savedDate = obj["calorieDate"].toString();
             if (savedDate == QDate::currentDate().toString("yyyy-MM-dd"))
                 m_userProfile.todayCalories = obj["todayCalories"].toDouble();
@@ -497,14 +485,13 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     }
     applyUserSettings();
     loadDailyRecords();
-    // 如果 user.json 中的今日热量与 daily_records 不一致，以 daily_records 为准并修复
     QString today = QDate::currentDate().toString("yyyy-MM-dd");
     if (m_dailyRecords.contains(today)) {
         double drCal = m_dailyRecords[today].totalCalories;
         if (m_userProfile.todayCalories != drCal) {
             m_userProfile.todayCalories = drCal;
             updateSidebarUserInfo();
-            saveRatingsToUserFile(); // 修复 user.json
+            saveRatingsToUserFile();
         }
     }
     {
@@ -528,7 +515,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
         }
     }
 
-    // ── BGM ──
+    // BGM
     m_bgmPlayer = new QMediaPlayer(this);
     m_bgmOutput = new QAudioOutput(this);
     m_bgmPlayer->setAudioOutput(m_bgmOutput);
@@ -715,12 +702,12 @@ void MainWindow::onReview() {
 
     struct EatenItem {
         Dish dish;
-        QString time;  // "yyyy-MM-dd HH:mm"
+        QString time;// "yyyy-MM-dd HH:mm"
     };
     QVector<EatenItem> items;
     QSet<QString> seenDishKeys;
 
-    // 第一源：eatingTimes（每条记录独立，同菜多份各自保留时间）
+    // eatingTimes
     for (auto it = m_eatingTimes.begin(); it != m_eatingTimes.end(); ++it) {
         const QString &fullKey = it.key();
         int lastSep = fullKey.lastIndexOf('|');
@@ -733,7 +720,7 @@ void MainWindow::onReview() {
             dishRestKey = fullKey;
 
         QString timeStr = it.value();
-        if (timeStr.length() > 16) timeStr = timeStr.left(16); // 去秒
+        if (timeStr.length() > 16) timeStr = timeStr.left(16);
 
         for (const auto &d : m_allDishes) {
             if (d.name + "|" + d.restaurant == dishRestKey) {
@@ -744,7 +731,7 @@ void MainWindow::onReview() {
         }
     }
 
-    // 第二源：dailyRecords（补充 eatingTimes 中不存在的菜品）
+    // dailyRecords
     for (auto it = m_dailyRecords.begin(); it != m_dailyRecords.end(); ++it) {
         const QString &date = it.key();
         for (const auto &dishName : it->dishes) {
@@ -848,7 +835,7 @@ void MainWindow::onMealReadyForReview(const QVector<Dish> &selected) {
         rec.totalPrice += 0;
         for (const auto &d : selected) rec.totalPrice += d.price;
         saveDailyRecords();
-        // 记录食用时间，使用 "菜名|食堂|yyyy-MM-dd HH:mm:ss" 复合键（含秒保证唯一）
+        // 记录食用时间
         {
             QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
             for (const auto &d : selected)
@@ -955,7 +942,6 @@ void MainWindow::onFinishEating() {
         double mealPrice = 0;
         for (const auto &d : m_currentMealDishes) mealPrice += d.price;
 
-        // 构建菜品价格表："name|restaurant" → price
         QMap<QString, double> dishPrices;
         for (const auto &d : m_allDishes)
             dishPrices[d.name + "|" + d.restaurant] = d.price;

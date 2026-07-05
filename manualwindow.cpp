@@ -57,7 +57,7 @@ ManualWindow::ManualWindow(QWidget *parent)
     connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::close);
     m_closeBtn->move(width() - 36 - 30, 30);
 
-    // 滚动区域
+    // 滚动
     QScrollArea *scroll = new QScrollArea(this);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
@@ -75,7 +75,6 @@ ManualWindow::ManualWindow(QWidget *parent)
     contentLay->setSpacing(12);
     contentLay->setContentsMargins(0, 4, 8, 8);
 
-    // 字体定义
     QFont h2Font; h2Font.setPointSize(13);
     h2Font.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
     h2Font.setWeight(QFont::Bold);
@@ -124,7 +123,7 @@ ManualWindow::ManualWindow(QWidget *parent)
         contentLay->addWidget(l);
     };
 
-    // 手册内容
+    // 手册
     addH2(QString::fromUtf8("概述"));
     addBody(QString::fromUtf8(
         "\"寻味燕园\"是一款面向北大学生的校园饮食决策APP。它将\"今天吃什么\"这个每日难题游戏化，变成一次有趣的抽卡体验。\n\n"

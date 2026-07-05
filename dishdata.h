@@ -9,12 +9,12 @@
 #include <QJsonObject>
 
 enum DishRole {
-    FULL_MEAL,  // 整餐：面、套餐
+    FULL_MEAL,  // 整餐
     MEAT,       // 荤菜
     VEGGIE,     // 素菜
-    STAPLE,     // 主食：米饭、馒头
-    BEVERAGE,   // 饮品：汤、豆浆、奶茶
-    SNACK       // 小吃：煎饼、烤冷面
+    STAPLE,     // 主食
+    BEVERAGE,   // 饮品
+    SNACK       // 小吃
 };
 
 inline QString dishRoleToString(DishRole r) {
@@ -60,8 +60,6 @@ struct Dish {
     DishRole role = MEAT;
     QStringList tags;
 
-    // 以下由队友的数据层维护
-    //队友维护了吗？
     double tastyScore = -1;
     double experienceScore = 5.0;
     double healthScore = 5.0;
@@ -80,20 +78,11 @@ struct UserProfile {
     QMap<QString, int> chooseCount;
     QMap<QString, double> ratings;
     QStringList recentChoices;
-
-    QJsonObject toJson() const;
-    static UserProfile fromJson(const QJsonObject &obj);
 };
 
 namespace DishData {
     QVector<Dish> loadDishes(const QString &filename);
     bool saveDishes(const QString &filename, const QVector<Dish> &dishes);
-
-    UserProfile loadUserProfile(const QString &filename);
-    bool saveUserProfile(const QString &filename, const UserProfile &profile);
-
-    QVector<UserProfile> loadAllUsers(const QString &filename);
-    bool saveAllUsers(const QString &filename, const QVector<UserProfile> &users);
 
     QVector<Dish> filterByCurrentTime(const QVector<Dish> &dishes);
 }

@@ -365,6 +365,7 @@ void MealPage::showNoDishes() {
     m_swapBtn->setVisible(false);
     m_giveUpBtn->setVisible(true);
     m_justEatBtn->setVisible(true);
+    m_justEatBtn->setEnabled(!m_mealSelected.isEmpty());
     m_drawLimitedBtn->setEnabled(false);
     m_drawWeightedBtn->setEnabled(false);
 }

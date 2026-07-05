@@ -195,7 +195,6 @@ private:
     QMap<QString, int> m_restaurantZoneMap;
     bool m_isObese = false;
 
-    // BGM
     QMediaPlayer *m_bgmPlayer;
     QAudioOutput *m_bgmOutput;
 };

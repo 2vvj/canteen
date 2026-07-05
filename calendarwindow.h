@@ -45,7 +45,6 @@ public:
     void setDishesText(const QString &text);
     void setCaloriesText(const QString &text);
     void setPriceText(const QString &text);
-    void addButton(SketchyButton *btn);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
