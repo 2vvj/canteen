@@ -8,7 +8,6 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
-// 一条成就的静态元数据（硬编码，不存 JSON）
 struct AchievementDef {
     QString key;
     QString name;
@@ -17,7 +16,6 @@ struct AchievementDef {
     int progressMax = 0;  // 0=一次性，>0=连续/累计目标值
 };
 
-// 一条成就的运行时状态（存入 achievements.json）
 struct AchievementState {
     bool unlocked = false;
     QString unlockDate;
@@ -34,7 +32,6 @@ struct AchievementData {
     static AchievementData fromJson(const QJsonObject &root);
 };
 
-// 10条成就的元数据定义
 inline QVector<AchievementDef> achievementDefs() {
     return {
         {"first_record",     "初来乍到",   "首次完成饮食记录",           "first_record",     0},
@@ -49,8 +46,6 @@ inline QVector<AchievementDef> achievementDefs() {
         {"luxury",           "豪华大餐王", "单餐消费超过50元",             "luxury",           0},
     };
 }
-
-// ── JSON 序列化实现 ──
 
 inline QJsonObject AchievementData::toJson() const {
     QJsonObject root;
@@ -90,4 +85,4 @@ inline AchievementData AchievementData::fromJson(const QJsonObject &root) {
     return data;
 }
 
-#endif // ACHIEVEMENTDATA_H
+#endif

@@ -5,7 +5,7 @@
 #include <QDateTime>
 #include <QMap>
 #include "achievementdata.h"
-#include "calendarwindow.h"  // for DailyRecord
+#include "calendarwindow.h"
 
 class AchievementManager : public QObject {
     Q_OBJECT
@@ -23,11 +23,9 @@ public:
                   const QMap<QString, QString> &eatingTimes = {},
                   const QMap<QString, double> &dishPrices = {});
 
-    // 皮肤
     QString activeSkin() const;
     void setActiveSkin(const QString &key);
 
-    // 查询
     const QVector<AchievementDef> &defs() const { return m_defs; }
     AchievementState state(const QString &key) const;
     bool hasNewAchievements() const { return !m_data.newlyUnlocked.isEmpty(); }
@@ -44,4 +42,4 @@ private:
     AchievementData m_data;
 };
 
-#endif // ACHIEVEMENTMANAGER_H
+#endif

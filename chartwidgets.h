@@ -23,7 +23,7 @@ public:
     void setAverageLine(double value, const QColor &color);
 
 signals:
-    void swiped(int direction);  // +1 = 右滑看更新的, -1 = 左滑看更早的
+    void swiped(int direction);  // +1右滑, -1左滑
 
 protected:
     void paintEvent(QPaintEvent *event) override;

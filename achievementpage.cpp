@@ -22,7 +22,7 @@ static const QColor C_CARD_LOCKED("#E8E4DE");
 static const QColor C_SHADOW("#3A3530");
 static const QColor C_INK("#2B2B2B");
 
-// ── 皮肤切换确认对话框（手绘卡片风格） ──
+// 皮肤切换确弹窗
 class SkinConfirmDialog : public QDialog {
 public:
     SkinConfirmDialog(const QString &skinName, QWidget *parent = nullptr)
@@ -134,8 +134,7 @@ private:
     QPoint m_dragPos;
 };
 
-// ── AchievementCard methods ──
-
+// 皮肤卡片
 AchievementCard::AchievementCard(const AchievementDef &def, const AchievementState &state,
                                  bool isNew, bool isActive, bool showObese,
                                  QWidget *parent)
@@ -150,7 +149,7 @@ AchievementCard::AchievementCard(const AchievementDef &def, const AchievementSta
     lay->setContentsMargins(18, 18, 18, 14);
     lay->setSpacing(14);
 
-    // 文字信息 — 左侧
+    // 左侧文字
     auto *textCol = new QVBoxLayout;
     textCol->setSpacing(3);
 
@@ -183,7 +182,7 @@ AchievementCard::AchievementCard(const AchievementDef &def, const AchievementSta
     textCol->addStretch();
     lay->addLayout(textCol, 1);
 
-    // 皮肤缩略图 — 右侧，按当前胖瘦状态展示单张
+    // 右侧缩略图
     const int kThumbW = 100, kThumbH = 100;
     auto *thumb = new QLabel;
     thumb->setFixedSize(kThumbW, kThumbH);
@@ -197,7 +196,6 @@ AchievementCard::AchievementCard(const AchievementDef &def, const AchievementSta
         thumb->setText(QString::fromUtf8("\xF0\x9F\xA6\x81"));
     lay->addWidget(thumb);
 
-    // 角标列 — 固定宽度保证图片位置一致
     auto *badgeCol = new QVBoxLayout;
     badgeCol->setAlignment(Qt::AlignTop);
     auto *badgePlaceholder = new QWidget;
@@ -233,7 +231,7 @@ void AchievementCard::paintEvent(QPaintEvent *) {
     QRectF r = rect().adjusted(3, 3, -3, -3);
     int seed = qHash(m_key) & 0xFF;
 
-    // 阴影层 — 激活卡片阴影更大更明显
+    // 阴影层
     double shadowOffset = m_isActive ? 3.0 : 2.5;
     double shadowOpacity = m_isActive ? 0.45 : 0.35;
     QPainterPath sp = sketchyRect(r.translated(shadowOffset, shadowOffset + 1), seed + 100, 2.8);
@@ -243,7 +241,7 @@ void AchievementCard::paintEvent(QPaintEvent *) {
     p.drawPath(sp);
     p.setOpacity(1.0);
 
-    // 纸张底色 — 激活卡片用暖金色
+    // 纸张底色
     QColor cardBg = C_CARD_LOCKED;
     if (m_isActive)
         cardBg = C_CARD_ACTIVE;
@@ -259,10 +257,8 @@ void AchievementCard::paintEvent(QPaintEvent *) {
     p.setPen(Qt::NoPen);
     p.drawPath(cp);
 
-    // 墨水晕染 — 激活卡更深
     drawInkWash(&p, cp, cardBg, m_isActive ? 18 : 14);
 
-    // 顶部色条 accent
     QColor accent;
     if (m_isActive)
         accent = QColor("#D4A84C");
@@ -279,7 +275,7 @@ void AchievementCard::paintEvent(QPaintEvent *) {
     p.drawPath(accentPath);
     p.setOpacity(1.0);
 
-    // 手绘墨水边框 — 激活卡更多层更明显
+    // 边框
     int passes = m_isActive ? 3 : (m_unlocked ? 3 : 2);
     double alpha = m_isActive ? 0.75 : (m_unlocked ? 0.65 : 0.4);
     drawInkBorder(&p, cp, C_INK, passes, alpha);
@@ -290,8 +286,7 @@ void AchievementCard::mousePressEvent(QMouseEvent *e) {
     QWidget::mousePressEvent(e);
 }
 
-// ── AchievementPage ──
-
+// 成就界面
 AchievementPage::AchievementPage(AchievementManager *mgr, QWidget *parent)
     : QWidget(parent), m_mgr(mgr)
 {
@@ -303,7 +298,6 @@ void AchievementPage::buildUI() {
     outer->setContentsMargins(36, 32, 36, 24);
     outer->setSpacing(14);
 
-    // 标题
     auto *title = new QLabel(QString::fromUtf8("干 饭 勋 章"));
     title->setAlignment(Qt::AlignCenter);
     title->setStyleSheet(
@@ -314,10 +308,8 @@ void AchievementPage::buildUI() {
 
     outer->addSpacing(4);
 
-    // 手绘分隔线
     outer->addWidget(new ScratchyDivider(this));
 
-    // 当前皮肤展示 — 居中
     outer->addSpacing(6);
     auto *skinWrapper = new QHBoxLayout;
     skinWrapper->addStretch();
@@ -356,7 +348,6 @@ void AchievementPage::buildUI() {
     outer->addWidget(new ScratchyDivider(this));
     outer->addSpacing(2);
 
-    // 可滚动的成就卡片网格
     auto *scroll = new QScrollArea;
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
@@ -376,7 +367,6 @@ void AchievementPage::buildUI() {
     scroll->setWidget(m_gridContainer);
     outer->addWidget(scroll, 1);
 
-    // 返回按钮
     auto *backBtn = new SketchyButton(QString::fromUtf8("← 返回地图"),
                                       QColor("#D3D9CA"), C_SHADOW, this);
     backBtn->setMinimumSize(140, 44);
@@ -395,12 +385,12 @@ void AchievementPage::buildUI() {
     outer->addLayout(btnRow);
 }
 
+// 换肤后刷新
 void AchievementPage::refresh() {
     const auto &defs = m_mgr->defs();
     const QString &activeSkin = m_mgr->activeSkin();
     const QStringList newly = m_mgr->newlyUnlocked();
 
-    // 刷新当前皮肤大图（固定 90x90 窗格，缩放填满，跟随地图胖瘦）
     QString skinSuffix = m_isObese ? "_obese.png" : "_slim.png";
     QPixmap activePm("lion_" + activeSkin + skinSuffix);
     if (!activePm.isNull())
@@ -413,14 +403,12 @@ void AchievementPage::refresh() {
     }
     m_currentSkinName->setText(QString::fromUtf8("当前: %1").arg(displayName));
 
-    // 清除旧卡片
     QLayoutItem *item;
     while ((item = m_gridLayout->takeAt(0)) != nullptr) {
         if (item->widget()) item->widget()->deleteLater();
         delete item;
     }
 
-    // 重建所有卡片
     for (int i = 0; i < defs.size(); ++i) {
         const auto &d = defs[i];
         const auto &st = m_mgr->state(d.key);
@@ -459,7 +447,6 @@ void AchievementPage::paintEvent(QPaintEvent *) {
     QRectF r = rect();
     int seed = 73;
 
-    // 暖米色纸纹背景
     QLinearGradient bgGrad(r.topLeft(), r.bottomRight());
     bgGrad.setColorAt(0.0, QColor("#FDFBF7"));
     bgGrad.setColorAt(0.4, QColor("#FAF6F0"));
@@ -470,10 +457,8 @@ void AchievementPage::paintEvent(QPaintEvent *) {
     QPainterPath bgPath = DecoPainter::makeOrganicRect(r, 3.0f, 41);
     p.drawPath(bgPath);
 
-    // 墨水边框
     drawInkBorder(&p, bgPath, C_INK, 3, 0.65);
 
-    // 淡色水彩晕染
     DecoPainter::drawWatercolorSplotch(p, QPointF(r.width() * 0.85, r.height() * 0.12), 22,
                                        QColor(250, 235, 215, 16));
     DecoPainter::drawWatercolorSplotch(p, QPointF(r.width() * 0.12, r.height() * 0.88), 18,

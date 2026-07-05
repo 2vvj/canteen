@@ -8,7 +8,6 @@
 #include <QTime>
 #include <QPainter>
 
-// ── 配色（与 MainWindow 一致的手绘风色板）─────────────────────────
 static const QColor C_CREAM      = QColor("#FDFBF7");
 static const QColor C_INK        = QColor("#2B2B2B");
 static const QColor C_INK_LIGHT  = QColor("#4A4540");
@@ -32,10 +31,8 @@ void MealPage::paintEvent(QPaintEvent *)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
-    // 奶油色纸张背景
     p.fillRect(rect(), C_CREAM);
 
-    // 纸张纹理点
     p.setPen(Qt::NoPen);
     for (int i = 0; i < 55; ++i) {
         int x = QRandomGenerator::global()->bounded(width());
@@ -53,11 +50,9 @@ void MealPage::setupUI() {
     mainLayout->setContentsMargins(28, 20, 28, 28);
     mainLayout->setSpacing(14);
 
-    // 字体
     QFont bodyFont;
     bodyFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
 
-    // === 顶栏：时段信息（左） + 返回按钮（右） ===
     auto *headerRow = new QHBoxLayout;
 
     auto *timeBlock = new QVBoxLayout;
@@ -83,14 +78,14 @@ void MealPage::setupUI() {
     headerRow->addWidget(m_backBtn);
     mainLayout->addLayout(headerRow);
 
-    // === 搜索 ===
+    // 搜索
     m_searchWidget = new SearchWidget(m_allDishes, m_user);
     m_searchWidget->setStyleSheet(QString("background:transparent;"));
     mainLayout->addWidget(m_searchWidget);
     connect(m_searchWidget, &SearchWidget::searchResultsChanged, this, &MealPage::onSearchResults);
     connect(m_searchWidget, &SearchWidget::tagsChanged, this, &MealPage::onTagsChanged);
 
-    // === 抽卡按钮（双按钮并排） ===
+    // 抽卡
     auto *btnRow = new QHBoxLayout;
     btnRow->setSpacing(14);
 
@@ -111,7 +106,7 @@ void MealPage::setupUI() {
     connect(m_drawLimitedBtn, &QPushButton::clicked, this, &MealPage::onDrawLimited);
     connect(m_drawWeightedBtn, &QPushButton::clicked, this, &MealPage::onDrawWeighted);
 
-    // === 抽卡结果卡片 ===
+    // 抽卡结果卡片
     m_resultPanel = new SketchyCard;
     m_resultPanel->setCardColor(QColor("#FFFBF5"));
     m_resultPanel->setVisible(false);
@@ -165,7 +160,7 @@ void MealPage::setupUI() {
     connect(m_eatBtn, &QPushButton::clicked, this, &MealPage::onEatDish);
     connect(m_swapBtn, &QPushButton::clicked, this, &MealPage::onSwapDish);
 
-    // === 附加阶段面板 ===
+    // 饮品/小吃
     m_extraPanel = new SketchyCard;
     m_extraPanel->setCardColor(QColor("#F7F2E8"));
     m_extraPanel->setVisible(false);
@@ -193,7 +188,7 @@ void MealPage::setupUI() {
     connect(m_extraDrinkBtn, &QPushButton::clicked, this, &MealPage::onAddExtra);
     connect(m_extraDoneBtn, &QPushButton::clicked, this, &MealPage::onConfirmMeal);
 
-    // === 菜单区域 ===
+    // 已选定菜品
     auto *menuLabel = new QLabel(QString::fromUtf8("今日菜单"));
     menuLabel->setStyleSheet(QString("font-size:17px; font-weight:bold; color:%1; margin-top:6px; background:transparent;").arg(C_INK.name()));
     mainLayout->addWidget(menuLabel);
@@ -207,7 +202,7 @@ void MealPage::setupUI() {
         "padding:6px;}").arg(C_INK.name()));
     mainLayout->addWidget(m_menuList);
 
-    // === 确认菜单按钮 ===
+    // 确认菜单
     m_confirmMealBtn = new SketchyButton(QString::fromUtf8("确认菜单，开始吃饭！"), C_CARD_BLUE, C_SHADOW_DK);
     m_confirmMealBtn->setFixedHeight(52);
     m_confirmMealBtn->setEnabled(false);
@@ -221,7 +216,7 @@ void MealPage::setupUI() {
     mainLayout->addStretch();
     updatePhaseLabel();
 
-    // 实时时钟：每秒更新左上角时间
+    // 实时时钟
     m_timeTimer = new QTimer(this);
     connect(m_timeTimer, &QTimer::timeout, this, &MealPage::updateTimeDisplay);
     m_timeTimer->start(1000);
@@ -255,8 +250,7 @@ void MealPage::updateTimeDisplay() {
     m_timeLabel->setText(QString("%1  %2 | %3").arg(now.toString("HH:mm")).arg(mode).arg(serving));
 }
 
-// ============ 搭配系统 ============
-
+// 搭配系统
 bool MealPage::isBreakfast() const {
     int h = QTime::currentTime().hour();
     return h >= 4 && h < 10;
@@ -305,8 +299,6 @@ void MealPage::updatePhaseLabel() {
     m_phaseLabel->setText(phaseText);
 }
 
-// ============ 筛菜 ============
-
 QVector<Dish> MealPage::filterByPhase(const QVector<Dish> &dishes) {
     QVector<Dish> out;
     auto r = filledRoles();
@@ -336,8 +328,7 @@ QVector<Dish> MealPage::allSearchDishes() const {
     return out;
 }
 
-// ============ 抽卡 ============
-
+// 抽卡
 void MealPage::doDraw(const QVector<Dish> &candidates, const QMap<QString, double> &weights) {
     if (candidates.isEmpty()) return;
     auto *gacha = new GachaWidget(this);
@@ -378,8 +369,7 @@ void MealPage::showNoDishes() {
     m_drawWeightedBtn->setEnabled(false);
 }
 
-// ============ 抽卡结果 ============
-
+// 抽卡结果
 void MealPage::onGachaDishSelected(const Dish &dish) {
     m_currentGacha = nullptr;
     m_latestDish = dish;
@@ -523,7 +513,6 @@ void MealPage::refreshMenuList() {
 }
 
 void MealPage::onConfirmMeal() {
-    // 不再直接结束，而是发射信号让 MainWindow 展示雷达确认页
     emit mealReadyForReview(m_mealSelected, m_user);
 }
 
@@ -566,7 +555,6 @@ void MealPage::removeDishFromMenu(int index) {
     updatePhaseLabel();
     refreshMenuList();
 
-    // Reset result panel and button states
     m_resultPanel->setVisible(false);
     m_eatBtn->setVisible(true);
     m_swapBtn->setVisible(true);

@@ -3,8 +3,6 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 
-// ============ SupplyWindow ============
-
 QJsonObject SupplyWindow::toJson() const {
     QJsonObject obj;
     obj["start"] = start.toString("HH:mm");
@@ -18,8 +16,6 @@ SupplyWindow SupplyWindow::fromJson(const QJsonObject &obj) {
     sw.end = QTime::fromString(obj["end"].toString(), "HH:mm");
     return sw;
 }
-
-// ============ Dish ============
 
 QJsonObject Dish::toJson() const {
     QJsonObject obj;
@@ -60,8 +56,6 @@ Dish Dish::fromJson(const QJsonObject &obj) {
     return d;
 }
 
-// ============ UserProfile ============
-
 QJsonObject UserProfile::toJson() const {
     QJsonObject obj;
     obj["name"] = name;
@@ -94,8 +88,6 @@ UserProfile UserProfile::fromJson(const QJsonObject &obj) {
         p.recentChoices.append(v.toString());
     return p;
 }
-
-// ============ DishData ============
 
 QVector<Dish> DishData::loadDishes(const QString &filename) {
     QVector<Dish> dishes;

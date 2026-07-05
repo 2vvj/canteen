@@ -7,10 +7,10 @@ struct UserSettings {
     QString avatarPath;
     QString name = "用户";
     QString gender;
-    int height = 0;   // cm
-    int weight = 0;   // kg
+    int height = 0;
+    int weight = 0;
     int age = 0;
-    int bgmVolume = 50;  // 0-100
+    int bgmVolume = 50;
 };
 
 class UserData {

@@ -14,15 +14,12 @@
 #include <QTimer>
 #include <QMouseEvent>
 #include "calendarwindow.h"
-
-// ── 历史报告条目 ──
 struct ReportEntry {
-    QString date;      // 生成日期 "yyyy-MM-dd"
-    QString type;      // "当日" 或 "本周"
-    QString content;   // markdown 内容
+    QString date;
+    QString type;
+    QString content;
 };
 
-// ── 历史报告弹窗 ──
 class ReportHistoryDialog : public QDialog {
     Q_OBJECT
 public:
@@ -38,7 +35,6 @@ private:
     void showReport(int index);
 };
 
-// ── AI 饮食报告主弹窗 ──
 class AiReportDialog : public QDialog {
     Q_OBJECT
 public:
@@ -86,16 +82,13 @@ private:
     QString m_apiKey;
     ReportMode m_mode = Today;
 
-    // Streaming
     QNetworkReply *m_currentReply = nullptr;
     QByteArray m_sseBuffer;
     QString m_fullText;
 
-    // Loading 动画
     QTimer *m_loadingTimer;
     int m_loadingDots = 0;
 
-    // 窗口拖拽
     QPoint m_dragPos;
     bool m_dragging = false;
     bool m_closedWhileGenerating = false;

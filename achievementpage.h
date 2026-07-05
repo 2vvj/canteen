@@ -9,7 +9,7 @@
 
 class AchievementManager;
 
-// 单张成就卡片（手绘风格）
+// 皮肤卡片
 class AchievementCard : public QWidget {
     Q_OBJECT
 public:
@@ -57,4 +57,4 @@ private:
     bool m_isObese = false;
 };
 
-#endif // ACHIEVEMENTPAGE_H
+#endif

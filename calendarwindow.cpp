@@ -17,8 +17,6 @@ static const QColor C_CREAM  = QColor("#FDFBF7");
 static const QColor C_INK    = QColor("#2B2B2B");
 static const QColor C_SHADOW = QColor("#3A3530");
 
-// ========== ScratchyDivider ==========
-// 参考开屏界面：单条 quadTo 柔和曲线，双层墨线叠涂
 ScratchyDivider::ScratchyDivider(QWidget *parent)
     : QWidget(parent)
 {
@@ -50,7 +48,6 @@ void ScratchyDivider::paintEvent(QPaintEvent *) {
     p.drawPath(sepPath);
 }
 
-// ========== CalendarFrameWidget ==========
 CalendarFrameWidget::CalendarFrameWidget(QCalendarWidget *calendar, QWidget *parent)
     : QWidget(parent), m_calendar(calendar)
 {
@@ -74,7 +71,6 @@ void CalendarFrameWidget::paintEvent(QPaintEvent *) {
     DecoPainter::drawSketchyBorder(&p, bgPath, ink, 3, 1.0f);
 }
 
-// ========== RecordCardWidget ==========
 RecordCardWidget::RecordCardWidget(QWidget *parent)
     : QWidget(parent)
 {
@@ -166,7 +162,6 @@ void RecordCardWidget::paintEvent(QPaintEvent *) {
     p.setOpacity(1.0);
 }
 
-// ========== CalendarWindow ==========
 CalendarWindow::CalendarWindow(QWidget *parent)
     : QDialog(parent), m_currentDate(QDate::currentDate())
 {
@@ -178,7 +173,6 @@ CalendarWindow::CalendarWindow(QWidget *parent)
     mainLayout->setContentsMargins(36, 36, 36, 28);
     mainLayout->setSpacing(10);
 
-    // ── 标题 — 占满宽度，文字居中 ──
     QLabel *titleLabel = new QLabel(QString::fromUtf8("饮 食 历 史"), this);
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setStyleSheet(
@@ -187,7 +181,6 @@ CalendarWindow::CalendarWindow(QWidget *parent)
         "border:none;background:transparent;");
     mainLayout->addWidget(titleLabel);
 
-    // ── 关闭按钮 — SketchyButton，匹配手绘风格 ──
     m_closeBtn = new SketchyButton(QString::fromUtf8("×"),
         QColor("#E0D7CC"), QColor("#3A3530"), this);
     m_closeBtn->setFixedSize(36, 36);
@@ -200,10 +193,8 @@ CalendarWindow::CalendarWindow(QWidget *parent)
 
     mainLayout->addSpacing(4);
 
-    // ── 手绘分隔线 ──
     mainLayout->addWidget(new ScratchyDivider(this));
 
-    // ── 日历 — 有机手绘框架包裹 ──
     m_calendar = new QCalendarWidget();
     m_calendar->setGridVisible(false);
     m_calendar->setFirstDayOfWeek(Qt::Monday);
@@ -214,7 +205,6 @@ CalendarWindow::CalendarWindow(QWidget *parent)
         "QCalendarWidget {"
         "  background-color: #FDFBF7; border: none;"
         "}"
-        // 月份弹出菜单
         "QCalendarWidget QMenu {"
         "  background-color: #FDFBF7;"
         "  border: 1.5px solid #C8BEB4;"
@@ -228,7 +218,6 @@ CalendarWindow::CalendarWindow(QWidget *parent)
         "QCalendarWidget QMenu::item:selected {"
         "  background-color: #E8D8C8;"
         "}"
-        // 导航栏按钮
         "QCalendarWidget QWidget#qt_calendar_navigationbar > QToolButton {"
         "  color: #2B2B2B; font-size: 14px; font-weight: bold;"
         "  padding: 5px 14px;"
@@ -243,7 +232,6 @@ CalendarWindow::CalendarWindow(QWidget *parent)
         "QCalendarWidget QWidget#qt_calendar_navigationbar > QToolButton:pressed {"
         "  background-color: #E0D4C4;"
         "}"
-        // 年份输入框 — 隐藏上下按钮，纯文本输入
         "QCalendarWidget QSpinBox {"
         "  background-color: #F5F0E8;"
         "  border: 1.5px solid #C8BEB4; border-radius: 8px;"
@@ -259,7 +247,6 @@ CalendarWindow::CalendarWindow(QWidget *parent)
         "QCalendarWidget QSpinBox::down-arrow {"
         "  width: 0px; height: 0px;"
         "}"
-        // 日期区域
         "QCalendarWidget QAbstractItemView:enabled {"
         "  font-family: 'Microsoft YaHei'; font-size: 12px;"
         "  color: #5D4B3A;"
@@ -276,13 +263,11 @@ CalendarWindow::CalendarWindow(QWidget *parent)
         "  background-color: #FDFBF7; border: none;"
         "}");
 
-    // 周末文字颜色
     QTextCharFormat weekendFmt;
     weekendFmt.setForeground(QColor("#B08070"));
     m_calendar->setWeekdayTextFormat(Qt::Saturday, weekendFmt);
     m_calendar->setWeekdayTextFormat(Qt::Sunday, weekendFmt);
 
-    // 今天高亮 — 柔和复古蓝底色
     QTextCharFormat todayFmt;
     todayFmt.setBackground(QColor("#D0DDE8"));
     todayFmt.setForeground(QColor("#2B2B2B"));
@@ -296,13 +281,11 @@ CalendarWindow::CalendarWindow(QWidget *parent)
     m_calendarFrame = new CalendarFrameWidget(m_calendar, this);
     mainLayout->addWidget(m_calendarFrame);
 
-    // ── 记录卡片 ──
     m_recordCard = new RecordCardWidget(this);
     mainLayout->addWidget(m_recordCard);
 
     mainLayout->addStretch();
 
-    // ── 底部按钮行：饮食报告 + 历史报告 + 数据统计 ──
     QHBoxLayout *btnRow = new QHBoxLayout;
     SketchyButton *aiBtn = new SketchyButton(
         QString::fromUtf8("饮食报告"),
@@ -339,7 +322,6 @@ void CalendarWindow::setRecords(const QMap<QString, DailyRecord> &records) {
     showRecordForDate(m_currentDate);
 }
 
-// ── 参照 SettingsDialog 的卡片式绘制 ──
 void CalendarWindow::paintEvent(QPaintEvent *) {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
@@ -354,7 +336,7 @@ void CalendarWindow::paintEvent(QPaintEvent *) {
     p.setPen(Qt::NoPen);
     p.drawPath(sp);
 
-    // 卡片层 — 奶油纸色 + 墨水晕染 + 黑边
+    // 卡片底色
     QPainterPath cp = sketchyRect(card, seed, 2.8);
     drawInkWash(&p, cp, C_CREAM, 18);
     drawInkBorder(&p, cp, C_INK, 3, 0.7);
@@ -417,7 +399,6 @@ void CalendarWindow::onStatisticsClicked() {
 }
 
 void CalendarWindow::onReportClicked() {
-    // 读取用户数据获取 BMR
     UserData ud;
     double bmr = 0;
     if (ud.load("user.json")) {

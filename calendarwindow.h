@@ -18,7 +18,6 @@ struct DailyRecord {
 
 class SketchyButton;
 
-// 手绘分隔线 — 一根带毛刺的墨线
 class ScratchyDivider : public QWidget {
     Q_OBJECT
 public:
@@ -27,7 +26,6 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 };
 
-// 有机框架 — 包裹日历，绘制手绘边框
 class CalendarFrameWidget : public QWidget {
     Q_OBJECT
 public:
@@ -38,7 +36,6 @@ private:
     QCalendarWidget *m_calendar;
 };
 
-// 有机形状的记录卡片 — 手绘宣纸质感
 class RecordCardWidget : public QWidget {
     Q_OBJECT
 public:

@@ -12,7 +12,6 @@
 #include "gachawidget.h"
 #include "sketchyui.h"
 
-// 用餐决策页面：搜索 → 抽卡 → 搭配
 class MealPage : public QWidget {
     Q_OBJECT
 public:
@@ -22,9 +21,7 @@ public:
     void resetMeal();
 
 signals:
-    // 用户确认了菜品组合，要求展示雷达图确认
     void mealReadyForReview(const QVector<Dish> &selected, const UserProfile &user);
-    // 用户想回到地图
     void backToMap();
 
 private slots:

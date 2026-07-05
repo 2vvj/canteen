@@ -46,7 +46,6 @@ static const QColor C_CARD_TAUPE = QColor("#E0D7CC");
 static const QColor C_CARD_GOLD = QColor("#F2E5C7");
 static const QColor C_CARD_PURPLE = QColor("#D5CFDF");
 
-// ── CharacterItem ──────────────────────────────────────────────
 CharacterItem::CharacterItem(const QString &spritePath, int size, QGraphicsItem *parent)
     : QGraphicsObject(parent), m_size(size) { m_sprite = QPixmap(spritePath); }
 
@@ -66,7 +65,7 @@ void CharacterItem::setSprite(const QString &path) {
     update();
 }
 
-// ── WelcomePage ────────────────────────────────────────────────
+// 开屏界面
 WelcomePage::WelcomePage(QWidget *parent) : QWidget(parent) {
     setCursor(Qt::PointingHandCursor);
     m_bgPixmap = QPixmap("start_page_background.png");
@@ -100,12 +99,12 @@ void WelcomePage::paintEvent(QPaintEvent *) {
     drawInkWash(&p, cardPath, QColor("#FAF7F0"), 15);
     drawInkBorder(&p, cardPath, C_INK, 3, 0.8);
     if (!m_titleArt.isNull()) {
-        double pad = 5;  // 留出边框宽度
+        double pad = 5;
         double maxW = cardW - pad * 2, maxH = cardH - pad * 2;
         QSizeF sz = m_titleArt.size();
         double s = qMin(maxW / sz.width(), maxH / sz.height());
         double iw = sz.width() * s, ih = sz.height() * s;
-        double imgX = cardX + pad + (maxW - iw) / 2.0 + 3;  // 微右移
+        double imgX = cardX + pad + (maxW - iw) / 2.0 + 3;
         p.drawPixmap(QRectF(imgX, cardY + pad + (maxH - ih) / 2.0, iw, ih),
                      m_titleArt, m_titleArt.rect());
     } else {
@@ -121,7 +120,7 @@ void WelcomePage::paintEvent(QPaintEvent *) {
     p.restore();
 }
 
-// ── Sidebar ────────────────────────────────────────────────────
+// 侧边栏
 Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
     setFixedWidth(255);
     QVBoxLayout *layout = new QVBoxLayout(this);
@@ -158,7 +157,6 @@ Sidebar::Sidebar(QWidget *parent) : QWidget(parent) {
     layout->addWidget(m_settingsBtn);
     layout->addWidget(m_manualBtn);
 
-    // 红色角标
     m_achievementDot = new QLabel(m_achievementBtn);
     m_achievementDot->setFixedSize(10, 10);
     m_achievementDot->setStyleSheet("background:#D45A3A; border-radius:5px;");
@@ -232,9 +230,7 @@ void Sidebar::paintEvent(QPaintEvent *) {
     p.setBrush(Qt::NoBrush); p.drawPath(line);
 }
 
-// ── ReviewDialog ────────────────────────────────────────────────
 int ReviewDialog::findZoneForRestaurant(const QString &restaurant) const {
-    // 优先查映射表
     if (m_restaurantZoneMap.contains(restaurant)) {
         int zoneId = m_restaurantZoneMap.value(restaurant, -1);
         if (zoneId >= 0) return zoneId;
@@ -271,7 +267,6 @@ ReviewDialog::ReviewDialog(const QVector<Dish> &dishes, int userZoneId,
     layout->setContentsMargins(36, 40, 36, 32);
     layout->setSpacing(12);
 
-    // Fonts
     QFont titleFont; titleFont.setPointSize(16);
     titleFont.setLetterSpacing(QFont::AbsoluteSpacing, 3.0);
     titleFont.setWeight(QFont::Bold);
@@ -280,7 +275,6 @@ ReviewDialog::ReviewDialog(const QVector<Dish> &dishes, int userZoneId,
     QFont hintFont; hintFont.setPointSize(10);
     hintFont.setLetterSpacing(QFont::AbsoluteSpacing, 1.5);
 
-    // Title
     QLabel *titleLabel = new QLabel(QString::fromUtf8("你的今日搭配"));
     titleLabel->setFont(titleFont);
     titleLabel->setStyleSheet(QString("color: %1;").arg(C_INK.name()));
@@ -454,7 +448,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     connect(m_mealPage, &MealPage::mealReadyForReview, this, &MainWindow::onMealReadyForReview);
     connect(m_mealPage, &MealPage::backToMap, this, &MainWindow::backFromMeal);
 
-    // ── 成就系统初始化 ──
     m_achievementManager = new AchievementManager(this);
     m_achievementManager->load();
 
@@ -514,7 +507,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
             saveRatingsToUserFile(); // 修复 user.json
         }
     }
-    // 加载评分日期
     {
         QFile f("rating_dates.json");
         if (f.open(QIODevice::ReadOnly)) {
@@ -526,7 +518,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     }
     loadEatingTimes();
 
-    // 加载食堂→区域映射
     {
         QFile f("restaurant_zone_map.json");
         if (f.open(QIODevice::ReadOnly)) {
@@ -648,38 +639,32 @@ void MainWindow::showNoZoneDialog() {
             QRectF card(18, 18, width() - 36, height() - 36);
             int seed = 73;
 
-            // Shadow
             QRectF shadow = card.translated(2.5, 3.5);
             QPainterPath sp = sketchyRect(shadow, seed + 100, 2.8);
             p.setBrush(C_SHADOW_DK);
             p.setPen(Qt::NoPen);
             p.drawPath(sp);
 
-            // Card fill
             QPainterPath cp = sketchyRect(card, seed, 2.8);
             drawInkWash(&p, cp, C_CREAM, 18);
             drawInkBorder(&p, cp, C_INK, 3, 0.7);
 
-            // Decorative line below title
             QPointF lineStart(card.left() + 25, card.top() + 52);
             QPointF lineEnd(card.left() + 25 + 60, card.top() + 52);
             QPen decoPen(C_INK_LIGHT);
             decoPen.setWidthF(1.0);
             decoPen.setCapStyle(Qt::RoundCap);
             p.setPen(decoPen);
-            // Slightly wavy line
             QPainterPath wavy;
             wavy.moveTo(lineStart);
             wavy.cubicTo(lineStart + QPointF(20, -3), lineStart + QPointF(40, 3), lineEnd);
             p.drawPath(wavy);
-            // Second faint pass for sketchy feel
             decoPen.setWidthF(0.5);
             p.setPen(decoPen);
             p.translate(0.3, 0.4);
             p.drawPath(wavy);
             p.resetTransform();
 
-            // Title
             QFont f = font();
             f.setPointSize(13);
             f.setBold(true);
@@ -690,7 +675,6 @@ void MainWindow::showNoZoneDialog() {
                        Qt::AlignLeft | Qt::AlignVCenter,
                        QString::fromUtf8("提示"));
 
-            // Message
             f.setPointSize(10);
             f.setBold(false);
             f.setLetterSpacing(QFont::AbsoluteSpacing, 1.0);
@@ -729,13 +713,12 @@ void MainWindow::onReview() {
     hw->setAttribute(Qt::WA_DeleteOnClose);
     hw->setWindowTitle(QString::fromUtf8("菜品评价"));
 
-    // ── 构建菜品列表，每道菜绑定自己的时间戳 ──
     struct EatenItem {
         Dish dish;
-        QString time;  // "yyyy-MM-dd HH:mm" 显示用
+        QString time;  // "yyyy-MM-dd HH:mm"
     };
     QVector<EatenItem> items;
-    QSet<QString> seenDishKeys; // 用于 dailyRecords 去重
+    QSet<QString> seenDishKeys;
 
     // 第一源：eatingTimes（每条记录独立，同菜多份各自保留时间）
     for (auto it = m_eatingTimes.begin(); it != m_eatingTimes.end(); ++it) {
@@ -788,15 +771,13 @@ void MainWindow::onReview() {
         }
     }
 
-    // 按时间降序排列（最新在最上面）
     std::sort(items.begin(), items.end(), [](const EatenItem &a, const EatenItem &b) {
         return a.time > b.time;
     });
 
-    // 提取排序后的 dish 列表和键映射
     QVector<Dish> eatenDishes;
-    QMap<QString, QString> displayDates; // QString::number(i) → 时间
-    QMap<int, QString> idxToKey;          // dishId → "菜名|食堂"
+    QMap<QString, QString> displayDates;
+    QMap<int, QString> idxToKey;
     for (int i = 0; i < items.size(); ++i) {
         eatenDishes.append(items[i].dish);
         displayDates[QString::number(i)] = items[i].time;
@@ -827,7 +808,6 @@ void MainWindow::onSettings() {
         m_userData.settings=dlg.result();
         m_userData.save("user.json");
         applyUserSettings();
-        // 如果用户没拖动滑块直接保存，也应用音量
         int vol = qBound(0, m_userData.settings.bgmVolume, 100);
         m_bgmOutput->setVolume(vol / 100.0);
         if (vol > 0) m_bgmPlayer->play();
@@ -845,8 +825,7 @@ void MainWindow::onMealReadyForReview(const QVector<Dish> &selected) {
     ReviewDialog dlg(selected, m_userZoneId, m_zoneManager, m_distanceDB, m_userData.settings, m_restaurantZoneMap, this);
     if(dlg.exec()==QDialog::Accepted && dlg.isConfirmed()){
         m_currentMealDishes=selected; m_mealActive=true; m_stack->setCurrentWidget(m_mapPage);
-
-        // 让狮子走到对应食堂
+        
         if (!selected.isEmpty()) {
             QString restaurant = selected.first().restaurant;
             int zoneId = m_restaurantZoneMap.value(restaurant, -1);
@@ -861,8 +840,7 @@ void MainWindow::onMealReadyForReview(const QVector<Dish> &selected) {
 
         double totalCal=0; for(const auto &d:selected) totalCal+=d.calories;
         m_userProfile.todayCalories+=totalCal;
-        saveRatingsToUserFile(); // 持久化今日热量
-        // 保存到每日记录
+        saveRatingsToUserFile();
         QString today = QDate::currentDate().toString("yyyy-MM-dd");
         DailyRecord &rec = m_dailyRecords[today];
         for (const auto &d : selected) rec.dishes.append(d.name + "|" + d.restaurant);
@@ -943,12 +921,10 @@ void MainWindow::onFinishEating() {
     m_mealActive=false;
     HistoryWindow *hw = new HistoryWindow(this); hw->setAttribute(Qt::WA_DeleteOnClose);
     hw->setWindowTitle(QString::fromUtf8("为这顿饭打分"));
-    // 传入当前日期时间作为食用时间，用索引位置做键保证独立
     QMap<QString, QString> eatingDates;
     QString now = QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm");
     for (int i = 0; i < m_currentMealDishes.size(); ++i)
         eatingDates[QString::number(i)] = now;
-    // 每次吃完打分独立，不受之前评分影响：将当前菜品的评分临时设为 0
     UserProfile tempProfile = m_userProfile;
     for (const auto &d : m_currentMealDishes) {
         QString k = d.name + "|" + d.restaurant;
@@ -966,7 +942,6 @@ void MainWindow::onFinishEating() {
         }
     });
 
-    // ── 成就检查 ──
     if (m_achievementManager) {
         double bmr = 2000;
         const auto &s = m_userData.settings;
@@ -1069,7 +1044,7 @@ void MainWindow::saveRatingsToUserFile() {
         f.write(QJsonDocument(obj).toJson(QJsonDocument::Indented));
         f.close();
     }
-    // 同时保存评分日期
+    
     {
         QFile fd("rating_dates.json");
         if (fd.open(QIODevice::WriteOnly)) {

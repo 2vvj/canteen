@@ -23,4 +23,4 @@ private:
     bool m_dragging = false;
 };
 
-#endif // MANUALWINDOW_H
+#endif

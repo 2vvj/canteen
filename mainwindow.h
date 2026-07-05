@@ -30,7 +30,6 @@ class AchievementPage;
 class HistoryWindow;
 struct ZoneInfo;
 
-// 漫游小狮子
 class CharacterItem : public QGraphicsObject {
     Q_OBJECT
 public:
@@ -46,7 +45,6 @@ private:
     double m_walkPhase = 0;
 };
 
-// 欢迎页
 class WelcomePage : public QWidget {
     Q_OBJECT
     Q_PROPERTY(double fadeIn READ fadeIn WRITE setFadeIn)
@@ -64,7 +62,6 @@ private:
     QPixmap m_titleArt;
 };
 
-// 侧边栏 — 4个按钮
 class Sidebar : public QWidget {
     Q_OBJECT
 public:
@@ -98,7 +95,6 @@ private:
     QLabel *m_achievementDot = nullptr;
 };
 
-// 雷达确认对话框
 class ReviewDialog : public QDialog {
     Q_OBJECT
 public:
@@ -131,7 +127,6 @@ private:
     bool m_dragging = false;
 };
 
-// 主窗口
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
@@ -184,9 +179,8 @@ private:
     UserData m_userData;
     bool m_editMode = false;
     int m_selectedZoneId = -1;
-    int m_userZoneId = -1;  // 用户点击地图选择的区域
+    int m_userZoneId = -1;
 
-    // 用餐系统
     MealPage *m_mealPage;
     AchievementManager *m_achievementManager;
     AchievementPage *m_achievementPage;
@@ -196,9 +190,9 @@ private:
     bool m_mealActive = false;
     QVector<Dish> m_currentMealDishes;
     QMap<QString, DailyRecord> m_dailyRecords;
-    QMap<QString, QString> m_ratingDates;  // "菜名|食堂" -> 评分日期
-    QMap<QString, QString> m_eatingTimes;  // "菜名|食堂|时间戳" -> 时间戳
-    QMap<QString, int> m_restaurantZoneMap; // 食堂名 -> 区域ID
+    QMap<QString, QString> m_ratingDates;
+    QMap<QString, QString> m_eatingTimes;
+    QMap<QString, int> m_restaurantZoneMap;
     bool m_isObese = false;
 
     // BGM

@@ -43,7 +43,6 @@ ManualWindow::ManualWindow(QWidget *parent)
     subLbl->setStyleSheet(QString("color: %1; padding-bottom: 8px;").arg(C_HINT_M.name()));
     mainLay->addWidget(subLbl);
 
-    // 分隔线
     mainLay->addWidget(new ScratchyDivider(this));
     mainLay->addSpacing(8);
 
@@ -125,8 +124,7 @@ ManualWindow::ManualWindow(QWidget *parent)
         contentLay->addWidget(l);
     };
 
-    // ========== 手册内容 ==========
-
+    // 手册内容
     addH2(QString::fromUtf8("概述"));
     addBody(QString::fromUtf8(
         "\"寻味燕园\"是一款面向北大学生的校园饮食决策APP。它将\"今天吃什么\"这个每日难题游戏化，变成一次有趣的抽卡体验。\n\n"
