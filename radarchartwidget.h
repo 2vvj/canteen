@@ -14,7 +14,6 @@ struct RadarData {
     float calories = 60;
     float distance = 90;
 
-    // 实际值（标注用）
     float actualTaste = 0;
     float actualPrice = 0;
     float actualExperience = 0;

@@ -19,7 +19,6 @@ static const QColor C_CREAM_S  = QColor("#FDFBF7");
 static const QColor C_INK_S    = QColor("#2B2B2B");
 static const QColor C_SHADOW_S = QColor("#3A3530");
 
-// ========== ChartCardWidget ==========
 ChartCardWidget::ChartCardWidget(const QString &title, const QColor &accentColor,
                                  QWidget *parent)
     : QWidget(parent), m_title(title), m_accentColor(accentColor)
@@ -57,7 +56,6 @@ void ChartCardWidget::setDateRange(const QString &text) {
             "border:none; background:transparent;");
         QVBoxLayout *lay = qobject_cast<QVBoxLayout*>(layout());
         if (lay) {
-            // 找到 chart widget 的位置，把日期标签插在它前面
             int chartIdx = -1;
             for (int i = 0; i < lay->count(); ++i) {
                 if (lay->itemAt(i)->widget() && lay->itemAt(i)->widget() != m_rangeLabel)
@@ -79,7 +77,6 @@ void ChartCardWidget::paintEvent(QPaintEvent *event) {
 
     QRectF r = rect().adjusted(2, 2, -2, -2);
 
-    // 卡片底色 — 微纸纹渐变
     QLinearGradient bg(r.topLeft(), r.bottomRight());
     bg.setColorAt(0.0, m_cardColor);
     bg.setColorAt(0.6, QColor("#F7F3EC"));
@@ -89,11 +86,9 @@ void ChartCardWidget::paintEvent(QPaintEvent *event) {
     QPainterPath cardPath = DecoPainter::makeOrganicRect(r, 2.2f, 17);
     p.drawPath(cardPath);
 
-    // 手绘墨水边框
     QColor ink(43, 43, 43, 75);
     DecoPainter::drawSketchyBorder(&p, cardPath, ink, 2, 1.0f);
 
-    // 顶部色条 — accent 色
     QRectF accentR(r.x() + 20, r.y() + 6, r.width() - 40, 4.0f);
     QPainterPath accentPath = DecoPainter::makeWavyRect(accentR, 0.8f);
     p.setBrush(m_accentColor);
@@ -102,13 +97,11 @@ void ChartCardWidget::paintEvent(QPaintEvent *event) {
     p.drawPath(accentPath);
     p.setOpacity(1.0);
 
-    // 标题文字 — 手写体
     DecoPainter::setHandwritingFont(p, 13, true);
     p.setPen(DecoPainter::titleBrown());
     p.drawText(QRectF(r.x() + 26, r.y() + 2, r.width() - 52, 28),
                Qt::AlignLeft | Qt::AlignVCenter, m_title);
 
-    // 淡色水彩晕染
     DecoPainter::drawWatercolorSplotch(p, QPointF(r.right() - 25, r.y() + 15), 12,
                                        QColor(250, 235, 215, 18));
     DecoPainter::drawWatercolorSplotch(p, QPointF(r.x() + 30, r.bottom() - 8), 9,
@@ -118,13 +111,11 @@ void ChartCardWidget::paintEvent(QPaintEvent *event) {
     QWidget::paintEvent(event);
 }
 
-// ========== StatisticsWindow ==========
 StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     setWindowTitle(QString::fromUtf8("数据统计"));
     setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
 
-    // 自动高度匹配全屏
     QScreen *screen = QGuiApplication::primaryScreen();
     int screenH = screen ? screen->availableGeometry().height() : 900;
     setFixedSize(960, screenH);
@@ -133,7 +124,6 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     mainLayout->setContentsMargins(36, 36, 36, 28);
     mainLayout->setSpacing(10);
 
-    // ── 标题 ──
     QLabel *titleLabel = new QLabel(QString::fromUtf8("数 据 统 计"), this);
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setStyleSheet(
@@ -142,7 +132,6 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
         "border:none;background:transparent;");
     mainLayout->addWidget(titleLabel);
 
-    // ── 关闭按钮 — SketchyButton，匹配设置界面风格 ──
     m_closeBtn = new SketchyButton(QString::fromUtf8("×"),
         QColor("#E0D7CC"), QColor("#3A3530"), this);
     m_closeBtn->setFixedSize(36, 36);
@@ -155,10 +144,8 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
 
     mainLayout->addSpacing(4);
 
-    // ── 手绘分隔线 ──
     mainLayout->addWidget(new ScratchyDivider(this));
 
-    // ── 滚动区域 ──
     QScrollArea *scroll = new QScrollArea(this);
     scroll->setWidgetResizable(true);
     scroll->setFrameShape(QFrame::NoFrame);
@@ -176,7 +163,6 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     contentLayout->setSpacing(16);
     contentLayout->setContentsMargins(4, 8, 4, 8);
 
-    // 空数据提示
     m_emptyLabel = new QLabel(QString::fromUtf8("暂无数据，请先在历史记录中查看"), this);
     m_emptyLabel->setStyleSheet(
         "color:#B0A090;font-size:15px;padding:60px 0;font-family:'Microsoft YaHei';"
@@ -184,7 +170,6 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     m_emptyLabel->setAlignment(Qt::AlignCenter);
     m_emptyLabel->hide();
 
-    // 每日支出卡片
     m_expenseCard = new ChartCardWidget(
         QString::fromUtf8("每日支出"), QColor("#C86A5A"), this);
     m_expenseChart = new LineChartWidget(this);
@@ -194,7 +179,6 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     contentLayout->addWidget(m_expenseCard);
     connect(m_expenseChart, &LineChartWidget::swiped, this, &StatisticsWindow::onExpenseSwiped);
 
-    // 每日热量卡片
     m_calorieCard = new ChartCardWidget(
         QString::fromUtf8("每日热量"), QColor("#B0C29A"), this);
     m_calorieChart = new LineChartWidget(this);
@@ -204,7 +188,6 @@ StatisticsWindow::StatisticsWindow(QWidget *parent) : QDialog(parent) {
     contentLayout->addWidget(m_calorieCard);
     connect(m_calorieChart, &LineChartWidget::swiped, this, &StatisticsWindow::onCalorieSwiped);
 
-    // 每月支出卡片
     m_monthlyCard = new ChartCardWidget(
         QString::fromUtf8("每月支出"), QColor("#80A0A8"), this);
     m_monthlyBarChart = new BarChartWidget(this);
@@ -230,14 +213,12 @@ void StatisticsWindow::paintEvent(QPaintEvent *) {
     QRectF card(12, 12, width() - 24, height() - 24);
     int seed = 59;
 
-    // 阴影层
     QRectF shadow = card.translated(2.5, 3.5);
     QPainterPath sp = sketchyRect(shadow, seed + 100, 2.8);
     p.setBrush(C_SHADOW_S);
     p.setPen(Qt::NoPen);
     p.drawPath(sp);
 
-    // 卡片层 — 奶油纸色 + 墨水晕染 + 黑边
     QPainterPath cp = sketchyRect(card, seed, 2.8);
     drawInkWash(&p, cp, C_CREAM_S, 18);
     drawInkBorder(&p, cp, C_INK_S, 3, 0.7);
@@ -284,7 +265,6 @@ void StatisticsWindow::loadData() {
     loadExpenseChart();
     loadCalorieChart();
 
-    // 每月支出柱状图 — 始终用全部历史数据
     QStringList allDates = m_records.keys();
     QMap<QString, double> monthly;
     for (const auto &date : allDates) {

@@ -12,7 +12,6 @@
 #include <QMouseEvent>
 #include <QTimer>
 
-// 艺术市集色板 — 参考主界面侧边栏按钮配色
 static const QList<QColor> kCardColors = {
     QColor("#DCE4D3"), QColor("#D0DDE8"), QColor("#EAD7D2"),
     QColor("#E0D7CC"), QColor("#DDE8D0"), QColor("#D5E0E8"),
@@ -23,7 +22,6 @@ static const QColor C_CREAM  = QColor("#FDFBF7");
 static const QColor C_INK    = QColor("#2B2B2B");
 static const QColor C_SHADOW = QColor("#3A3530");
 
-// ========== StarRatingWidget ==========
 StarRatingWidget::StarRatingWidget(int maxStars, QWidget *parent)
     : QWidget(parent), m_maxStars(maxStars), m_rating(0),
       m_pendingRating(0), m_previewing(false)
@@ -150,7 +148,6 @@ void StarRatingWidget::updateStarUIPreview(int previewRating) {
     }
 }
 
-// ========== HistoryItemWidget ==========
 HistoryItemWidget::HistoryItemWidget(int dishId, const QString &dishName,
                                      const QString &dateStr, const QString &canteenName,
                                      const QColor &cardColor,
@@ -206,17 +203,14 @@ void HistoryItemWidget::paintEvent(QPaintEvent *event) {
     p.setRenderHint(QPainter::SmoothPixmapTransform);
     QRectF r = rect().adjusted(2, 2, -2, -2);
 
-    // 卡片底色
     p.setBrush(m_cardColor);
     p.setPen(Qt::NoPen);
     QPainterPath bgPath = DecoPainter::makeWavyRect(r, 2.0f);
     p.drawPath(bgPath);
 
-    // 手绘墨水边框
     QColor ink(43, 43, 43, 90);
     DecoPainter::drawSketchyBorder(&p, bgPath, ink, 2, 1.0f);
 
-    // 左侧手绘色条
     float barW = 4.0f;
     QRectF barR(r.x() + 7, r.y() + r.height() * 0.15f, barW, r.height() * 0.7f);
     p.setBrush(m_cardColor.darker(125));
@@ -224,7 +218,6 @@ void HistoryItemWidget::paintEvent(QPaintEvent *event) {
     QPainterPath barPath = DecoPainter::makeWavyRect(barR, 0.9f);
     p.drawPath(barPath);
 
-    // 淡色水彩晕染
     DecoPainter::drawWatercolorSplotch(p, QPointF(r.right() - 18, r.y() + 14), 8,
                                        QColor(250, 235, 215, 18));
 
@@ -339,7 +332,6 @@ void HistoryItemWidget::onRatingRequested(int proposedRating) {
     }
 }
 
-// ========== HistoryWindow ==========
 HistoryWindow::HistoryWindow(QWidget *parent) : QDialog(parent) {
     setWindowFlags(Qt::Dialog | Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
@@ -349,7 +341,7 @@ HistoryWindow::HistoryWindow(QWidget *parent) : QDialog(parent) {
     mainLayout->setContentsMargins(36, 36, 36, 28);
     mainLayout->setSpacing(10);
 
-    // ── 标题 — 居中 ──
+    // 标题
     QLabel *titleLabel = new QLabel(QString::fromUtf8("干 饭 档 案"), this);
     titleLabel->setAlignment(Qt::AlignCenter);
     titleLabel->setStyleSheet(
@@ -358,7 +350,7 @@ HistoryWindow::HistoryWindow(QWidget *parent) : QDialog(parent) {
         "border: none; background: transparent;");
     mainLayout->addWidget(titleLabel);
 
-    // ── 关闭按钮 — SketchyButton，匹配设置界面风格 ──
+    // 关闭按钮
     m_closeBtn = new SketchyButton(QString::fromUtf8("×"),
         QColor("#E0D7CC"), C_SHADOW, this);
     m_closeBtn->setFixedSize(36, 36);
@@ -369,7 +361,7 @@ HistoryWindow::HistoryWindow(QWidget *parent) : QDialog(parent) {
     connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::close);
     m_closeBtn->move(width() - 36 - 36, 30);
 
-    // ── 副标题 ──
+    // 副标题
     QLabel *subTitleLabel = new QLabel(QString::fromUtf8("为你吃过的菜打分吧！"), this);
     subTitleLabel->setAlignment(Qt::AlignCenter);
     subTitleLabel->setStyleSheet(
@@ -380,10 +372,8 @@ HistoryWindow::HistoryWindow(QWidget *parent) : QDialog(parent) {
 
     mainLayout->addSpacing(4);
 
-    // ── 手绘分隔线 ──
     mainLayout->addWidget(new ScratchyDivider(this));
 
-    // ── 滚动区域 ──
     QScrollArea *scrollArea = new QScrollArea(this);
     scrollArea->setWidgetResizable(true);
     scrollArea->setFrameShape(QFrame::NoFrame);
@@ -422,7 +412,7 @@ void HistoryWindow::paintEvent(QPaintEvent *) {
     p.setPen(Qt::NoPen);
     p.drawPath(sp);
 
-    // 卡片层 — 奶油纸色 + 墨水晕染 + 黑边
+    // 卡片底色
     QPainterPath cp = sketchyRect(card, seed, 2.8);
     drawInkWash(&p, cp, C_CREAM, 18);
     drawInkBorder(&p, cp, C_INK, 3, 0.7);
@@ -466,7 +456,6 @@ void HistoryWindow::loadDishes(const QVector<Dish> &dishes, const UserProfile &u
         const auto &d = dishes[i];
         QString key = d.name + "|" + d.restaurant;
         int rating = static_cast<int>(user.ratings.value(key, 0));
-        // eatingDates 的键是位置索引 QString::number(i)，保证每个实例独立
         QString dateStr = eatingDates.value(QString::number(i));
         bool locked = (rating > 0);
         QColor cardColor = kCardColors[colorIndex % kCardColors.size()];

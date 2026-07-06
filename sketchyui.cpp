@@ -21,7 +21,6 @@ static int seedFor(const QRectF &r, int base)
 
 static double jit(int seed, int idx, double amplitude)
 {
-    // Deterministic pseudo-random: fast, seed-dependent
     int s = seed + idx * 2654435761u;
     s ^= (s >> 16);
     s *= 0x45d9f3b;
@@ -38,7 +37,6 @@ QPainterPath sketchyRect(const QRectF &r, int seed, double jitterAmt)
     double x1 = r.right();
     double y1 = r.bottom();
 
-    // 4 corners with jitter
     double cx0 = x0 + jit(seed, 0, jitterAmt);
     double cy0 = y0 + jit(seed, 1, jitterAmt);
     double cx1 = x1 + jit(seed, 2, jitterAmt);
@@ -48,7 +46,6 @@ QPainterPath sketchyRect(const QRectF &r, int seed, double jitterAmt)
     double cx3 = x0 + jit(seed, 6, jitterAmt);
     double cy3 = y1 + jit(seed, 7, jitterAmt);
 
-    // 4 midpoints along edges with jitter
     double mxTop    = (x0 + x1) / 2.0 + jit(seed, 8,  jitterAmt * 0.8);
     double myTop    = y0 + jit(seed, 9,  jitterAmt * 0.5);
     double mxRight  = x1 + jit(seed, 10, jitterAmt * 0.5);
@@ -59,13 +56,9 @@ QPainterPath sketchyRect(const QRectF &r, int seed, double jitterAmt)
     double myLeft   = (y0 + y1) / 2.0 + jit(seed, 15, jitterAmt * 0.8);
 
     path.moveTo(cx0, cy0);
-    // Top edge: corner0 → midTop → corner1
     path.quadTo(mxTop, myTop, cx1, cy1);
-    // Right edge
     path.quadTo(mxRight, myRight, cx2, cy2);
-    // Bottom edge
     path.quadTo(mxBottom, myBottom, cx3, cy3);
-    // Left edge
     path.quadTo(mxLeft, myLeft, cx0, cy0);
 
     return path;
@@ -96,7 +89,6 @@ void drawInkBorder(QPainter *p, const QPainterPath &path,
 void drawInkWash(QPainter *p, const QPainterPath &path,
                  const QColor &fill, int alphaNoise)
 {
-    // Slightly textured fill
     QColor base = fill;
     if (base.alpha() == 255) {
         int a = 240 + static_cast<int>(quickHash(&base, sizeof(base)) % alphaNoise);
@@ -106,7 +98,6 @@ void drawInkWash(QPainter *p, const QPainterPath &path,
     p->setPen(Qt::NoPen);
     p->drawPath(path);
 
-    // Subtle cross-hatch suggestion
     QPen hatch(base.darker(105));
     hatch.setWidthF(0.3);
     p->setPen(hatch);
@@ -117,9 +108,6 @@ void drawInkWash(QPainter *p, const QPainterPath &path,
         p->drawLine(QPointF(bb.left(), y + off), QPointF(bb.right(), y + off + 1.0));
     }
 }
-
-
-// ── SketchyButton ───────────────────────────────────────────────
 
 SketchyButton::SketchyButton(const QString &text,
                              const QColor &cardColor,
@@ -180,14 +168,12 @@ void SketchyButton::drawIcon(QPainter *p, const QRectF &iconRect)
 
     switch (m_iconType) {
     case ICON_CARD: {
-        // Diamond/card shape
         QPainterPath card;
         card.moveTo(cx, cy - s);
         card.lineTo(cx + s * 0.7, cy);
         card.lineTo(cx, cy + s);
         card.lineTo(cx - s * 0.7, cy);
         card.closeSubpath();
-        // Double-line sketchy effect
         p->drawPath(card);
         p->translate(0.4, 0.3);
         ipen.setWidthF(0.8);
@@ -196,14 +182,12 @@ void SketchyButton::drawIcon(QPainter *p, const QRectF &iconRect)
         break;
     }
     case ICON_SEARCH: {
-        // Magnifying glass: circle + handle
         double r = s * 0.55;
         p->drawEllipse(QPointF(cx - s * 0.15, cy - s * 0.15), r, r);
         p->translate(0.4, 0.2);
         ipen.setWidthF(0.7);
         p->setPen(ipen);
         p->drawEllipse(QPointF(cx - s * 0.15, cy - s * 0.15), r, r);
-        // Handle
         QPointF handleStart(cx - s * 0.15 + r * 0.7, cy - s * 0.15 + r * 0.7);
         QPointF handleEnd(handleStart.x() + s * 0.7, handleStart.y() + s * 0.7);
         ipen.setWidthF(1.5);
@@ -216,7 +200,6 @@ void SketchyButton::drawIcon(QPainter *p, const QRectF &iconRect)
         break;
     }
     case ICON_STAR: {
-        // 5-pointed star
         QPainterPath star;
         for (int i = 0; i < 5; ++i) {
             double angle = -M_PI / 2.0 + i * 2.0 * M_PI / 5.0;
@@ -224,7 +207,6 @@ void SketchyButton::drawIcon(QPainter *p, const QRectF &iconRect)
             double y = cy + sin(angle) * s;
             if (i == 0) star.moveTo(x, y);
             else star.lineTo(x, y);
-            // Inner point
             angle += M_PI / 5.0;
             x = cx + cos(angle) * s * 0.38;
             y = cy + sin(angle) * s * 0.38;
@@ -239,7 +221,6 @@ void SketchyButton::drawIcon(QPainter *p, const QRectF &iconRect)
         break;
     }
     case ICON_HEART: {
-        // Heart shape using two arcs
         QPainterPath heart;
         double hs = s * 0.65;
         heart.moveTo(cx, cy + hs);
@@ -269,7 +250,6 @@ void SketchyButton::paintEvent(QPaintEvent *)
     double margin = 4.0;
     bool enabled = isEnabled();
 
-    // Shadow offset — shifts slightly on hover (only when enabled)
     double activeHover = enabled ? m_hover : 0.0;
     double sx = 2.5 + activeHover * 0.8;
     double sy = 3.0 + activeHover * 0.8;
@@ -278,7 +258,6 @@ void SketchyButton::paintEvent(QPaintEvent *)
                       area.width() - margin * 2 - 4,
                       area.height() - margin * 2 - 4);
 
-    // Card sits offset from shadow; press moves card toward shadow
     double baseOx = -1.5, baseOy = -1.5;
     double targetOx = sx, targetOy = sy;
     double ox = baseOx + (targetOx - baseOx) * (enabled ? m_pressOffset : 0.0);
@@ -295,7 +274,6 @@ void SketchyButton::paintEvent(QPaintEvent *)
     QPainterPath shadowPath = sketchyRect(shadowRect, s + 100, jitAmt);
     QPainterPath cardPath   = sketchyRect(cardRect, s, jitAmt);
 
-    // Shadow — faint when disabled, deepens on hover when enabled
     QColor shadowCol = m_shadowColor;
     if (!enabled) {
         shadowCol = QColor(
@@ -309,7 +287,6 @@ void SketchyButton::paintEvent(QPaintEvent *)
     p.setPen(Qt::NoPen);
     p.drawPath(shadowPath);
 
-    // Card fill — washed out when disabled, warms slightly on hover
     QColor cardCol = m_cardColor;
     if (!enabled) {
         cardCol = QColor(
@@ -325,7 +302,6 @@ void SketchyButton::paintEvent(QPaintEvent *)
     }
     drawInkWash(&p, cardPath, cardCol, 15);
 
-    // Ink border — subtle when disabled, gets bolder on hover
     QColor ink = m_inkColor;
     if (!enabled) {
         ink = QColor(
@@ -337,7 +313,6 @@ void SketchyButton::paintEvent(QPaintEvent *)
     double borderSpread = enabled ? (0.4 + activeHover * 0.3) : 0.25;
     drawInkBorder(&p, cardPath, ink, borderPasses, borderSpread);
 
-    // Icon + Text — faded when disabled, intensifies on hover
     QColor textInk = ink;
     if (enabled && activeHover > 0.5) {
         textInk = QColor(
@@ -401,8 +376,6 @@ void SketchyButton::mouseReleaseEvent(QMouseEvent *e)
     m_pressAnim->start();
     QPushButton::mouseReleaseEvent(e);
 }
-
-// ── SketchyCard ──────────────────────────────────────────────────
 
 SketchyCard::SketchyCard(QWidget *parent) : QWidget(parent) {}
 

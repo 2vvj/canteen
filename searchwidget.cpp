@@ -13,7 +13,6 @@ SearchWidget::SearchWidget(const QVector<Dish> &allDishes,
     setupUI();
 }
 
-// 与 MealPage 一致的配色
 static const QColor C_INK       = QColor("#2B2B2B");
 static const QColor C_INK_LIGHT = QColor("#4A4540");
 static const QColor C_SHADOW_DK = QColor("#3A3530");
@@ -23,7 +22,7 @@ void SearchWidget::setupUI() {
     auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
-    // --- 搜索栏 ---
+    // 搜索栏
     auto *searchRow = new QHBoxLayout;
     searchRow->setSpacing(10);
     m_searchInput = new QLineEdit;
@@ -45,7 +44,7 @@ void SearchWidget::setupUI() {
     searchRow->addWidget(m_searchBtn);
     mainLayout->addLayout(searchRow);
 
-    // --- 标签条 ---
+    // 标签条
     m_tagChipArea = new QWidget;
     m_tagChipLayout = new QHBoxLayout(m_tagChipArea);
     m_tagChipLayout->setContentsMargins(0, 0, 0, 0);
@@ -53,13 +52,12 @@ void SearchWidget::setupUI() {
     m_tagChipLayout->addStretch();
     mainLayout->addWidget(m_tagChipArea);
 
-    // --- 状态 ---
     m_statusLabel = new QLabel;
     m_statusLabel->setWordWrap(true);
     m_statusLabel->setStyleSheet(QString("color:%1; font-size:14px; padding:4px 0; background:transparent;").arg(C_INK_LIGHT.name()));
     mainLayout->addWidget(m_statusLabel);
 
-    // --- 结果列表 ---
+    // 结果列表
     m_resultList = new QListWidget;
     m_resultList->setAlternatingRowColors(true);
     m_resultList->setStyleSheet(QString(
@@ -76,7 +74,6 @@ void SearchWidget::setupUI() {
 }
 
 void SearchWidget::rebuildTagChips() {
-    // 清空旧标签
     QLayoutItem *child;
     while ((child = m_tagChipLayout->takeAt(0)) != nullptr) {
         delete child->widget();

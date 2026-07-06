@@ -24,10 +24,6 @@ static const QColor C_CREAM  = QColor("#FDFBF7");
 static const QColor C_INK    = QColor("#2B2B2B");
 static const QColor C_SHADOW = QColor("#3A3530");
 
-// ═══════════════════════════════════════════
-//  Helper: report JSON 存储
-// ═══════════════════════════════════════════
-
 static QString reportPath() {
     return QCoreApplication::applicationDirPath() + "/diet_reports.json";
 }
@@ -47,9 +43,7 @@ static QVector<ReportEntry> loadReportEntries() {
 static void saveReportEntry(const QString &date, const QString &type, const QString &content) {
     auto entries = loadReportEntries();
     ReportEntry e{ date, type, content };
-    // 最新生成的放最前面
     entries.insert(entries.begin(), e);
-    // 最多保留 50 条
     if (entries.size() > 50) entries.resize(50);
 
     QJsonArray arr;
@@ -65,7 +59,7 @@ static void saveReportEntry(const QString &date, const QString &type, const QStr
         f.write(QJsonDocument(arr).toJson());
 }
 
-// ── Helper: API Key 存储 ──
+// API Key 存储
 static QString configPath() {
     return QCoreApplication::applicationDirPath() + "/ai_config.json";
 }
@@ -85,10 +79,6 @@ static void saveApiKey(const QString &key) {
     f.write(QJsonDocument(obj).toJson());
 }
 
-// ═══════════════════════════════════════════
-//  ReportHistoryDialog（手绘风格，无顶部留白）
-// ═══════════════════════════════════════════
-
 ReportHistoryDialog::ReportHistoryDialog(QWidget *parent)
     : QDialog(parent)
 {
@@ -100,12 +90,11 @@ ReportHistoryDialog::ReportHistoryDialog(QWidget *parent)
     QVBoxLayout *lay = new QVBoxLayout(this);
     lay->setContentsMargins(0, 0, 0, 0);
 
-    // 内容容器（与手绘卡片边框配合）
     QVBoxLayout *inner = new QVBoxLayout;
     inner->setContentsMargins(36, 24, 36, 20);
     inner->setSpacing(8);
 
-    // 标题行：标题 + 关闭按钮
+    // 标题 + 关闭按钮
     QHBoxLayout *titleRow = new QHBoxLayout;
     QLabel *title = new QLabel(QString::fromUtf8("历史饮食报告"), this);
     title->setStyleSheet("font-size:20px;font-weight:bold;color:#2B2B2B;"
@@ -126,7 +115,6 @@ ReportHistoryDialog::ReportHistoryDialog(QWidget *parent)
     titleRow->addWidget(m_closeBtn);
     inner->addLayout(titleRow);
 
-    // 分割面板
     QSplitter *split = new QSplitter(Qt::Horizontal, this);
 
     m_list = new QListWidget(this);
@@ -193,10 +181,6 @@ void ReportHistoryDialog::showReport(int index) {
     m_viewer->setMarkdown(m_entries[index].content);
 }
 
-// ═══════════════════════════════════════════
-//  AiReportDialog
-// ═══════════════════════════════════════════
-
 AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
                                  double bmr, QWidget *parent)
     : QDialog(parent), m_records(records), m_bmr(bmr)
@@ -210,7 +194,6 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
     m_loadingTimer->setInterval(500);
     connect(m_loadingTimer, &QTimer::timeout, this, &AiReportDialog::onLoadingTick);
 
-    // ── 布局 ──
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(36, 30, 36, 20);
     mainLayout->setSpacing(8);
@@ -224,10 +207,9 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
         "border:none;background:transparent;");
     mainLayout->addWidget(titleLabel);
 
-    // 手绘分割线
     mainLayout->addWidget(new ScratchyDivider(this));
 
-    // ── 模式选择 ──
+    // 模式选择
     QHBoxLayout *modeRow = new QHBoxLayout;
     modeRow->setSpacing(16);
     modeRow->addStretch();
@@ -259,7 +241,7 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
         "border:none;background:transparent;");
     mainLayout->addWidget(m_statusLabel);
 
-    // 报告文本区
+    // 报告文本
     m_reportText = new QTextEdit(this);
     m_reportText->setReadOnly(true);
     m_reportText->setStyleSheet(
@@ -273,7 +255,7 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
     m_reportText->setMinimumHeight(380);
     mainLayout->addWidget(m_reportText);
 
-    // ── 按钮行 ──
+    // 按钮行
     QHBoxLayout *btnRow = new QHBoxLayout;
     btnRow->addStretch();
 
@@ -301,7 +283,7 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
     btnRow->addStretch();
     mainLayout->addLayout(btnRow);
 
-    // ── 右上角 × ──
+    // 关闭按钮
     SketchyButton *xBtn = new SketchyButton(QString::fromUtf8("×"),
         QColor("#E0D7CC"), C_SHADOW, this);
     xBtn->setFixedSize(36, 36);
@@ -318,7 +300,7 @@ AiReportDialog::AiReportDialog(const QMap<QString, DailyRecord> &records,
     m_apiKey = loadApiKey();
 }
 
-// ── 模式选择 ──
+// 模式选择
 void AiReportDialog::onModeSelected(ReportMode mode) {
     m_mode = mode;
     updateModeButtonStyles();
@@ -332,15 +314,15 @@ void AiReportDialog::onModeSelected(ReportMode mode) {
         "border:none;background:transparent;");
 }
 
-// ── 历史报告 ──
+// 历史报告
 void AiReportDialog::onHistoryClicked() {
     ReportHistoryDialog dlg(this);
     dlg.exec();
 }
 
-// ── 生成报告 ──
+// 生成报告
 void AiReportDialog::onGenerateReport() {
-    // 今日无记录 → 弹窗
+    // 今日无记录
     if (m_mode == Today) {
         QString today = QDate::currentDate().toString("yyyy-MM-dd");
         if (!m_records.contains(today) || m_records[today].dishes.isEmpty()) {
@@ -451,7 +433,6 @@ void AiReportDialog::onGenerateReport() {
                     "  font-family:'Microsoft YaHei';"
                     "}"
                     "QLineEdit:focus { border-color: #8A7A6A; }");
-                // 卡片内：card = (18,18,404,254)，输入框放在约 card.top+120
                 QRectF card(18, 18, width() - 36, height() - 36);
                 m_input->setGeometry(card.left() + 25, card.top() + 118,
                                      card.width() - 50, 36);
@@ -486,18 +467,15 @@ void AiReportDialog::onGenerateReport() {
                 QRectF card(18, 18, width() - 36, height() - 36);
                 int seed = 73;
 
-                // Shadow
                 QPainterPath sp = sketchyRect(card.translated(2.5, 3.5), seed + 100, 2.8);
                 p.setBrush(QColor("#3A3530"));
                 p.setPen(Qt::NoPen);
                 p.drawPath(sp);
 
-                // Card
                 QPainterPath cp = sketchyRect(card, seed, 2.8);
                 drawInkWash(&p, cp, QColor("#FDFBF7"), 18);
                 drawInkBorder(&p, cp, QColor("#2B2B2B"), 3, 0.7);
 
-                // Decorative wavy line below title
                 QPointF lineStart(card.left() + 25, card.top() + 52);
                 QPointF lineEnd(card.left() + 25 + 60, card.top() + 52);
                 QPen decoPen(QColor("#4A4540"));
@@ -514,7 +492,6 @@ void AiReportDialog::onGenerateReport() {
                 p.drawPath(wavy);
                 p.resetTransform();
 
-                // Title
                 QFont f = font();
                 f.setPointSize(13);
                 f.setBold(true);
@@ -525,7 +502,6 @@ void AiReportDialog::onGenerateReport() {
                            Qt::AlignLeft | Qt::AlignVCenter,
                            QString::fromUtf8("请输入 API Key"));
 
-                // Hint text
                 f.setPointSize(10);
                 f.setBold(false);
                 f.setLetterSpacing(QFont::AbsoluteSpacing, 1.0);
@@ -567,17 +543,12 @@ void AiReportDialog::onGenerateReport() {
     callApi(prompt);
 }
 
-// ── 加载动画 tick ──
 void AiReportDialog::onLoadingTick() {
     m_loadingDots = (m_loadingDots + 1) % 6;
     QString dots;
     for (int i = 0; i <= m_loadingDots; ++i) dots += ".";
     m_reportText->setPlainText(QString::fromUtf8("正在生成报告%1\n\n请稍候，正在分析您的饮食数据…").arg(dots));
 }
-
-// ═══════════════════════════════════════════
-//  饮食质量分析（用于自适应语气）
-// ═══════════════════════════════════════════
 
 void AiReportDialog::analyzeDietQuality(QString &toneHint, QString &dietQuality) const {
     if (m_records.isEmpty()) {
@@ -599,7 +570,7 @@ void AiReportDialog::analyzeDietQuality(QString &toneHint, QString &dietQuality)
         const auto &r = m_records[d];
         ++totalDays;
         for (const auto &dish : r.dishes) {
-            // 粗略判断菜品类别
+            // 判断菜品类别
             if (dish.contains(QString::fromUtf8("菜")) || dish.contains(QString::fromUtf8("蔬"))
                 || dish.contains(QString::fromUtf8("瓜")) || dish.contains(QString::fromUtf8("叶"))
                 || dish.contains(QString::fromUtf8("番茄")) || dish.contains(QString::fromUtf8("青"))
@@ -647,15 +618,10 @@ void AiReportDialog::analyzeDietQuality(QString &toneHint, QString &dietQuality)
     }
 }
 
-// ═══════════════════════════════════════════
-//  Prompt 构造
-// ═══════════════════════════════════════════
-
 QString AiReportDialog::buildTodayPrompt() const {
     QString today = QDate::currentDate().toString("yyyy-MM-dd");
     const auto &r = m_records[today];
 
-    // 分析饮食质量
     QString toneHint, dietQuality;
     analyzeDietQuality(toneHint, dietQuality);
 
@@ -731,15 +697,12 @@ QString AiReportDialog::buildTodayTemplate() const {
 }
 
 QString AiReportDialog::buildWeekPrompt() const {
-    // 取最近 7 天数据（不含今天，从昨天往前数 7 天）
     QStringList allDates = m_records.keys();
     std::sort(allDates.begin(), allDates.end());
     QString today = QDate::currentDate().toString("yyyy-MM-dd");
-    // 去掉今天的记录
     allDates.erase(std::remove(allDates.begin(), allDates.end(), today), allDates.end());
     QStringList weekDates = allDates.mid(qMax(0, allDates.size() - 7));
 
-    // 分析饮食质量
     QString toneHint, dietQuality;
     analyzeDietQuality(toneHint, dietQuality);
 
@@ -842,10 +805,6 @@ QString AiReportDialog::buildWeekTemplate() const {
     );
 }
 
-// ═══════════════════════════════════════════
-//  API 调用（流式）
-// ═══════════════════════════════════════════
-
 void AiReportDialog::callApi(const QString &prompt) {
     QUrl url("https://open.bigmodel.cn/api/paas/v4/chat/completions");
     QNetworkRequest req(url);
@@ -909,7 +868,6 @@ void AiReportDialog::callApi(const QString &prompt) {
     });
 
     connect(m_currentReply, &QNetworkReply::finished, this, [this]() {
-        // 处理 buffer 中残余数据
         if (!m_sseBuffer.isEmpty()) {
             QString leftover = QString::fromUtf8(m_sseBuffer);
             int idx = leftover.indexOf("\"content\":\"");
@@ -928,7 +886,7 @@ void AiReportDialog::callApi(const QString &prompt) {
         m_currentReply = nullptr;
         m_loadingTimer->stop();
 
-        // 后台生成：窗口已关闭，保存后自行销毁
+        // 后台生成
         if (m_closedWhileGenerating) {
             if (!m_fullText.trimmed().isEmpty()) {
                 QString typeLabel = (m_mode == Today)
@@ -950,7 +908,6 @@ void AiReportDialog::callApi(const QString &prompt) {
             return;
         }
 
-        // 直接渲染为 Markdown，不显示原始 AI 文本
         m_reportText->setMarkdown(m_fullText);
         m_statusLabel->setText(QString::fromUtf8("✓ 报告生成完成"));
         m_statusLabel->setStyleSheet(
@@ -958,7 +915,6 @@ void AiReportDialog::callApi(const QString &prompt) {
             "font-family:'Microsoft YaHei';border:none;background:transparent;");
         setButtonsEnabled(true);
 
-        // 保存到历史
         QString typeLabel = (m_mode == Today)
             ? QString::fromUtf8("当日报告")
             : QString::fromUtf8("本周报告");
@@ -987,7 +943,6 @@ void AiReportDialog::setApiKey(const QString &key) {
     saveApiKey(key);
 }
 
-// ── 绘制 ──
 void AiReportDialog::paintEvent(QPaintEvent *) {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
@@ -1007,10 +962,6 @@ void AiReportDialog::paintEvent(QPaintEvent *) {
     p.end();
 }
 
-// ═══════════════════════════════════════════
-//  updateModeButtonStyles
-// ═══════════════════════════════════════════
-
 void AiReportDialog::updateModeButtonStyles() {
     QColor activeColor("#D0DDE8");
     QColor inactiveColor("#E0D7CC");
@@ -1021,7 +972,6 @@ void AiReportDialog::updateModeButtonStyles() {
     if (weekSk)  weekSk->setCardColor(m_mode == Week  ? activeColor : inactiveColor);
 }
 
-// ── 窗口拖拽 ──
 void AiReportDialog::mousePressEvent(QMouseEvent *e) {
     if (e->button() == Qt::LeftButton) {
         QWidget *child = childAt(e->pos());
@@ -1049,7 +999,7 @@ void AiReportDialog::mouseReleaseEvent(QMouseEvent *e) {
 
 void AiReportDialog::closeEvent(QCloseEvent *e) {
     if (m_currentReply) {
-        // 后台继续生成，只隐藏窗口
+        // 后台生成
         m_closedWhileGenerating = true;
         hide();
         e->ignore();

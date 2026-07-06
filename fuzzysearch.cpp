@@ -20,8 +20,6 @@ static QMap<QString, QString> restaurantAbbrevs() {
 
 FuzzySearch::FuzzySearch() {}
 
-// ============ 同义词 ============
-
 bool FuzzySearch::loadSynonyms(const QString &filename) {
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly)) return false;
@@ -31,10 +29,10 @@ bool FuzzySearch::loadSynonyms(const QString &filename) {
     m_synonymToTags.clear();
     QJsonObject obj = doc.object();
     for (auto it = obj.begin(); it != obj.end(); ++it) {
-        QString tag = it.key();           // 标签名，如 "麻辣"
+        QString tag = it.key();
         QJsonArray arr = it.value().toArray();
         for (const auto &v : arr) {
-            QString syn = v.toString();   // 同义词，如 "辣"
+            QString syn = v.toString();
             m_synonymToTags[syn].append(tag);
         }
     }
@@ -42,7 +40,7 @@ bool FuzzySearch::loadSynonyms(const QString &filename) {
 }
 
 QStringList FuzzySearch::resolveSynonyms(const QString &word) const {
-    return m_synonymToTags.value(word);  // 空列表 = 未命中
+    return m_synonymToTags.value(word);
 }
 
 void FuzzySearch::buildTagIndex(const QVector<Dish> &dishes) {
@@ -53,8 +51,6 @@ void FuzzySearch::buildTagIndex(const QVector<Dish> &dishes) {
         }
     }
 }
-
-// ============ 编辑距离 ============
 
 int FuzzySearch::levenshteinDistance(const QString &s1, const QString &s2) {
     int m = s1.length(), n = s2.length();
@@ -83,10 +79,8 @@ double FuzzySearch::nameSimilarity(const QString &s1, const QString &s2) {
 
     QString a = s1.toLower(), b = s2.toLower();
 
-    // 完全匹配
     if (a == b) return 1.0;
 
-    // 包含关系（短边至少2字，避免"面"误匹配"面包"）
     int minLen = qMin(a.length(), b.length());
     if (minLen >= 2 && (a.contains(b) || b.contains(a))) return 0.9;
 
@@ -94,7 +88,6 @@ double FuzzySearch::nameSimilarity(const QString &s1, const QString &s2) {
     int maxLen = qMax(a.length(), b.length());
     double sim = 1.0 - static_cast<double>(dist) / maxLen;
 
-    // 超过自适应阈值则归零
     int threshold = maxAcceptableDist(s1);
     if (dist > threshold) return 0.0;
 
@@ -108,25 +101,20 @@ double FuzzySearch::restaurantSimilarity(const QString &query, const QString &re
 
     if (q == r) return 1.0;
 
-    // 单向包含：查询被餐厅名完整包含（查询≥2字）
     if (q.length() >= 2 && r.contains(q)) return 0.9;
 
     return 0.0;
 }
 
-// ============ 历史偏好加权 ============
-
 double FuzzySearch::historyBonus(const Dish &dish, const UserProfile &user) const {
     double bonus = 0.0;
 
-    // 用户评分高的菜加分（最多+0.15）
     QString ratingKey = dish.name + "|" + dish.restaurant;
     if (user.ratings.contains(ratingKey)) {
         double rating = user.ratings[ratingKey];
         bonus += (rating / 10.0) * 0.15;
     }
 
-    // 常选的菜微加分（最多+0.1）
     if (user.chooseCount.contains(dish.name)) {
         int count = user.chooseCount[dish.name];
         bonus += qMin(static_cast<double>(count) / 20.0, 0.1);
@@ -134,8 +122,6 @@ double FuzzySearch::historyBonus(const Dish &dish, const UserProfile &user) cons
 
     return bonus;
 }
-
-// ============ 临时标签管理 ============
 
 void FuzzySearch::addTempTag(const QString &tag) {
     if (!m_tempTags.contains(tag, Qt::CaseInsensitive))
@@ -168,7 +154,6 @@ QVector<SearchResult> FuzzySearch::rescoreWithCurrentTags(
         SearchResult sr;
         sr.dish = d;
 
-        // 交集匹配：每个临时标签都必须通过名字或标签匹配
         bool matchesAll = true;
         bool hasNameMatch = false;
         double minNameScore = 1.0;
@@ -248,14 +233,12 @@ QStringList FuzzySearch::tempTags() const {
     return m_tempTags;
 }
 
-// ============ 主搜索 ============
-
 QVector<SearchResult> FuzzySearch::search(const QString &query,
                                            const QVector<Dish> &allDishes,
                                            const UserProfile &user) {
     QString q = query.trimmed();
+    
     if (q.isEmpty()) {
-        // 空搜索返回所有菜
         QVector<SearchResult> all;
         for (const auto &d : allDishes) {
             all.append({d, 0.0, 0.0, 0});
@@ -263,7 +246,6 @@ QVector<SearchResult> FuzzySearch::search(const QString &query,
         return all;
     }
 
-    // 先把关键词本身加入临时标签
     addTempTag(q);
 
     QVector<SearchResult> results;
@@ -274,14 +256,12 @@ QVector<SearchResult> FuzzySearch::search(const QString &query,
         SearchResult sr;
         sr.dish = d;
 
-        // 交集匹配：每个临时标签都必须通过名字或标签匹配
         bool matchesAll = true;
         bool hasNameMatch = false;
         double minNameScore = 1.0;
         int matchedTagCount = 0;
 
         for (const auto &tag : m_tempTags) {
-            // 名字/食堂匹配
             double dishSim = nameSimilarity(tag, d.name);
             double restSim = restaurantSimilarity(tag, d.restaurant);
             if (restSim == 0.0) {
@@ -291,7 +271,6 @@ QVector<SearchResult> FuzzySearch::search(const QString &query,
             }
             double bestName = qMax(dishSim, restSim);
 
-            // 标签匹配（同义词 → 子串兜底）
             bool tagOk = false;
             QStringList resolved = resolveSynonyms(tag);
             if (!resolved.isEmpty()) {

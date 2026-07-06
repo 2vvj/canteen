@@ -9,28 +9,10 @@
 #include <QtMath>
 #include <algorithm>
 
-// 柱状图用色 — 统一暖调
 static const QList<QColor> kChartColors = {
     QColor(160, 140, 120),
 };
 
-// ==========================================
-// 静态辅助：绘制装饰云朵
-// ==========================================
-static void drawCloud(QPainter &painter, const QPointF &pos, float size, const QColor &color) {
-    painter.setPen(Qt::NoPen);
-    painter.setBrush(color);
-    float s = size;
-    painter.drawEllipse(pos, s * 0.5, s * 0.35);
-    painter.drawEllipse(QPointF(pos.x() - s * 0.3, pos.y() + s * 0.05), s * 0.35, s * 0.25);
-    painter.drawEllipse(QPointF(pos.x() + s * 0.35, pos.y() + s * 0.05), s * 0.4, s * 0.28);
-    painter.drawEllipse(QPointF(pos.x() - s * 0.1, pos.y() + s * 0.1), s * 0.3, s * 0.2);
-    painter.drawEllipse(QPointF(pos.x() + s * 0.15, pos.y() + s * 0.12), s * 0.25, s * 0.18);
-}
-
-// ==========================================
-// LineChartWidget 实现
-// ==========================================
 LineChartWidget::LineChartWidget(QWidget *parent) : QWidget(parent) {
     m_lineColor = QColor(200, 150, 120);
     setMinimumHeight(220);
@@ -72,7 +54,6 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
     int h = height();
     if (w <= 0 || h <= 0) return;
 
-    // 1. 暖米手账纸背景 — 有机形状
     QRadialGradient bgGradient(rect().center(), qMax(w, h) * 0.75);
     bgGradient.setColorAt(0.0, QColor(253, 251, 247));
     bgGradient.setColorAt(0.5, QColor(250, 246, 240));
@@ -84,19 +65,15 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
     painter.drawPath(bgPath);
     DecoPainter::drawPaperTexture(painter, rect());
 
-    // 1.5 手绘边框
     DecoPainter::drawSketchyBorder(&painter, bgPath, QColor(43, 43, 43, 40), 1, 0.6f);
 
-    // 2. 水彩晕染装饰
     DecoPainter::drawWatercolorSplotch(painter, QPointF(w * 0.10f, h * 0.08f), 18,
                                        QColor(250, 235, 215, 28));
     DecoPainter::drawWatercolorSplotch(painter, QPointF(w * 0.85f, h * 0.88f), 15,
                                        QColor(245, 230, 215, 22));
 
-    // 裁剪到背景框内，确保折线图不溢出
     painter.setClipPath(bgPath);
 
-    // 3. 计算图表区域
     QRectF chartArea = calcChartArea();
 
     if (m_points.isEmpty()) {
@@ -106,7 +83,6 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
         return;
     }
 
-    // 4. 确定最大值（圆整到5的倍数）
     double maxVal = 1.0;
     for (const auto &pt : m_points)
         if (pt.value > maxVal) maxVal = pt.value;
@@ -114,12 +90,10 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
     int numLines = 5;
     int n = m_points.size();
 
-    // 5. 浅色图表区域背景
     painter.setBrush(QColor(250, 247, 243, 80));
     painter.setPen(QPen(QColor(229, 221, 211, 60), 1));
     painter.drawRoundedRect(chartArea, 8, 8);
 
-    // 6. Y轴网格线
     QColor gridColor(200, 190, 178, 60);
     QFont labelFont("Microsoft YaHei", 8);
     for (int i = 0; i <= numLines; ++i) {
@@ -135,7 +109,6 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
                          QString::number(val, 'f', 0));
     }
 
-    // 7. X轴标签（日期，自动跳过防重叠）
     QFont xFont("Microsoft YaHei", 7);
     painter.setFont(xFont);
     painter.setPen(DecoPainter::textBrown());
@@ -147,7 +120,6 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
                          Qt::AlignHCenter | Qt::AlignTop, m_points[i].label);
     }
 
-    // 8. 数据折线（带手绘波动）
     QVector<QPointF> pts;
     for (int i = 0; i < n; ++i) {
         double x = chartArea.left() + chartArea.width() * i / (n - 1);
@@ -157,7 +129,6 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
         pts.append(QPointF(x + wobble, y + 1.0 * qCos(i * 2.3)));
     }
 
-    // 渐变填充区域
     QPainterPath fillPath;
     fillPath.moveTo(pts[0]);
     for (int i = 1; i < n; ++i)
@@ -173,7 +144,6 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
     painter.setPen(Qt::NoPen);
     painter.drawPath(fillPath);
 
-    // 折线
     QPen linePen(m_lineColor, 2.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     painter.setBrush(Qt::NoBrush);
     painter.setPen(linePen);
@@ -183,17 +153,15 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
         strokePath.lineTo(pts[i]);
     painter.drawPath(strokePath);
 
-    // 9. 数据点圆点
     painter.setBrush(Qt::white);
     painter.setPen(QPen(m_lineColor, 2));
     for (int i = 0; i < n; ++i) {
         painter.drawEllipse(pts[i], 4.0, 4.0);
     }
 
-    // 9.25 悬停点高亮 — 光晕 + 放大实心点
+    // 悬停高亮
     if (m_hoveredIndex >= 0 && m_hoveredIndex < n) {
         QPointF hp = pts[m_hoveredIndex];
-        // 外光晕
         QRadialGradient glow(hp, 9.0);
         QColor glowC = m_lineColor;
         glow.setColorAt(0.0, QColor(glowC.red(), glowC.green(), glowC.blue(), 80));
@@ -201,17 +169,15 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
         painter.setBrush(glow);
         painter.setPen(Qt::NoPen);
         painter.drawEllipse(hp, 9.0, 9.0);
-        // 外环
         painter.setBrush(Qt::NoBrush);
         painter.setPen(QPen(m_lineColor.lighter(140), 2.5));
         painter.drawEllipse(hp, 7.5, 7.5);
-        // 实心点
         painter.setBrush(m_lineColor);
         painter.setPen(QPen(Qt::white, 1.5));
         painter.drawEllipse(hp, 4.5, 4.5);
     }
 
-    // 9.5 均值虚线 — 线用数据色，标签用表头 accent 色
+    // 均值线
     if (m_avgValue > 0 && niceMax > 0) {
         double avgY = chartArea.bottom() - (m_avgValue / niceMax) * chartArea.height();
         avgY = qBound(chartArea.top(), avgY, chartArea.bottom());
@@ -220,7 +186,6 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
         painter.setPen(avgPen);
         painter.drawLine(QPointF(chartArea.left(), avgY), QPointF(chartArea.right(), avgY));
 
-        // 均值标签 — 表头 accent 色
         QFont avgFont("Microsoft YaHei", 8);
         avgFont.setItalic(true);
         painter.setFont(avgFont);
@@ -230,7 +195,6 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
                          Qt::AlignRight | Qt::AlignVCenter, avgText);
     }
 
-    // 10. Y轴标签
     if (!m_yAxisLabel.isEmpty()) {
         painter.save();
         painter.translate(10, chartArea.center().y());
@@ -241,7 +205,6 @@ void LineChartWidget::paintEvent(QPaintEvent *event) {
         painter.restore();
     }
 
-    // 11. 底部标题
     if (!m_title.isEmpty()) {
         painter.setPen(DecoPainter::titleBrown());
         DecoPainter::setHandwritingFont(painter, 13, true);
@@ -263,9 +226,9 @@ void LineChartWidget::mouseReleaseEvent(QMouseEvent *event) {
         m_pressing = false;
         int dx = event->globalPosition().toPoint().x() - m_pressPos.x();
         if (dx > 60) {
-            emit swiped(-1);  // 右拖 → 看更早
+            emit swiped(-1);  // 右拖
         } else if (dx < -60) {
-            emit swiped(+1);  // 左拖 → 看更新
+            emit swiped(+1);  // 左拖
         }
     }
     QWidget::mouseReleaseEvent(event);
@@ -319,9 +282,6 @@ void LineChartWidget::mouseMoveEvent(QMouseEvent *event) {
     if (newHover == -1) QToolTip::hideText();
 }
 
-// ==========================================
-// BarChartWidget 实现
-// ==========================================
 BarChartWidget::BarChartWidget(QWidget *parent) : QWidget(parent) {
     setMinimumHeight(220);
     setMouseTracking(true);
@@ -355,7 +315,6 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
     int h = height();
     if (w <= 0 || h <= 0) return;
 
-    // 1. 暖米手账纸背景 — 有机形状
     QRadialGradient bgGradient(rect().center(), qMax(w, h) * 0.75);
     bgGradient.setColorAt(0.0, QColor(253, 251, 247));
     bgGradient.setColorAt(0.5, QColor(250, 246, 240));
@@ -367,16 +326,13 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
     painter.drawPath(bgPath);
     DecoPainter::drawPaperTexture(painter, rect());
 
-    // 1.5 手绘边框
     DecoPainter::drawSketchyBorder(&painter, bgPath, QColor(43, 43, 43, 40), 1, 0.6f);
 
-    // 2. 水彩晕染装饰
     DecoPainter::drawWatercolorSplotch(painter, QPointF(w * 0.10f, h * 0.08f), 16,
                                        QColor(250, 235, 215, 25));
     DecoPainter::drawWatercolorSplotch(painter, QPointF(w * 0.82f, h * 0.88f), 14,
                                        QColor(245, 230, 215, 20));
 
-    // 3. 图表区域
     QRectF chartArea = calcChartArea();
 
     if (m_bars.isEmpty()) {
@@ -386,7 +342,6 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
         return;
     }
 
-    // 4. 最大值
     double maxVal = 1.0;
     for (const auto &bar : m_bars)
         if (bar.value > maxVal) maxVal = bar.value;
@@ -394,12 +349,10 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
     int numLines = 4;
     int n = m_bars.size();
 
-    // 5. 浅色图表背景
     painter.setBrush(QColor(250, 247, 243, 80));
     painter.setPen(QPen(QColor(229, 221, 211, 60), 1));
     painter.drawRoundedRect(chartArea, 8, 8);
 
-    // 6. 网格线
     QColor gridColor(200, 190, 178, 60);
     QFont labelFont("Microsoft YaHei", 8);
     for (int i = 0; i <= numLines; ++i) {
@@ -415,7 +368,6 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
                          QString::number(val, 'f', 0));
     }
 
-    // 7. 绘制柱状条 — 固定柱宽，间距自适应
     const double kFixedBarW = 52.0;
     double totalBarsW = n * kFixedBarW;
     double barWidth = qMin(kFixedBarW, chartArea.width() / (n * 1.6));
@@ -434,20 +386,18 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
         QRectF barRect(x, y, bw, barH);
         QColor barColor = kChartColors[i % kChartColors.size()];
 
-        // 圆角柱状条
         QPainterPath barPath;
         barPath.addRoundedRect(barRect, 4, 4);
         painter.setBrush(barColor);
         painter.setPen(QPen(barColor.darker(130), 1));
         painter.drawPath(barPath);
 
-        // 悬停高亮 — 亮边 + 光晕
+        // 悬停高亮
         if (i == m_hoveredIndex) {
             QColor hlColor = barColor.lighter(150);
             painter.setBrush(Qt::NoBrush);
             painter.setPen(QPen(hlColor, 2.5));
             painter.drawPath(barPath);
-            // 底部光晕条
             QLinearGradient glowGrad(barRect.bottomLeft(), barRect.topRight());
             glowGrad.setColorAt(0.0, QColor(hlColor.red(), hlColor.green(), hlColor.blue(), 50));
             glowGrad.setColorAt(1.0, QColor(hlColor.red(), hlColor.green(), hlColor.blue(), 0));
@@ -456,14 +406,12 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
             painter.drawPath(barPath);
         }
 
-        // 值标签 — 居中于柱子
         painter.setPen(DecoPainter::titleBrown());
         painter.setFont(valFont);
         double valW = qMax(bw + 20, 40.0);
         painter.drawText(QRectF(x - (valW - bw) / 2.0, y - 17, valW, 15),
                          Qt::AlignCenter, QString::number(m_bars[i].value, 'f', 0));
 
-        // X轴标签 — 居中于柱子
         painter.setPen(DecoPainter::textBrown());
         painter.setFont(xFont);
         double labelW = qMax(bw + 24, 50.0);
@@ -471,7 +419,7 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
                          Qt::AlignHCenter | Qt::AlignTop, m_bars[i].label);
     }
 
-    // 7.5 均值虚线 — 线用数据色，标签用表头 accent 色
+    // 均值线
     if (m_avgValue > 0 && niceMax > 0) {
         double avgY = chartArea.bottom() - (m_avgValue / niceMax) * chartArea.height();
         avgY = qBound(chartArea.top(), avgY, chartArea.bottom());
@@ -489,7 +437,6 @@ void BarChartWidget::paintEvent(QPaintEvent *event) {
                          Qt::AlignRight | Qt::AlignVCenter, avgText);
     }
 
-    // 8. 底部标题
     if (!m_title.isEmpty()) {
         painter.setPen(DecoPainter::titleBrown());
         DecoPainter::setHandwritingFont(painter, 13, true);

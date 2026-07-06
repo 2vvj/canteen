@@ -41,7 +41,6 @@ bool ZoneEditor::eventFilter(QObject *watched, QEvent *event)
             startDrawing(sp);
             return true;
         } else if (me->button() == Qt::RightButton) {
-            // Right-click in edit mode: check if on a zone, prompt delete
             QPointF sp = m_view->mapToScene(me->pos());
             int zoneId = m_zoneManager->zoneAtPoint(sp);
             if (zoneId >= 0) {

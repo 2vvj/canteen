@@ -12,7 +12,6 @@ class SketchyButton;
 class LineChartWidget;
 class BarChartWidget;
 
-// 有机形状图表容器 — 手绘卡片包裹每个图表
 class ChartCardWidget : public QWidget {
     Q_OBJECT
 public:

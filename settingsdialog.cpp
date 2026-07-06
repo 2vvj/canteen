@@ -65,7 +65,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     mainLay->setContentsMargins(36, 36, 36, 28);
     mainLay->setSpacing(16);
 
-    // ── Fonts ──
     QFont secFont; secFont.setPointSize(12);
     secFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
     secFont.setWeight(QFont::Bold);
@@ -74,7 +73,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     QFont hintFont; hintFont.setPointSize(10);
     hintFont.setLetterSpacing(QFont::AbsoluteSpacing, 2.0);
 
-    // ── Title ──
     QLabel *titleLbl = new QLabel(QString::fromUtf8("设  置"));
     QFont titleFont; titleFont.setPointSize(16);
     titleFont.setLetterSpacing(QFont::AbsoluteSpacing, 3.0);
@@ -84,7 +82,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     mainLay->addWidget(titleLbl);
     mainLay->addSpacing(4);
 
-    // ── 关闭按钮 — SketchyButton，匹配取消按钮风格 ──
     m_closeBtn = new SketchyButton(QString::fromUtf8("×"),
         QColor("#E0D7CC"), C_SHADOW2, this);
     m_closeBtn->setFixedSize(36, 36);
@@ -95,7 +92,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     connect(m_closeBtn, &QPushButton::clicked, this, &QDialog::close);
     m_closeBtn->move(width() - 36 - 36, 30);
 
-    // ── Avatar ──
     m_avatarPreview = new QLabel;
     m_avatarPreview->setFixedSize(80, 80);
     m_avatarPreview->setCursor(Qt::PointingHandCursor);
@@ -113,7 +109,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     mainLay->addWidget(avatarHint);
     mainLay->addSpacing(6);
 
-    // ── Name ──
     QLabel *nameLbl = new QLabel(QString::fromUtf8("昵称"));
     nameLbl->setFont(secFont);
     nameLbl->setStyleSheet(QString("color: %1;").arg(C_INK_L2.name()));
@@ -125,7 +120,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     m_nameEdit->setStyleSheet(FIELD_STYLE);
     mainLay->addWidget(m_nameEdit);
 
-    // ── Gender ──
     QHBoxLayout *genderRow = new QHBoxLayout;
     QLabel *genderLbl = new QLabel(QString::fromUtf8("性别"));
     genderLbl->setFont(secFont);
@@ -154,7 +148,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     mainLay->addLayout(genderRow);
     mainLay->addSpacing(4);
 
-    // ── Body metrics ──
     auto makeRow = [&](const QString &label, const QString &unit, int value, QLineEdit *&edit) {
         QHBoxLayout *row = new QHBoxLayout;
         QLabel *lbl = new QLabel(label);
@@ -181,7 +174,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     mainLay->addLayout(makeRow(QString::fromUtf8("年龄"), QString::fromUtf8("岁"), current.age, m_ageEdit));
     mainLay->addSpacing(4);
 
-    // ── BGM 音量滑条 ──
     QHBoxLayout *bgmRow = new QHBoxLayout;
     QLabel *bgmIcon = new QLabel(QString::fromUtf8("🎵"), this);
     bgmIcon->setStyleSheet("font-size:14px;background:transparent;border:none;");
@@ -210,7 +202,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     bgmRow->addStretch();
     mainLay->addLayout(bgmRow);
 
-    // ── Privacy ──
     QLabel *privacy = new QLabel(QString::fromUtf8(
         "本程序收集的所有个人信息仅用于计算基础代谢，"
         "我们承诺所有数据均保存在您的设备，"
@@ -230,7 +221,6 @@ SettingsDialog::SettingsDialog(const UserSettings &current, QWidget *parent)
     watermark->setStyleSheet(QString("color: %1;").arg(C_HINT.name()));
     mainLay->addWidget(watermark);
 
-    // ── Buttons ──
     QHBoxLayout *btnRow = new QHBoxLayout;
     btnRow->addStretch();
     SketchyButton *saveBtn = new SketchyButton(QString::fromUtf8("保存"),
@@ -256,14 +246,12 @@ void SettingsDialog::paintEvent(QPaintEvent *)
     QRectF card(12, 12, width() - 24, height() - 24);
     int seed = 57;
 
-    // Shadow
     QRectF shadow = card.translated(2.5, 3.5);
     QPainterPath sp = sketchyRect(shadow, seed + 100, 2.8);
     p.setBrush(C_SHADOW2);
     p.setPen(Qt::NoPen);
     p.drawPath(sp);
 
-    // Card
     QPainterPath cp = sketchyRect(card, seed, 2.8);
     drawInkWash(&p, cp, C_CREAM2, 18);
     drawInkBorder(&p, cp, C_INK2, 3, 0.7);
@@ -272,7 +260,6 @@ void SettingsDialog::paintEvent(QPaintEvent *)
 void SettingsDialog::mousePressEvent(QMouseEvent *e)
 {
     if (e->button() == Qt::LeftButton) {
-        // check if click hit a child widget — if so, let child handle it
         QWidget *child = childAt(e->pos());
         if (!child || child == this) {
             m_dragPos = e->globalPosition().toPoint() - frameGeometry().topLeft();
@@ -286,7 +273,7 @@ void SettingsDialog::mouseMoveEvent(QMouseEvent *e)
 {
     if (m_dragging && (e->buttons() & Qt::LeftButton)) {
         QPoint delta = e->globalPosition().toPoint() - frameGeometry().topLeft() - m_dragPos;
-        if (delta.manhattanLength() > 4)  // 4px tolerance to avoid accidental drag on click
+        if (delta.manhattanLength() > 4)
             move(e->globalPosition().toPoint() - m_dragPos);
     }
     QDialog::mouseMoveEvent(e);

@@ -24,7 +24,6 @@ bool DistanceDB::open(const QString &dbPath)
 {
     if (m_open) close();
 
-    // Remove stale connection if it exists
     if (QSqlDatabase::contains(m_connectionName))
         QSqlDatabase::removeDatabase(m_connectionName);
 

@@ -71,9 +71,6 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
                                    const QMap<QString, double> &dishPrices) {
     QDate today = currentTime.date();
 
-    // ── 一次性成就 ──
-
-    // first_record：只要有一条历史记录即解锁
     if (!dailyRecords.isEmpty()) {
         auto &fr = m_data.states["first_record"];
         if (!fr.unlocked) {
@@ -84,7 +81,7 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
         }
     }
 
-    // late_meal：当前餐次 >=21:00，或在历史 eatingTimes 中有 >=21:00 的记录
+    // 深夜食堂
     {
         auto &lm = m_data.states["late_meal"];
         if (!lm.unlocked) {
@@ -109,7 +106,7 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
         }
     }
 
-    // luxury：当前单餐 >50元，或在历史 eatingTimes 中有单餐 >50元
+    // 豪华大餐王
     {
         auto &lx = m_data.states["luxury"];
         if (!lx.unlocked) {
@@ -120,8 +117,6 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
                 found = true;
             }
             if (!found) {
-                // 按日期+餐段分组汇总价格：key = (dateStr, period)
-                // period: 0=早餐(5-10), 1=午餐(10-15), 2=晚餐(15-23)
                 QMap<QPair<QString, int>, double> mealPrices;
                 for (auto it = eatingTimes.begin(); it != eatingTimes.end(); ++it) {
                     QString ts = it.value();
@@ -131,7 +126,6 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
                     int period = (h < 10) ? 0 : (h < 15) ? 1 : 2;
                     QString dateStr = dt.date().toString("yyyy-MM-dd");
 
-                    // 从键提取 "name|restaurant"：键格式为 "name|rest|timestamp"
                     QString fullKey = it.key();
                     QString dishKey = fullKey.left(fullKey.length() - ts.length() - 1);
 
@@ -139,7 +133,7 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
                     if (priceIt != dishPrices.end())
                         mealPrices[{dateStr, period}] += priceIt.value();
                 }
-                // 按日期升序查找第一个超50元的餐段
+                
                 QStringList mealKeys;
                 for (auto it = mealPrices.begin(); it != mealPrices.end(); ++it)
                     mealKeys.append(it.key().first + "|" + QString::number(it.key().second));
@@ -157,11 +151,9 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
         }
     }
 
-    // ── 连续型成就 ──
     QStringList keys = dailyRecords.keys();
     keys.sort();
 
-    // findStreakInfo returns {maxStreak, dateWhenTarget3Reached, dateWhenTarget7Reached}
     auto findStreakInfo = [&](auto predicate) -> QPair<int, QPair<QDate, QDate>> {
         int best = 0, current = 0;
         QDate prev, d3, d7;
@@ -205,8 +197,7 @@ void AchievementManager::checkAll(const QDateTime &currentTime,
     updateStreak("streak_over_7",    7, overInfo.first,  overInfo.second.second);
     updateStreak("streak_record_7",  7, recInfo.first,   recInfo.second.second);
 
-    // ── 累计型成就：统计历史不重复菜品，找到达成目标的日期 ──
-
+    // 味蕾收藏家 + 百味大师
     QSet<QString> seen;
     QDate taste50Date, taste100Date;
     for (const auto &key : keys) {

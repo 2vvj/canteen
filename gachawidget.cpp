@@ -18,7 +18,7 @@ GachaWidget::GachaWidget(QWidget *parent)
     m_bento = QPixmap("bento.png");
     m_ribbon = QPixmap("ribbon.png");
 
-    // 抽卡揭示音效
+    // 抽卡音效
     m_gachaSfx = new QMediaPlayer(this);
     m_gachaSfxOutput = new QAudioOutput(this);
     m_gachaSfxOutput->setVolume(0.5);
@@ -62,10 +62,9 @@ void GachaWidget::startDraw(const QVector<Dish> &candidates,
     auto *dropAnim = new QPropertyAnimation(this, "bagY");
     dropAnim->setDuration(700);
     dropAnim->setStartValue(-600.0);
-    // 缩放到显示宽度~400
     double scale = 400.0 / qMax(m_bento.width(), 1);
     int dispH2 = static_cast<int>(m_bento.height() * scale);
-    int centerY = height() * 2 / 5 - dispH2 / 2; // 屏幕上方40%处
+    int centerY = height() * 2 / 5 - dispH2 / 2;
     if (centerY < 20) centerY = 20;
     dropAnim->setEndValue(centerY);
     dropAnim->setEasingCurve(QEasingCurve::OutBounce);
@@ -91,8 +90,6 @@ void GachaWidget::pickWinner() {
     m_winner.drawCount++;
 }
 
-// ============ 绘制 ============
-
 void GachaWidget::paintEvent(QPaintEvent *) {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
@@ -102,31 +99,27 @@ void GachaWidget::paintEvent(QPaintEvent *) {
     int by = static_cast<int>(m_bagY);
     double bob = (m_state == IDLE) ? qSin(m_idleBob) * 2.5 : 0;
 
-    // 便当盒显示尺寸（原图缩放到显示宽度约400px）
     double bentoScale = 400.0 / qMax(m_bento.width(), 1);
     int dispW = static_cast<int>(m_bento.width() * bentoScale);
     int dispH = static_cast<int>(m_bento.height() * bentoScale);
-
-    // ---- 便当盒 ----
+    
     if (!m_bento.isNull()) {
         int bx = cx - dispW / 2;
         p.drawPixmap(QRect(bx, by + static_cast<int>(bob), dispW, dispH), m_bento);
     }
 
-    // ---- 丝带（叠在便当盒上方，随拖拽右移） ----
     double pull = m_ribbonPull;
     if (!m_ribbon.isNull() && m_state != BURST && m_state != REVEAL) {
-        double ribbonScale = bentoScale; // 同比例缩放
+        double ribbonScale = bentoScale;
         int rw = static_cast<int>(m_ribbon.width() * ribbonScale);
         int rh = static_cast<int>(m_ribbon.height() * ribbonScale);
-        int ribbonX = cx - rw / 2 + static_cast<int>(pull * 300); // 拖拽可移300px
+        int ribbonX = cx - rw / 2 + static_cast<int>(pull * 300);
         int ribbonY = by + dispH / 2 - rh / 2 + static_cast<int>(bob);
 
         p.save();
         p.drawPixmap(QRect(ribbonX, ribbonY, rw, rh), m_ribbon);
         p.restore();
 
-        // 提示
         if (m_state == IDLE && pull < 0.05) {
             p.setPen(QColor(255, 255, 255, 140 + static_cast<int>(qSin(m_idleBob * 2) * 60)));
             QFont hintFont("Microsoft YaHei", 13);
@@ -135,7 +128,6 @@ void GachaWidget::paintEvent(QPaintEvent *) {
         }
     }
 
-    // ---- 拉开后的暖光 ----
     if (pull > 0.1 && m_state != BURST && m_state != REVEAL) {
         QPointF center(cx, by + dispH / 2 + bob);
         QRadialGradient glow(center, qMin(dispW, dispH) / 2);
@@ -145,7 +137,6 @@ void GachaWidget::paintEvent(QPaintEvent *) {
         p.drawEllipse(center, dispW / 2, dispH / 2);
     }
 
-    // ---- 光芒爆发 ----
     if (m_state == BURST) {
         int alpha = qMin(200, m_burstFrame * 10);
         double r = m_burstFrame * 16;
@@ -163,7 +154,6 @@ void GachaWidget::paintEvent(QPaintEvent *) {
             p.drawEllipse(center, r * (1 + layer * 0.5), r * (1 + layer * 0.5));
         }
 
-        // 射线
         p.setPen(QPen(QColor(255, 240, 150, alpha / 2), 1.5));
         for (int i = 0; i < 16; ++i) {
             double angle = i * M_PI / 8 + m_burstFrame * 0.08;
@@ -173,7 +163,6 @@ void GachaWidget::paintEvent(QPaintEvent *) {
                                center.y() + qSin(angle) * len));
         }
 
-        // 闪光粒子
         for (const auto &sp : m_sparkles) {
             double sx = center.x() + sp.x * (1 + m_burstFrame * 0.05);
             double sy = center.y() + sp.y * (1 + m_burstFrame * 0.05);
@@ -192,7 +181,6 @@ void GachaWidget::paintEvent(QPaintEvent *) {
         }
     }
 
-    // ---- 蒸汽粒子 ----
     if (m_state == BURST || m_state == REVEAL) {
         for (const auto &pt : m_particles) {
             int a = qBound(0, (int)pt.x, 200);
@@ -208,12 +196,10 @@ void GachaWidget::paintEvent(QPaintEvent *) {
         }
     }
 
-    // ---- 菜品浮现 ----
     if (m_state == REVEAL && !m_winner.name.isEmpty()) {
         int a = static_cast<int>(m_revealAlpha * 255);
         int cardY = by + dispH + 20;
 
-        // 菜名卡片
         p.setBrush(QColor(255, 252, 245, a));
         p.setPen(QPen(QColor(200, 165, 120, a), 2.5));
         p.drawRoundedRect(QRectF(cx - 180, cardY, 360, 80), 18, 18);
@@ -231,7 +217,6 @@ void GachaWidget::paintEvent(QPaintEvent *) {
         p.drawText(QRectF(cx - 160, cardY + 38, 320, 28), Qt::AlignHCenter, detail);
     }
 
-    // ---- 关闭提示 ----
     if (m_showCloseBtn) {
         int cardBottom = by + dispH + 100;
         p.setPen(QColor(255, 255, 255, 140));
@@ -240,8 +225,6 @@ void GachaWidget::paintEvent(QPaintEvent *) {
         p.drawText(QRectF(cx - 120, cardBottom + 18, 240, 22), Qt::AlignCenter, "点击任意位置关闭");
     }
 }
-
-// ============ 动画逻辑（不变） ============
 
 void GachaWidget::startBurst() {
     m_state = BURST; m_burstFrame = 0; m_particleFrame = 0;
@@ -258,7 +241,6 @@ void GachaWidget::startBurst() {
         sp.alpha = 200 + QRandomGenerator::global()->generateDouble() * 55;
         m_sparkles.append(sp);
     }
-    // 闪光瞬间播放音效
     m_gachaSfx->stop();
     m_gachaSfx->setPosition(0);
     m_gachaSfx->play();
@@ -294,18 +276,15 @@ void GachaWidget::onSteamTick() {
     update();
 }
 
-// ============ 鼠标拖拽丝带 ============
-
 void GachaWidget::mousePressEvent(QMouseEvent *event) {
     if (m_showCloseBtn && m_state == REVEAL) {
         m_idleTimer->stop();
-        hide(); // 先隐藏避免闪烁
+        hide();
         emit dishSelected(m_winner);
         deleteLater();
         return;
     }
     if (m_state != IDLE) return;
-    // 丝带右端为拖拽点
     double scale2 = 400.0 / qMax(m_bento.width(), 1);
     int cx = width() / 2;
     int by = static_cast<int>(m_bagY);
@@ -315,7 +294,6 @@ void GachaWidget::mousePressEvent(QMouseEvent *event) {
     int ribbonLeft = cx - rw / 2;
     int ribbonRight = ribbonLeft + rw;
     int ribbonY = by + bdh / 2 - rh / 2;
-    // 可拖拽区域：丝带中右段（不要太靠边）
     QRectF ribbonTail(ribbonRight - 130, ribbonY - 10, 140, rh + 20);
     if (ribbonTail.contains(event->pos())) {
         m_isDragging = true; m_state = DRAGGING;
